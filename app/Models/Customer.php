@@ -1,0 +1,48 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Customer extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'name',
+        'mobile',
+        'location',
+        'created_by',
+        'is_active',
+    ];
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function bills(): HasMany
+    {
+        return $this->hasMany(Bill::class);
+    }
+
+    public function dues(): HasMany
+    {
+        return $this->hasMany(Due::class);
+    }
+
+    public function getLastBillDateAttribute()
+    {
+        return $this->bills()->latest('created_at')->value('created_at')
+            ?: $this->created_at;
+    }
+
+    public function isInactive(): bool
+    {
+        return $this->last_bill_date 
+            && $this->last_bill_date->diffInDays(now()) > 30;
+    }
+}
