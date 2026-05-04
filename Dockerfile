@@ -27,7 +27,7 @@ RUN cp .env.example .env \
 RUN composer install --no-dev --optimize-autoloader --no-interaction \
     && php artisan key:generate \
     && php artisan route:cache \
-    && php artisan view:cache
+   
 
 EXPOSE 10000
 
