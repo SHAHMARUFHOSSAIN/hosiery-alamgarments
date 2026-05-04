@@ -2,19 +2,23 @@ FROM php:8.2-fpm
 
 WORKDIR /var/www
 
+# system dependencies + gd deps
 RUN apt-get update && apt-get install -y \
-    git curl zip unzip libpq-dev libpng-dev libjpeg-dev libfreetype6-dev
+    git curl zip unzip libpq-dev \
+    libpng-dev libjpeg-dev libfreetype6-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# GD extension first
+# enable PHP extensions (IMPORTANT ORDER)
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install gd pdo pdo_pgsql
 
-# Composer
+# composer install
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 COPY . .
 
-RUN composer install --no-dev --optimize-autoloader
+# safety: ensure autoload works clean
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 EXPOSE 10000
 
