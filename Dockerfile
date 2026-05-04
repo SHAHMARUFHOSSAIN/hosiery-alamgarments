@@ -9,8 +9,8 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # enable PHP extensions (IMPORTANT ORDER)
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install gd pdo pdo_pgsql
+RUN docker-php-ext-configure gd --with-freetype=/usr --with-jpeg=/usr \
+    && docker-php-ext-install -j$(nproc) gd pdo pdo_pgsql
 
 # composer install
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
