@@ -15,6 +15,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Copy project
 COPY . .
 
+RUN mkdir -p storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache
+
 # Permissions (important for Laravel)
 RUN chmod -R 775 storage bootstrap/cache
 
