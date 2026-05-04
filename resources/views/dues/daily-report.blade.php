@@ -29,7 +29,7 @@
         <div class="d-flex justify-content-between align-items-center">
             <h5 class="mb-0">
                 <i class="bi bi-calendar-event"></i> 
-                Total: {{ number_format($todayDues->sum('amount'), 2) }}
+                Total: {{ number_format($todayDues->sum('remaining_amount'), 2) }}
             </h5>
             <a href="{{ route('export.dues', ['date_from' => now()->toDateString(), 'date_to' => now()->toDateString()]) }}" class="btn btn-sm btn-success">
                 <i class="bi bi-download"></i> Export
@@ -43,7 +43,9 @@
                     <th>ID</th>
                     <th>Customer</th>
                     <th>Mobile</th>
-                    <th>Amount</th>
+                    <th>Original</th>
+                    <th>Paid</th>
+                    <th>Remaining</th>
                     <th>Due Date</th>
                     <th>User</th>
                     <th>Action</th>
@@ -55,19 +57,22 @@
                     <td>{{ $due->id }}</td>
                     <td><a href="{{ route('customers.show', $due->customer) }}" class="fw-semibold">{{ $due->customer->name ?? 'N/A' }}</a></td>
                     <td>{{ $due->customer->mobile ?? 'N/A' }}</td>
-                    <td class="text-danger fw-bold fs-5">{{ number_format($due->amount, 2) }}</td>
+                    <td>{{ number_format($due->original_amount, 2) }}</td>
+                    <td class="text-success fw-bold">{{ number_format($due->total_paid, 2) }}</td>
+                    <td class="text-danger fw-bold fs-5">{{ number_format($due->remaining_amount, 2) }}</td>
                     <td><span class="badge bg-danger text-white">{{ $due->due_date->format('M d, Y') }}</span></td>
                     <td><span class="badge bg-secondary">{{ $due->creator->name ?? 'N/A' }}</span></td>
                     <td>
-                        <form method="POST" action="{{ route('dues.mark-paid', ['id' => $due->id]) }}" class="d-inline">
-                            @csrf
-                            <button type="submit" class="btn btn-sm btn-success py-0 px-2">Mark Paid</button>
-                        </form>
+                        <button type="button" class="btn btn-sm btn-success py-0 px-2" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#dailyPayModal{{ $due->id }}">
+                            <i class="bi bi-credit-card"></i> Pay
+                        </button>
                     </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="7" class="text-center py-4 text-success">
+                    <td colspan="9" class="text-center py-4 text-success">
                         <i class="bi bi-check-circle-fill fs-1 d-block mb-2"></i>
                         <strong>No pending dues for today!</strong>
                     </td>
@@ -77,8 +82,8 @@
             @if($todayDues->count() > 0)
             <tfoot class="table-dark">
                 <tr>
-                    <td colspan="3" class="text-end"><strong>Total:</strong></td>
-                    <td class="text-danger fw-bold fs-5">{{ number_format($todayDues->sum('amount'), 2) }}</td>
+                    <td colspan="5" class="text-end"><strong>Total Remaining:</strong></td>
+                    <td class="text-danger fw-bold fs-5">{{ number_format($todayDues->sum(fn($d) => $d->remaining_amount), 2) }}</td>
                     <td colspan="3"></td>
                 </tr>
             </tfoot>
@@ -86,4 +91,67 @@
         </table>
     </div>
 </div>
+
+@foreach($todayDues as $due)
+<div class="modal fade" id="dailyPayModal{{ $due->id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Make Payment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ route('dues.add-payment') }}">
+                @csrf
+                <input type="hidden" name="due_id" value="{{ $due->id }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <strong>Customer:</strong> {{ $due->customer->name ?? 'N/A' }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>Original Amount:</strong> ৳{{ number_format($due->original_amount, 2) }}
+                    </div>
+                    @if($due->hasPartialPayments())
+                    <div class="mb-3">
+                        <strong>Total Paid:</strong> <span class="text-success">৳{{ number_format($due->total_paid, 2) }}</span>
+                    </div>
+                    @endif
+                    <div class="mb-3 alert alert-warning">
+                        <strong>Remaining:</strong> <span class="text-danger fw-bold">৳{{ number_format($due->remaining_amount, 2) }}</span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Payment Amount <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">৳</span>
+                            <input type="number" step="0.01" name="payment_amount" class="form-control" 
+                                   max="{{ $due->remaining_amount }}" value="{{ $due->remaining_amount }}" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Payment Type <span class="text-danger">*</span></label>
+                        <select name="payment_type" class="form-select" required>
+                            <option value="cash">Cash</option>
+                            <option value="check">Check</option>
+                            <option value="mobile_banking">Mobile Banking</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Next Due Date <small class="text-muted">(if remaining balance)</small></label>
+                        <input type="date" name="next_due_date" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Note</label>
+                        <textarea name="note" class="form-control" rows="2" placeholder="Optional note..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Record Payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endforeach
 @endsection

@@ -47,9 +47,18 @@
                     @enderror
                 </div>
                 <div class="col-md-6">
+                    <label for="bill_man" class="form-label">Bill Man</label>
+                    <input type="text" name="bill_man" id="bill_man" 
+                           class="form-control @error('bill_man') is-invalid @enderror" 
+                           value="{{ old('bill_man', $bill->bill_man) }}">
+                    @error('bill_man')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-md-6">
                     <label for="bill_amount" class="form-label">Bill Amount <span class="text-danger">*</span></label>
                     <div class="input-group">
-                        <span class="input-group-text">$</span>
+                        <span class="input-group-text">৳</span>
                         <input type="number" step="0.01" name="bill_amount" id="bill_amount" 
                                class="form-control @error('bill_amount') is-invalid @enderror" 
                                value="{{ old('bill_amount', $bill->bill_amount) }}" required>
@@ -61,12 +70,70 @@
                 <div class="col-md-6">
                     <label for="discount" class="form-label">Discount</label>
                     <div class="input-group">
-                        <span class="input-group-text">$</span>
+                        <span class="input-group-text">৳</span>
                         <input type="number" step="0.01" name="discount" id="discount" 
                                class="form-control @error('discount') is-invalid @enderror" 
                                value="{{ old('discount', $bill->discount) }}">
                     </div>
                 </div>
+
+                @php
+                    $checkPayment = $bill->payments()->where('payment_type', 'check')->first();
+                @endphp
+                @if($checkPayment)
+                <div class="col-12">
+                    <div class="card border border-warning">
+                        <div class="card-header bg-warning text-dark py-2">
+                            <h6 class="mb-0"><i class="bi bi-bank"></i> Check Payment Details</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Bank Name</label>
+                                    <input type="text" class="form-control" value="{{ $checkPayment->bank_name ?? 'N/A' }}" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Check No</label>
+                                    <input type="text" class="form-control" value="{{ $checkPayment->check_no ?? 'N/A' }}" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Check Amount</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">৳</span>
+                                        <input type="text" class="form-control" value="{{ number_format($checkPayment->check_amount, 2) }}" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Check Date</label>
+                                    <input type="date" class="form-control" value="{{ $checkPayment->check_date?->format('Y-m-d') }}" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Reminder Date</label>
+                                    <input type="date" class="form-control" value="{{ $checkPayment->check_reminder_date?->format('Y-m-d') }}" readonly>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Status</label>
+                                    <div>
+                                        @if($checkPayment->status === 'encashed')
+                                        <span class="badge bg-success">Encashed</span>
+                                        @else
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Check Photo</label>
+                                    @if($checkPayment->check_photo)
+                                    <div><a href="{{ asset('storage/' . $checkPayment->check_photo) }}" target="_blank" class="btn btn-sm btn-outline-primary">View Photo</a></div>
+                                    @else
+                                    <span class="text-muted">No photo uploaded</span>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endif
                 <div class="col-12">
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-save"></i> Update Bill

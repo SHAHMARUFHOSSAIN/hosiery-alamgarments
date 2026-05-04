@@ -111,7 +111,8 @@
                     <thead class="table-light">
                         <tr>
                             <th>Customer</th>
-                            <th>Amount</th>
+                            <th>Original</th>
+                            <th>Remaining</th>
                             <th>Due Date</th>
                             <th>Action</th>
                         </tr>
@@ -120,17 +121,19 @@
                         @forelse($recentDues as $due)
                         <tr>
                             <td>{{ $due->customer->name ?? 'N/A' }}</td>
-                            <td class="text-danger fw-bold">{{ number_format($due->amount, 2) }}</td>
+                            <td>{{ number_format($due->original_amount, 2) }}</td>
+                            <td class="text-danger fw-bold">{{ number_format($due->remaining_amount, 2) }}</td>
                             <td><span class="badge bg-warning text-dark">{{ $due->due_date->format('M d') }}</span></td>
                             <td>
-                                <form method="POST" action="{{ route('dues.mark-paid', $due) }}" class="d-inline">
-                                    @csrf
-                                    <button type="submit" class="btn btn-sm btn-success py-0 px-2">Paid</button>
-                                </form>
+                                <button type="button" class="btn btn-sm btn-success py-0 px-2" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#dashPayModal{{ $due->id }}">
+                                    <i class="bi bi-credit-card"></i> Pay
+                                </button>
                             </td>
                         </tr>
                         @empty
-                        <tr><td colspan="4" class="text-center py-3">No pending dues</td></tr>
+                        <tr><td colspan="5" class="text-center py-3">No pending dues</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -138,4 +141,56 @@
         </div>
     </div>
 </div>
+
+@foreach($recentDues as $due)
+<div class="modal fade" id="dashPayModal{{ $due->id }}" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Make Payment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ route('dues.add-payment') }}">
+                @csrf
+                <input type="hidden" name="due_id" value="{{ $due->id }}">
+                <div class="modal-body">
+                    <div class="mb-3 alert alert-warning">
+                        <strong>Remaining:</strong> <span class="text-danger fw-bold">৳{{ number_format($due->remaining_amount, 2) }}</span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Payment Amount <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">৳</span>
+                            <input type="number" step="0.01" name="payment_amount" class="form-control" 
+                                   max="{{ $due->remaining_amount }}" value="{{ $due->remaining_amount }}" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Payment Type <span class="text-danger">*</span></label>
+                        <select name="payment_type" class="form-select" required>
+                            <option value="cash">Cash</option>
+                            <option value="check">Check</option>
+                            <option value="mobile_banking">Mobile Banking</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Next Due Date <small class="text-muted">(if remaining balance)</small></label>
+                        <input type="date" name="next_due_date" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Note</label>
+                        <textarea name="note" class="form-control" rows="2" placeholder="Optional note..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check-circle"></i> Record Payment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endforeach
 @endsection

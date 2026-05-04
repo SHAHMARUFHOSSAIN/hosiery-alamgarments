@@ -24,10 +24,15 @@
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-white py-3">
         <form method="GET" class="row g-3">
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <input type="text" name="search" class="form-control" 
-                       placeholder="Search bill no or shop..." 
+                       placeholder="Search bill no, shop, bill man..." 
                        value="{{ request('search') }}">
+            </div>
+            <div class="col-md-2">
+                <input type="text" name="bill_man" class="form-control" 
+                       placeholder="Filter by bill man..." 
+                       value="{{ request('bill_man') }}">
             </div>
             @if(auth()->user()->isAdmin())
             <div class="col-md-2">
@@ -47,7 +52,7 @@
                 <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
             </div>
             @endif
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <button type="submit" class="btn btn-secondary"><i class="bi bi-search"></i> Filter</button>
                 <a href="{{ route('bills.index') }}" class="btn btn-outline-secondary">Clear</a>
             </div>
@@ -57,25 +62,56 @@
         <table class="table table-hover mb-0">
             <thead class="table-light">
                 <tr>
-                    <th>ID</th>
-                    <th>Bill No</th>
+                    <th><a href="{{ route('bills.index', ['sort' => 'id', 'direction' => request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="text-decoration-none">ID @if(request('sort') == 'id'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif</a></th>
+                    <th><a href="{{ route('bills.index', ['sort' => 'bill_no', 'direction' => request('sort') == 'bill_no' && request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="text-decoration-none">Bill No @if(request('sort') == 'bill_no'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif</a></th>
                     <th>Customer</th>
-                    <th>Shop</th>
-                    <th>Amount</th>
+                    <th><a href="{{ route('bills.index', ['sort' => 'shop_name', 'direction' => request('sort') == 'shop_name' && request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="text-decoration-none">Shop @if(request('sort') == 'shop_name'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif</a></th>
+                    <th><a href="{{ route('bills.index', ['sort' => 'bill_man', 'direction' => request('sort') == 'bill_man' && request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="text-decoration-none">Bill Man @if(request('sort') == 'bill_man'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif</a></th>
+                    <th>Payment</th>
+                    <th><a href="{{ route('bills.index', ['sort' => 'bill_amount', 'direction' => request('sort') == 'bill_amount' && request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="text-decoration-none">Amount @if(request('sort') == 'bill_amount'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif</a></th>
+                    <th><a href="{{ route('bills.index', ['sort' => 'check_amount', 'direction' => request('sort') == 'check_amount' && request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="text-decoration-none">Check Amt @if(request('sort') == 'check_amount'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif</a></th>
                     <th>Discount</th>
                     <th>User</th>
-                    <th>Date</th>
+                    <th><a href="{{ route('bills.index', ['sort' => 'created_at', 'direction' => request('sort') == 'created_at' && request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="text-decoration-none">Date @if(request('sort') == 'created_at'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif</a></th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($bills as $bill)
+                @php
+                    $checkPayment = $bill->payments->where('payment_type', 'check')->first();
+                    $paymentType = $bill->payments->first()?->payment_type;
+                @endphp
                 <tr>
                     <td>{{ $bill->id }}</td>
                     <td><a href="{{ route('bills.show', $bill) }}" class="fw-semibold">{{ $bill->bill_no }}</a></td>
                     <td>{{ $bill->customer->name ?? 'N/A' }}</td>
                     <td>{{ $bill->shop_name ?? 'N/A' }}</td>
+                    <td>{{ $bill->bill_man ?? 'N/A' }}</td>
+                    <td>
+                        @if($paymentType === 'check')
+                        <span class="badge bg-warning text-dark">CHECK</span>
+                        @if($checkPayment && $checkPayment->status === 'encashed')
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        @endif
+                        @elseif($paymentType === 'due')
+                        <span class="badge bg-danger">DUE</span>
+                        @elseif($paymentType === 'tt')
+                        <span class="badge bg-info text-dark">TT</span>
+                        @elseif($paymentType === 'cash')
+                        <span class="badge bg-success">CASH</span>
+                        @else
+                        <span class="badge bg-secondary">-</span>
+                        @endif
+                    </td>
                     <td class="fw-bold">{{ number_format($bill->bill_amount, 2) }}</td>
+                    <td>
+                        @if($checkPayment)
+                        <span class="fw-bold text-warning">{{ number_format($checkPayment->check_amount, 2) }}</span>
+                        @else
+                        -
+                        @endif
+                    </td>
                     <td>{{ number_format($bill->discount, 2) }}</td>
                     <td><span class="badge bg-secondary">{{ $bill->user->name ?? 'N/A' }}</span></td>
                     <td>{{ $bill->created_at->format('M d, Y') }}</td>
@@ -97,11 +133,15 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="9" class="text-center py-3">No bills found</td></tr>
+                <tr><td colspan="12" class="text-center py-3">No bills found</td></tr>
                 @endforelse
             </tbody>
         </table>
     </div>
-    <div class="card-footer bg-white">{{ $bills->links() }}</div>
+    @if($bills->hasPages())
+    <div class="card-footer bg-white text-center">
+        {!! str_replace('page-link', 'page-link btn btn-sm btn-outline-secondary', $bills->links()) !!}
+    </div>
+    @endif
 </div>
 @endsection

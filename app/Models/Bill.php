@@ -15,6 +15,7 @@ class Bill extends Model
         'bill_no',
         'customer_id',
         'shop_name',
+        'bill_man',
         'bill_amount',
         'discount',
         'user_id',
@@ -41,6 +42,11 @@ class Bill extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    public function checkPayment()
+    {
+        return $this->hasOne(Payment::class)->where('payment_type', 'check');
     }
 
     public function dues(): HasMany

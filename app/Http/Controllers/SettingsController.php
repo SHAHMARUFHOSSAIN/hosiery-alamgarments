@@ -1,0 +1,243 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\User;
+use App\Models\Customer;
+use App\Models\Bill;
+use App\Models\Due;
+use App\Models\MainBalance;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\View\View;
+use Illuminate\Support\Facades\DB;
+
+class SettingsController extends Controller
+{
+    public function index(Request $request): View
+    {
+        $days = $request->get('days', 7);
+        $startDate = now()->subDays($days)->startOfDay();
+        
+        $stats = [
+            'totalUsers' => User::count(),
+            'totalCustomers' => Customer::count(),
+            'totalBills' => Bill::count(),
+            'totalDues' => Due::where('status', 'pending')->count(),
+            'totalRevenue' => MainBalance::where('type', 'credit')->sum('amount'),
+            'recentUsers' => User::where('created_at', '>=', $startDate)->count(),
+            'recentCustomers' => Customer::where('created_at', '>=', $startDate)->count(),
+            'recentBills' => Bill::where('created_at', '>=', $startDate)->count(),
+            'recentRevenue' => MainBalance::where('type', 'credit')->where('created_at', '>=', $startDate)->sum('amount'),
+        ];
+
+        return view('settings.index', compact('stats', 'days'));
+    }
+
+    public function users(Request $request): View
+    {
+        $query = User::query();
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('role')) {
+            $query->where('role', $request->role);
+        }
+
+        $users = $query->orderBy('id', 'desc')->paginate(15);
+
+        return view('settings.users', compact('users'));
+    }
+
+    public function storeUser(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8',
+            'role' => 'required|in:admin,user',
+        ]);
+
+        User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => $request->role,
+        ]);
+
+        return redirect()->route('settings.users')->with('success', 'User created successfully');
+    }
+
+    public function updateUser(Request $request, User $user)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'role' => 'required|in:admin,user',
+        ]);
+
+        $data = [
+            'name' => $request->name,
+            'email' => $request->email,
+            'role' => $request->role,
+        ];
+
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        }
+
+        $user->update($data);
+
+        return redirect()->route('settings.users')->with('success', 'User updated successfully');
+    }
+
+    public function deleteUser(User $user)
+    {
+        if ($user->id === Auth::id()) {
+            return redirect()->route('settings.users')->with('error', 'You cannot delete yourself');
+        }
+
+        $user->delete();
+
+        return redirect()->route('settings.users')->with('success', 'User deleted successfully');
+    }
+
+    public function allTransactions(Request $request): View
+    {
+        $days = $request->get('days', 30);
+        $startDate = now()->subDays($days)->startOfDay();
+        
+        $query = MainBalance::with(['user', 'branch']);
+
+        if ($request->filled('branch_id')) {
+            $query->where('branch_id', $request->branch_id);
+        }
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+        if ($days > 0) {
+            $query->where('created_at', '>=', $startDate);
+        }
+
+        $transactions = $query->orderBy('id', 'desc')->paginate(20);
+        
+        $totalCredit = MainBalance::where('type', 'credit')->sum('amount');
+        $totalDebit = MainBalance::where('type', 'debit')->sum('amount');
+        $totalBalance = $totalCredit - $totalDebit;
+
+        $branches = User::where('role', 'user')->get(['id', 'name']);
+
+        return view('settings.transactions', compact('transactions', 'totalCredit', 'totalDebit', 'totalBalance', 'branches', 'days'));
+    }
+
+    public function systemInfo(Request $request): View
+    {
+        $days = $request->get('days', 30);
+        $startDate = now()->subDays($days)->startOfDay();
+        
+        $stats = [
+            'totalUsers' => User::count(),
+            'totalCustomers' => Customer::count(),
+            'totalBills' => Bill::count(),
+            'totalDues' => Due::count(),
+            'pendingDues' => Due::where('status', 'pending')->count(),
+            'paidDues' => Due::where('status', 'paid')->count(),
+            'totalCredit' => MainBalance::where('type', 'credit')->sum('amount'),
+            'totalDebit' => MainBalance::where('type', 'debit')->sum('amount'),
+            'recentUsers' => User::where('created_at', '>=', $startDate)->count(),
+            'recentCustomers' => Customer::where('created_at', '>=', $startDate)->count(),
+            'recentBills' => Bill::where('created_at', '>=', $startDate)->count(),
+            'recentDues' => Due::where('created_at', '>=', $startDate)->count(),
+        ];
+
+        return view('settings.system-info', compact('stats', 'days'));
+    }
+
+    public function dataManagement(Request $request): View
+    {
+        $days = $request->get('days', 30);
+        $startDate = now()->subDays($days)->startOfDay();
+        
+        $recentBills = Bill::with(['customer', 'user'])
+            ->where('created_at', '>=', $startDate)
+            ->orderBy('id', 'desc')
+            ->paginate(15);
+            
+        $recentCustomers = Customer::with('creator')
+            ->where('created_at', '>=', $startDate)
+            ->orderBy('id', 'desc')
+            ->paginate(15);
+            
+        $recentDues = Due::with(['customer', 'bill'])
+            ->where('created_at', '>=', $startDate)
+            ->orderBy('id', 'desc')
+            ->paginate(15);
+
+        $recentBanks = \App\Models\Bank::with('creator')
+            ->where('created_at', '>=', $startDate)
+            ->orderBy('id', 'desc')
+            ->paginate(15);
+
+        $recentChecks = \App\Models\Payment::with(['bill.customer'])
+            ->where('payment_type', 'check')
+            ->where('created_at', '>=', $startDate)
+            ->orderBy('id', 'desc')
+            ->paginate(15);
+
+        return view('settings.data-management', compact('recentBills', 'recentCustomers', 'recentDues', 'recentBanks', 'recentChecks', 'days'));
+    }
+
+    public function deleteBill(Bill $bill)
+    {
+        $billNumber = $bill->bill_no;
+        $bill->delete();
+        
+        return redirect()->route('settings.data')->with('success', "Bill {$billNumber} deleted successfully");
+    }
+
+    public function deleteCustomer(Customer $customer)
+    {
+        $customerName = $customer->name;
+        $customer->delete();
+        
+        return redirect()->route('settings.data')->with('success', "Customer {$customerName} deleted successfully");
+    }
+
+    public function deleteDue(Due $due)
+    {
+        $due->delete();
+        
+        return redirect()->route('settings.data')->with('success', 'Due deleted successfully');
+    }
+
+    public function editBill(Request $request, Bill $bill)
+    {
+        $bill->update($request->only(['bill_no', 'shop_name', 'bill_man', 'bill_amount', 'discount']));
+        return redirect()->route('settings.data')->with('success', 'Bill updated successfully');
+    }
+
+    public function editCustomer(Request $request, Customer $customer)
+    {
+        $customer->update($request->only(['name', 'mobile', 'location']));
+        return redirect()->route('settings.data')->with('success', 'Customer updated successfully');
+    }
+
+    public function editDue(Request $request, Due $due)
+    {
+        $due->update($request->only(['amount', 'due_date', 'status']));
+        return redirect()->route('settings.data')->with('success', 'Due updated successfully');
+    }
+}

@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Bill;
 use App\Models\Customer;
 use App\Models\Due;
+use App\Models\DuePayment;
+use App\Models\MainBalance;
+use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -29,7 +32,18 @@ class ReportController extends Controller
         $totalDues = $dueQuery->where('status', 'pending')->sum('amount');
         $paidDues = $dueQuery->where('status', 'paid')->sum('amount');
 
-        return view('reports.index', compact('users', 'totalSales', 'totalDues', 'paidDues'));
+        $balanceQuery = MainBalance::query();
+        $totalCredit = $balanceQuery->clone()->where('type', 'credit')->sum('amount');
+        $totalDebit = $balanceQuery->clone()->where('type', 'debit')->sum('amount');
+        $mainBalance = $totalCredit - $totalDebit;
+
+        if (!Auth::user()->isAdmin()) {
+            $branchCredit = MainBalance::where('branch_id', Auth::id())->where('type', 'credit')->sum('amount');
+            $branchDebit = MainBalance::where('branch_id', Auth::id())->where('type', 'debit')->sum('amount');
+            $mainBalance = $branchCredit - $branchDebit;
+        }
+
+        return view('reports.index', compact('users', 'totalSales', 'totalDues', 'paidDues', 'mainBalance'));
     }
 
     public function sales(Request $request): View
@@ -51,9 +65,78 @@ class ReportController extends Controller
             $query->whereDate('created_at', '<=', $request->date_to);
         }
 
-        $bills = $query->orderBy('id', 'desc')->paginate(20);
-        $totalAmount = $query->sum('bill_amount');
-        $totalDiscount = $query->sum('discount');
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('bill_no', 'like', "%{$search}%")
+                  ->orWhere('shop_name', 'like', "%{$search}%")
+                  ->orWhere('bill_man', 'like', "%{$search}%")
+                  ->orWhereHas('customer', function ($cq) use ($search) {
+                      $cq->where('name', 'like', "%{$search}%")
+                         ->orWhere('mobile', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $sortField = $request->get('sort', 'created_at');
+        $sortDirection = $request->get('direction', 'desc');
+        $allowedSorts = ['bill_no', 'bill_amount', 'discount', 'created_at'];
+
+        if ($sortField === 'net') {
+            $query->orderByRaw('(bill_amount - discount) ' . $sortDirection);
+        } elseif (in_array($sortField, $allowedSorts)) {
+            $query->orderBy($sortField, $sortDirection);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $bills = $query->paginate(20);
+        $totalAmount = Bill::when(Auth::user()->isAdmin(), function ($q) use ($request) {
+                if ($request->filled('user_id')) $q->where('user_id', $request->user_id);
+            })
+            ->when($request->filled('date_from'), function ($q) use ($request) {
+                $q->whereDate('created_at', '>=', $request->date_from);
+            })
+            ->when($request->filled('date_to'), function ($q) use ($request) {
+                $q->whereDate('created_at', '<=', $request->date_to);
+            })
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = $request->search;
+                $q->where(function ($inner) use ($search) {
+                    $inner->where('bill_no', 'like', "%{$search}%")
+                          ->orWhere('shop_name', 'like', "%{$search}%")
+                          ->orWhere('bill_man', 'like', "%{$search}%")
+                          ->orWhereHas('customer', function ($cq) use ($search) {
+                              $cq->where('name', 'like', "%{$search}%")
+                                 ->orWhere('mobile', 'like', "%{$search}%");
+                          });
+                });
+            })
+            ->sum('bill_amount');
+
+        $totalDiscount = Bill::when(Auth::user()->isAdmin(), function ($q) use ($request) {
+                if ($request->filled('user_id')) $q->where('user_id', $request->user_id);
+            })
+            ->when($request->filled('date_from'), function ($q) use ($request) {
+                $q->whereDate('created_at', '>=', $request->date_from);
+            })
+            ->when($request->filled('date_to'), function ($q) use ($request) {
+                $q->whereDate('created_at', '<=', $request->date_to);
+            })
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = $request->search;
+                $q->where(function ($inner) use ($search) {
+                    $inner->where('bill_no', 'like', "%{$search}%")
+                          ->orWhere('shop_name', 'like', "%{$search}%")
+                          ->orWhere('bill_man', 'like', "%{$search}%")
+                          ->orWhereHas('customer', function ($cq) use ($search) {
+                              $cq->where('name', 'like', "%{$search}%")
+                                 ->orWhere('mobile', 'like', "%{$search}%");
+                          });
+                });
+            })
+            ->sum('discount');
+
         $users = User::where('role', 'user')->get(['id', 'name']);
 
         return view('reports.sales', compact('bills', 'totalAmount', 'totalDiscount', 'users'));
@@ -61,14 +144,18 @@ class ReportController extends Controller
 
     public function dues(Request $request): View
     {
-        $query = Due::with(['customer', 'bill', 'creator']);
+        $query = Due::with(['customer', 'bill', 'creator', 'duePayments.user']);
 
         if (Auth::user()->isAdmin()) {
             if ($request->filled('user_id')) {
                 $query->where('created_by', $request->user_id);
             }
             if ($request->filled('status')) {
-                $query->where('status', $request->status);
+                if ($request->status === 'partial') {
+                    $query->where('status', 'pending')->whereHas('duePayments');
+                } else {
+                    $query->where('status', $request->status);
+                }
             }
         } else {
             $query->where('created_by', Auth::id());
@@ -81,8 +168,32 @@ class ReportController extends Controller
             $query->whereDate('due_date', '<=', $request->date_to);
         }
 
-        $dues = $query->orderBy('due_date', 'asc')->paginate(20);
-        $totalAmount = $query->where('status', 'pending')->sum('amount');
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('customer', function ($cq) use ($search) {
+                    $cq->where('name', 'like', "%{$search}%")
+                       ->orWhere('mobile', 'like', "%{$search}%");
+                })->orWhereHas('bill', function ($bq) use ($search) {
+                    $bq->where('bill_no', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        $sortField = $request->get('sort', 'due_date');
+        $sortDirection = $request->get('direction', 'asc');
+        $allowedSorts = ['id', 'original_amount', 'due_date', 'status', 'remaining_amount'];
+
+        if ($sortField === 'remaining_amount') {
+            $query->orderBy('amount', $sortDirection);
+        } elseif (in_array($sortField, $allowedSorts)) {
+            $query->orderBy($sortField, $sortDirection);
+        } else {
+            $query->orderBy('due_date', 'asc');
+        }
+
+        $dues = $query->paginate(20);
+        $totalAmount = Due::where('status', 'pending')->sum('amount');
         $users = User::where('role', 'user')->get(['id', 'name']);
 
         return view('reports.dues', compact('dues', 'totalAmount', 'users'));
@@ -108,5 +219,173 @@ class ReportController extends Controller
         $customers->appends($request->only('search'));
 
         return view('reports.inactive-customers', compact('customers'));
+    }
+
+    public function analytics(Request $request): View
+    {
+        $period = $request->get('period', '30');
+        $days = (int) $period;
+        $startDate = now()->subDays($days);
+        $endDate = now();
+
+        $baseBillQuery = Bill::query();
+        $baseDueQuery = Due::query();
+        $basePaymentQuery = \App\Models\Payment::query();
+
+        if (!Auth::user()->isAdmin()) {
+            $baseBillQuery->where('user_id', Auth::id());
+            $baseDueQuery->where('created_by', Auth::id());
+            $basePaymentQuery->whereHas('bill', function ($q) {
+                $q->where('user_id', Auth::id());
+            });
+        }
+
+        $periodBills = (clone $baseBillQuery)->whereBetween('created_at', [$startDate, $endDate])->get();
+        $totalSales = $periodBills->sum('bill_amount');
+        $totalDiscount = $periodBills->sum('discount');
+        $netSales = $totalSales - $totalDiscount;
+        $billCount = $periodBills->count();
+        $avgBillValue = $billCount > 0 ? $netSales / $billCount : 0;
+
+        $prevBills = (clone $baseBillQuery)
+            ->whereBetween('created_at', [$startDate->copy()->subDays($days), $startDate])
+            ->get();
+        $prevSales = $prevBills->sum('bill_amount');
+        $prevNetSales = $prevSales - $prevBills->sum('discount');
+        $salesGrowth = $prevNetSales > 0 ? (($netSales - $prevNetSales) / $prevNetSales) * 100 : 0;
+
+        $prevBillCount = $prevBills->count();
+        $billCountGrowth = $prevBillCount > 0 ? (($billCount - $prevBillCount) / $prevBillCount) * 100 : 0;
+
+        $avgPrevBill = $prevBillCount > 0 ? $prevNetSales / $prevBillCount : 0;
+        $avgBillGrowth = $avgPrevBill > 0 ? (($avgBillValue - $avgPrevBill) / $avgPrevBill) * 100 : 0;
+
+        $paymentBreakdown = (clone $basePaymentQuery)
+            ->whereHas('bill', function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('created_at', [$startDate, $endDate]);
+            })
+            ->selectRaw('payment_type, SUM(amount) as total, COUNT(*) as count')
+            ->groupBy('payment_type')
+            ->get()
+            ->keyBy('payment_type');
+
+        $paymentTypes = [
+            'cash' => ['total' => 0, 'count' => 0],
+            'check' => ['total' => 0, 'count' => 0],
+            'tt' => ['total' => 0, 'count' => 0],
+            'card' => ['total' => 0, 'count' => 0],
+            'due' => ['total' => 0, 'count' => 0],
+        ];
+        foreach ($paymentTypes as $type => $data) {
+            if ($paymentBreakdown->has($type)) {
+                $paymentTypes[$type] = [
+                    'total' => (float) $paymentBreakdown[$type]->total,
+                    'count' => (int) $paymentBreakdown[$type]->count,
+                ];
+            }
+        }
+
+        $dailySales = (clone $baseBillQuery)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->selectRaw('DATE(created_at) as date, SUM(bill_amount) as total, COUNT(*) as count')
+            ->groupBy('date')
+            ->orderBy('date')
+            ->get();
+
+        $dailyLabels = [];
+        $dailyValues = [];
+        $dailyCounts = [];
+        $day = $startDate->copy();
+        while ($day <= $endDate) {
+            $dateStr = $day->format('Y-m-d');
+            $dailyLabels[] = $day->format('M d');
+            $match = $dailySales->firstWhere('date', $dateStr);
+            $dailyValues[] = $match ? (float) $match->total : 0;
+            $dailyCounts[] = $match ? (int) $match->count : 0;
+            $day->addDay();
+        }
+
+        $topCustomers = (clone $baseBillQuery)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->with('customer')
+            ->selectRaw('customer_id, SUM(bill_amount) as total, COUNT(*) as count')
+            ->groupBy('customer_id')
+            ->orderByDesc('total')
+            ->limit(10)
+            ->get();
+
+        $userPerformance = [];
+        if (Auth::user()->isAdmin()) {
+            $users = User::where('role', 'user')->get();
+            foreach ($users as $user) {
+                $userBills = Bill::where('user_id', $user->id)
+                    ->whereBetween('created_at', [$startDate, $endDate])
+                    ->get();
+                $userPerformance[] = [
+                    'name' => $user->name,
+                    'sales' => $userBills->sum('bill_amount'),
+                    'bills' => $userBills->count(),
+                    'discount' => $userBills->sum('discount'),
+                ];
+            }
+            usort($userPerformance, function ($a, $b) {
+                return $b['sales'] <=> $a['sales'];
+            });
+        }
+
+        $dueStats = [
+            'total_pending' => (clone $baseDueQuery)->where('status', 'pending')->sum('amount'),
+            'total_partial' => (clone $baseDueQuery)->where('status', 'pending')->whereHas('duePayments')->sum('amount'),
+            'total_paid' => (clone $baseDueQuery)->where('status', 'paid')->sum('original_amount'),
+            'pending_count' => (clone $baseDueQuery)->where('status', 'pending')->count(),
+            'paid_count' => (clone $baseDueQuery)->where('status', 'paid')->count(),
+            'partial_count' => (clone $baseDueQuery)->where('status', 'pending')->whereHas('duePayments')->count(),
+        ];
+
+        $overdueDues = (clone $baseDueQuery)
+            ->where('status', 'pending')
+            ->where('due_date', '<', now()->toDateString())
+            ->sum('amount');
+
+        $checkPending = (clone $basePaymentQuery)
+            ->where('payment_type', 'check')
+            ->where('status', 'pending')
+            ->sum('check_amount');
+
+        $collectionRate = $totalSales > 0 ? ($paymentTypes['cash']['total'] + $paymentTypes['check']['total'] + $paymentTypes['tt']['total'] + $paymentTypes['card']['total']) / $totalSales * 100 : 0;
+
+        $dueCollection = DuePayment::whereHas('due', function ($q) use ($startDate, $endDate, $baseDueQuery) {
+                $q->whereBetween('created_at', [$startDate, $endDate]);
+                if (!Auth::user()->isAdmin()) {
+                    $q->where('created_by', Auth::id());
+                }
+            })
+            ->sum('amount');
+
+        $recoveryRate = $dueStats['total_paid'] > 0 ? ($dueStats['total_paid'] / ($dueStats['total_paid'] + $dueStats['total_pending'])) * 100 : 0;
+
+        return view('reports.analytics', compact(
+            'period',
+            'totalSales',
+            'totalDiscount',
+            'netSales',
+            'billCount',
+            'avgBillValue',
+            'salesGrowth',
+            'billCountGrowth',
+            'avgBillGrowth',
+            'paymentTypes',
+            'dailyLabels',
+            'dailyValues',
+            'dailyCounts',
+            'topCustomers',
+            'userPerformance',
+            'dueStats',
+            'overdueDues',
+            'checkPending',
+            'collectionRate',
+            'dueCollection',
+            'recoveryRate',
+        ));
     }
 }

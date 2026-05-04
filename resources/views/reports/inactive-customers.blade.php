@@ -65,8 +65,8 @@
                 </div>
             </div>
             @if($customers->hasPages())
-            <div class="card-footer bg-white">
-                {{ $customers->appends(request()->only('search'))->links() }}
+            <div class="card-footer bg-white text-center">
+                {!! str_replace('page-link', 'page-link btn btn-sm btn-outline-secondary', $customers->appends(request()->only('search'))->links()) !!}
             </div>
             @endif
         </div>

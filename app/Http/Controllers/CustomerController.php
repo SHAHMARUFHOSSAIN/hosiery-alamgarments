@@ -21,8 +21,7 @@ class CustomerController extends Controller
                 $query->where('created_by', $request->user_id);
             }
         } else {
-            $query->where('created_by', Auth::id());
-            $users = collect();
+            $users = \App\Models\User::where('role', 'user')->get(['id', 'name']);
         }
 
         if ($request->filled('search')) {
@@ -42,14 +41,8 @@ class CustomerController extends Controller
     public function search(Request $request): JsonResponse
     {
         $term = $request->term;
-
-        $query = Customer::query();
         
-        if (!Auth::user()->isAdmin()) {
-            $query->where('created_by', Auth::id());
-        }
-
-        $customers = $query->where(function ($q) use ($term) {
+        $customers = Customer::where(function ($q) use ($term) {
             $q->where('name', 'like', "%{$term}%")
               ->orWhere('mobile', 'like', "%{$term}%");
         })
@@ -119,7 +112,7 @@ class CustomerController extends Controller
             ->with('success', 'Customer updated successfully');
     }
 
-    public function destroy(Customer $customer): RedirectResponse
+public function destroy(Customer $customer): RedirectResponse
     {
         $this->authorizeCustomer($customer);
 
@@ -131,8 +124,6 @@ class CustomerController extends Controller
 
     private function authorizeCustomer(Customer $customer): void
     {
-        if (!Auth::user()->isAdmin() && $customer->created_by !== Auth::id()) {
-            abort(403, 'Unauthorized action.');
-        }
+        // Everyone can view, edit, delete any customer
     }
 }

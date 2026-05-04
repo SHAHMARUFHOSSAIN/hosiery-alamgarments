@@ -6,27 +6,35 @@
 
 @section('content')
 <div class="row g-4 mb-4">
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
                 <h6 class="text-muted mb-1">Total Sales</h6>
-                <h3 class="text-primary mb-0">${{ number_format($totalSales ?? 0, 2) }}</h3>
+                <h3 class="text-primary mb-0">৳{{ number_format($totalSales ?? 0, 2) }}</h3>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
                 <h6 class="text-muted mb-1">Total Due</h6>
-                <h3 class="text-danger mb-0">${{ number_format($totalDues ?? 0, 2) }}</h3>
+                <h3 class="text-danger mb-0">৳{{ number_format($totalDues ?? 0, 2) }}</h3>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
                 <h6 class="text-muted mb-1">Due Collected</h6>
-                <h3 class="text-success mb-0">${{ number_format($paidDues ?? 0, 2) }}</h3>
+                <h3 class="text-success mb-0">৳{{ number_format($paidDues ?? 0, 2) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-1">Main Balance</h6>
+                <h3 class="text-{{ $mainBalance >= 0 ? 'success' : 'danger' }} mb-0">৳{{ number_format($mainBalance ?? 0, 2) }}</h3>
             </div>
         </div>
     </div>
@@ -61,6 +69,28 @@
             <h5>Daily Report</h5>
             <p class="text-muted">View dues due today with export options</p>
             <a href="{{ route('dues.daily-report') }}" class="btn btn-success">Daily Report</a>
+        </div>
+    </div>
+    @if(auth()->user()->isAdmin())
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100 text-center p-4">
+            <div class="bg-info bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
+                <i class="bi bi-bar-chart-line text-info fs-2"></i>
+            </div>
+            <h5>Data Analytics</h5>
+            <p class="text-muted">Comprehensive business intelligence with charts and insights</p>
+            <a href="{{ route('reports.analytics') }}" class="btn btn-info text-white">Analytics</a>
+        </div>
+    </div>
+    @endif
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100 text-center p-4">
+            <div class="bg-warning bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
+                <i class="bi bi-wallet2 text-warning fs-2"></i>
+            </div>
+            <h5>Main Balance</h5>
+            <p class="text-muted">Manage main balance and transactions</p>
+            <a href="{{ route('main-balance.index') }}" class="btn btn-warning">View Balance</a>
         </div>
     </div>
     @if(auth()->user()->isAdmin())

@@ -4,17 +4,17 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Daily Report')</title>
+    <title>@yield('title', 'Alam Hosiary & Store')</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     @stack('styles')
 </head>
 <body>
     <div class="d-flex">
-        <nav class="bg-dark text-white sidebar p-3" style="width: 250px; min-height: 100vh;">
+        <nav class="sidebar text-white sidebar p-3" style="width: 250px; min-height: 100vh; background: linear-gradient(180deg, #1a237e 0%, #283593 100%);">
             <div class="mb-4 text-center border-bottom border-secondary pb-3">
-                <h5 class="mb-0"><i class="bi bi-file-earmark-text"></i> Daily Report</h5>
-                <small class="text-muted">{{ Auth::user()->role === 'admin' ? 'Super Admin' : 'User' }}</small>
+                <h5 class="mb-0"><i class="bi bi-shop"></i> Alam Hosiary</h5>
+                <small class="text-white-50">& Store</small>
             </div>
 
             <ul class="nav flex-column">
@@ -23,7 +23,7 @@
                         <i class="bi bi-speedometer2"></i> Dashboard
                     </a>
                 </li>
-                <li class="nav-item">
+<li class="nav-item">
                     <a href="{{ route('customers.index') }}" class="nav-link text-white {{ request()->routeIs('customers.*') ? 'active bg-primary rounded' : '' }}">
                         <i class="bi bi-people"></i> Customers
                     </a>
@@ -33,6 +33,21 @@
                         <i class="bi bi-receipt"></i> Bills
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="{{ route('banks.index') }}" class="nav-link text-white {{ request()->routeIs('banks.*') ? 'active bg-primary rounded' : '' }}">
+                        <i class="bi bi-bank"></i> Banks
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('dues.index') }}" class="nav-link text-white {{ request()->routeIs('dues.*') ? 'active bg-primary rounded' : '' }}">
+                        <i class="bi bi-clock-history"></i> Dues
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('dues.checks-report') }}" class="nav-link text-white {{ request()->routeIs('dues.checks-report') ? 'active bg-primary rounded' : '' }}">
+                        <i class="bi bi-calendar-check"></i> Check Reports
+                    </a>
+                </li>
                 @if(auth()->user()->isAdmin())
                 <li class="nav-item">
                     <a href="{{ route('users.index') }}" class="nav-link text-white {{ request()->routeIs('users.*') ? 'active bg-primary rounded' : '' }}">
@@ -40,8 +55,25 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('reports.index') }}" class="nav-link text-white {{ request()->routeIs('reports.*') ? 'active bg-primary rounded' : '' }}">
+                    <a href="{{ route('reports.index') }}" class="nav-link text-white {{ request()->routeIs('reports.*') && !request()->routeIs('reports.analytics') ? 'active bg-primary rounded' : '' }}">
                         <i class="bi bi-graph-up"></i> Reports
+                    </a>
+                </li>
+                @if(auth()->user()->isAdmin())
+                <li class="nav-item">
+                    <a href="{{ route('reports.analytics') }}" class="nav-link text-white {{ request()->routeIs('reports.analytics') ? 'active bg-info rounded' : '' }}">
+                        <i class="bi bi-bar-chart-line-fill"></i> Analytics
+                    </a>
+                </li>
+                @endif
+<li class="nav-item">
+                    <a href="{{ route('main-balance.index') }}" class="nav-link text-white {{ request()->routeIs('main-balance.*') ? 'active bg-primary rounded' : '' }}">
+                        <i class="bi bi-wallet2"></i> Balance
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('settings.index') }}" class="nav-link text-white {{ request()->routeIs('settings.*') ? 'active bg-primary rounded' : '' }}">
+                        <i class="bi bi-gear"></i> Settings
                     </a>
                 </li>
                 @endif

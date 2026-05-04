@@ -28,6 +28,18 @@ class ExportController extends Controller
             if ($request->filled('date_to')) {
                 $query->whereDate('created_at', '<=', $request->date_to);
             }
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('bill_no', 'like', "%{$search}%")
+                      ->orWhere('shop_name', 'like', "%{$search}%")
+                      ->orWhere('bill_man', 'like', "%{$search}%")
+                      ->orWhereHas('customer', function ($cq) use ($search) {
+                          $cq->where('name', 'like', "%{$search}%")
+                             ->orWhere('mobile', 'like', "%{$search}%");
+                      });
+                });
+            }
         } else {
             $query->where('user_id', Auth::id());
         }
@@ -52,7 +64,22 @@ class ExportController extends Controller
                 $query->whereDate('due_date', '<=', $request->date_to);
             }
             if ($request->filled('status')) {
-                $query->where('status', $request->status);
+                if ($request->status === 'partial') {
+                    $query->where('status', 'pending')->whereHas('duePayments');
+                } else {
+                    $query->where('status', $request->status);
+                }
+            }
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->whereHas('customer', function ($cq) use ($search) {
+                        $cq->where('name', 'like', "%{$search}%")
+                           ->orWhere('mobile', 'like', "%{$search}%");
+                    })->orWhereHas('bill', function ($bq) use ($search) {
+                        $bq->where('bill_no', 'like', "%{$search}%");
+                    });
+                });
             }
         } else {
             $query->where('created_by', Auth::id());
