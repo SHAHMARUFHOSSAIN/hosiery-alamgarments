@@ -1,0 +1,13 @@
+.env
+vendor/
+node_modules/
+.git/
+.gitignore
+*.md
+storage/
+bootstrap/cache/*
+!bootstrap/cache/.gitignore
+public/storage
+.idea/
+.vscode/
+*.log
