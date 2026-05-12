@@ -14,6 +14,26 @@
 </nav>
 @endsection
 
+@push('styles')
+<style>
+    .search-dropdown .list-group-item {
+        cursor: pointer;
+        border: 1px solid #dee2e6;
+        background: #fff;
+    }
+    .search-dropdown .list-group-item:hover {
+        background-color: #f8f9fa;
+        border-color: #86b7fe;
+    }
+    .search-dropdown .list-group-item.active,
+    .search-dropdown .list-group-item:active {
+        background-color: #e9ecef;
+        border-color: #dee2e6;
+        color: #212529;
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="row justify-content-center">
     <div class="col-lg-8">
@@ -39,7 +59,7 @@
                                     <i class="bi bi-plus"></i> New
                                 </button>
                             </div>
-                            <div id="customerResults" class="list-group position-absolute w-50" style="z-index: 1000; display: none; max-height: 200px; overflow-y: auto;"></div>
+                            <div id="customerResults" class="list-group position-absolute w-100 shadow search-dropdown" style="z-index: 1050; display: none; max-height: 250px; overflow-y: auto; top: 100%; left: 0; background: #fff;"></div>
                         </div>
 
                         <div class="col-md-6">
@@ -111,59 +131,65 @@
                         </div>
 
                         <div class="col-12" id="checkFields" style="display: none;">
-                            <div class="card border border-warning">
-                                <div class="card-header bg-warning text-dark py-2">
-                                    <h6 class="mb-0"><i class="bi bi-bank"></i> Check Payment Details</h6>
-                                </div>
-                                <div class="card-body">
-                                    <div class="row g-3">
-                                        <div class="col-md-6" style="position: relative;">
-                                            <label for="bank_name" class="form-label">Bank Name <span class="text-danger">*</span></label>
-                                            <div class="input-group">
-                                                <input type="text" id="bankSearch" class="form-control" placeholder="Search bank name..." autocomplete="off">
-                                                <input type="hidden" name="bank_name" id="bankNameInput">
-                                                <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#newBankModal">
-                                                    <i class="bi bi-plus"></i> New
-                                                </button>
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="mb-0 text-warning"><i class="bi bi-bank"></i> Check Payment Details</h6>
+                                <button type="button" class="btn btn-sm btn-warning" id="addCheckBtn">
+                                    <i class="bi bi-plus"></i> Add Another Check
+                                </button>
+                            </div>
+                            <div id="checkPaymentsContainer">
+                                <div class="card border border-warning mb-3 check-payment-item" data-index="0">
+                                    <div class="card-header bg-warning text-dark py-2 d-flex justify-content-between align-items-center">
+                                        <span><i class="bi bi-bank"></i> Check Payment #1</span>
+                                        <button type="button" class="btn btn-sm btn-danger remove-check-btn" style="display: none;">
+                                            <i class="bi bi-trash"></i> Remove
+                                        </button>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-3">
+                                            <div class="col-md-6" style="position: relative;">
+                                                <label class="form-label">Bank Name <span class="text-danger">*</span></label>
+                                                <div class="input-group">
+                                                    <input type="text" name="checks[0][bank_name]" class="form-control bank-search-input" placeholder="Search bank name..." autocomplete="off" required>
+                                                    <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#newBankModal">
+                                                        <i class="bi bi-plus"></i>
+                                                    </button>
+                                                </div>
+                                                <div class="bank-results list-group position-absolute w-100 shadow search-dropdown" style="z-index: 1050; display: none; max-height: 250px; overflow-y: auto; top: 100%; left: 0; background: #fff;"></div>
                                             </div>
-                                            <div id="bankResults" class="list-group position-absolute w-100" style="z-index: 1000; display: none; max-height: 200px; overflow-y: auto;"></div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label for="check_no" class="form-label">Check No <span class="text-danger">*</span></label>
-                                            <input type="text" name="check_no" id="check_no" class="form-control @error('check_no') is-invalid @enderror" value="{{ old('check_no') }}">
-                                            @error('check_no')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label for="check_date" class="form-label">Check Date <span class="text-danger">*</span></label>
-                                            <input type="date" name="check_date" id="check_date" class="form-control @error('check_date') is-invalid @enderror" value="{{ old('check_date') }}">
-                                            @error('check_date')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label for="check_amount" class="form-label">Check Amount <span class="text-danger">*</span></label>
-                                            <div class="input-group">
-                                                <span class="input-group-text">৳</span>
-                                                <input type="number" step="0.01" name="check_amount" id="check_amount" class="form-control @error('check_amount') is-invalid @enderror" value="{{ old('check_amount') }}">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Check No <span class="text-danger">*</span></label>
+                                                <input type="text" name="checks[0][check_no]" class="form-control" required>
                                             </div>
-                                            @error('check_amount')
-                                            <div class="invalid-feedback">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label for="check_reminder_date" class="form-label">Reminder Date</label>
-                                            <input type="date" name="check_reminder_date" id="check_reminder_date" class="form-control" value="{{ old('check_reminder_date') }}">
-                                            <small class="text-muted">Date to remind before check date</small>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <label for="check_photo" class="form-label">Check Photo</label>
-                                            <input type="file" name="check_photo" id="check_photo" class="form-control" accept="image/*">
-                                            <small class="text-muted">Upload check image (max 2MB)</small>
+                                            <div class="col-md-4">
+                                                <label class="form-label">Check Date <span class="text-danger">*</span></label>
+                                                <input type="date" name="checks[0][check_date]" class="form-control" required>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">Check Amount <span class="text-danger">*</span></label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">৳</span>
+                                                    <input type="number" step="0.01" name="checks[0][check_amount]" class="form-control check-amount-input" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">Reminder Date</label>
+                                                <input type="date" name="checks[0][check_reminder_date]" class="form-control">
+                                                <small class="text-muted">Date to remind before check date</small>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">Check Photo</label>
+                                                <input type="file" name="checks[0][check_photo]" class="form-control" accept="image/*">
+                                                <small class="text-muted">Upload check image (max 2MB)</small>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                            <div class="alert alert-info">
+                                <strong>Total Check Amount: </strong><span id="totalCheckAmount">0.00</span>
+                                <br>
+                                <strong>Remaining Due: </strong><span id="checkRemainingDue" class="fw-bold text-danger">0.00</span>
                             </div>
                         </div>
 
@@ -180,7 +206,7 @@
                                                 <input type="text" id="ttBankSearch" class="form-control" placeholder="Search bank name..." autocomplete="off">
                                                 <input type="hidden" name="tt_bank_name" id="ttBankNameInput">
                                             </div>
-                                            <div id="ttBankResults" class="list-group position-absolute w-100" style="z-index: 1000; display: none; max-height: 200px; overflow-y: auto;"></div>
+                                            <div id="ttBankResults" class="list-group position-absolute w-100 shadow search-dropdown" style="z-index: 1050; display: none; max-height: 250px; overflow-y: auto; top: 100%; left: 0; background: #fff;"></div>
                                         </div>
                                         <div class="col-md-6">
                                             <label for="tt_account_no" class="form-label">Account No <span class="text-danger">*</span></label>
@@ -254,10 +280,16 @@
                             </div>
                         </div>
 
-                        <div class="col-12" id="duePreview" style="display: none;">
-                            <div class="alert alert-info mb-0">
-                                <strong>Due Amount:</strong> $<span id="calculatedDue">0.00</span>
-                                <small class="text-muted d-block">(Bill Amount - Discount - Payment Received)</small>
+                        <div class="col-12" id="duePreview">
+                            <div class="alert alert-info mb-0 d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>Due Amount:</strong> <span class="fs-5 fw-bold" id="calculatedDue">0.00</span>
+                                    <small class="text-muted d-block">(Bill Amount - Discount - Payment Received)</small>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted d-block">Net Payable</small>
+                                    <span class="fs-4 fw-bold text-success" id="netPayable">0.00</span>
+                                </div>
                             </div>
                         </div>
 
@@ -333,289 +365,415 @@
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+    var banksSearchUrl = '{{ route("banks.search") }}';
+    var customersSearchUrl = '{{ route("customers.search") }}';
+
+    function setupSearch(input, results, routeUrl, onSelect) {
+        if (!input || !results) return;
+
+        var searchTimeout;
+
+        input.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            var term = this.value.trim();
+
+            if (term.length < 2) {
+                results.style.display = 'none';
+                return;
+            }
+
+            results.innerHTML = '<div class="list-group-item text-muted text-center py-2">Searching...</div>';
+            results.style.display = 'block';
+
+            searchTimeout = setTimeout(function() {
+                var url = routeUrl + '?term=' + encodeURIComponent(term);
+
+                fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(function(res) {
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    return res.json();
+                })
+                .then(function(data) {
+                    results.innerHTML = '';
+
+                    if (!Array.isArray(data) || data.length === 0) {
+                        results.innerHTML = '<div class="list-group-item text-muted text-center py-2">No results found</div>';
+                        return;
+                    }
+
+                    data.forEach(function(item) {
+                        var el = document.createElement('a');
+                        el.href = '#';
+                        el.className = 'list-group-item list-group-item-action';
+                        el.setAttribute('data-json', JSON.stringify(item));
+                        el.textContent = item.name + (item.mobile ? ' - ' + item.mobile : '');
+                        results.appendChild(el);
+                    });
+                })
+                .catch(function(err) {
+                    console.error('Search error:', err);
+                    results.innerHTML = '<div class="list-group-item text-danger text-center py-2">Error loading results</div>';
+                });
+            }, 300);
+        });
+
+        results.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var item = e.target.closest('.list-group-item');
+            if (!item || !item.hasAttribute('data-json')) return;
+            var data = JSON.parse(item.getAttribute('data-json'));
+            if (data) onSelect(data);
+            results.style.display = 'none';
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!input.contains(e.target) && !results.contains(e.target)) {
+                results.style.display = 'none';
+            }
+        });
+    }
+
+    setupSearch(
+        document.getElementById('customerSearch'),
+        document.getElementById('customerResults'),
+        customersSearchUrl,
+        function(data) {
+            document.getElementById('customerId').value = data.id;
+            document.getElementById('customerSearch').value = data.name + (data.mobile ? ' - ' + data.mobile : '');
+        }
+    );
+
+    setupSearch(
+        document.getElementById('ttBankSearch'),
+        document.getElementById('ttBankResults'),
+        banksSearchUrl,
+        function(data) {
+            document.getElementById('ttBankNameInput').value = data.name;
+            document.getElementById('ttBankSearch').value = data.name;
+        }
+    );
+
+    // Payment type toggle
     var paymentType = document.getElementById('payment_type');
     var dueDateSection = document.getElementById('dueDateSection');
     var dueDateInput = document.getElementById('due_date');
-    var duePreview = document.getElementById('duePreview');
-    var calculatedDue = document.getElementById('calculatedDue');
     var checkFields = document.getElementById('checkFields');
     var ttFields = document.getElementById('ttFields');
     var cardFields = document.getElementById('cardFields');
-    
+
+    paymentType.addEventListener('change', function() {
+        var val = this.value;
+        dueDateSection.style.display = val === 'due' ? 'block' : 'none';
+        dueDateInput.required = val === 'due';
+        checkFields.style.display = val === 'check' ? 'block' : 'none';
+        ttFields.style.display = val === 'tt' ? 'block' : 'none';
+        cardFields.style.display = val === 'card' ? 'block' : 'none';
+        updateDueCalculation();
+    });
+
     var billAmount = document.getElementById('bill_amount');
     var discount = document.getElementById('discount');
     var paymentAmount = document.getElementById('payment_amount');
-    
+
     function updateDueCalculation() {
-        if (paymentType.value === 'due') {
-            var bill = parseFloat(billAmount.value) || 0;
-            var disc = parseFloat(discount.value) || 0;
-            var paid = parseFloat(paymentAmount.value) || 0;
-            var due = bill - disc - paid;
-            calculatedDue.textContent = due.toFixed(2);
-        }
-    }
-    
-    paymentType.addEventListener('change', function() {
-        if (this.value === 'due') {
-            dueDateSection.style.display = 'block';
-            dueDateInput.required = true;
-            duePreview.style.display = 'block';
-            checkFields.style.display = 'none';
-            ttFields.style.display = 'none';
-        } else if (this.value === 'check') {
-            dueDateSection.style.display = 'none';
-            dueDateInput.required = false;
-            duePreview.style.display = 'none';
-            checkFields.style.display = 'block';
-            ttFields.style.display = 'none';
-        } else if (this.value === 'tt') {
-            dueDateSection.style.display = 'none';
-            dueDateInput.required = false;
-            duePreview.style.display = 'none';
-            checkFields.style.display = 'none';
-            ttFields.style.display = 'block';
-            cardFields.style.display = 'none';
-        } else if (this.value === 'card') {
-            dueDateSection.style.display = 'none';
-            dueDateInput.required = false;
-            duePreview.style.display = 'none';
-            checkFields.style.display = 'none';
-            ttFields.style.display = 'none';
-            cardFields.style.display = 'block';
+        var bill = parseFloat(billAmount.value) || 0;
+        var disc = parseFloat(discount.value) || 0;
+        var paid = parseFloat(paymentAmount.value) || 0;
+        var totalCheck = parseFloat(document.getElementById('totalCheckAmount').textContent) || 0;
+        paid = paid + totalCheck;
+        var due = bill - disc - paid;
+
+        document.getElementById('calculatedDue').textContent = due.toFixed(2);
+        document.getElementById('netPayable').textContent = (bill - disc).toFixed(2);
+
+        if (due <= 0) {
+            document.getElementById('calculatedDue').className = 'fs-5 fw-bold text-success';
+            document.getElementById('calculatedDue').textContent = '0.00';
         } else {
-            dueDateSection.style.display = 'none';
-            dueDateInput.required = false;
-            duePreview.style.display = 'none';
-            checkFields.style.display = 'none';
-            ttFields.style.display = 'none';
-            cardFields.style.display = 'none';
+            document.getElementById('calculatedDue').className = 'fs-5 fw-bold text-danger';
         }
-    });
-    
+
+        updateCheckRemainingDue();
+    }
+
     [billAmount, discount, paymentAmount].forEach(function(el) {
         el.addEventListener('input', updateDueCalculation);
     });
 
+    updateDueCalculation();
     paymentType.dispatchEvent(new Event('change'));
 
-    var bankSearch = document.getElementById('bankSearch');
-    var bankNameInput = document.getElementById('bankNameInput');
-    var bankResults = document.getElementById('bankResults');
-    var newBankForm = document.getElementById('newBankForm');
-    var newBankModal = new bootstrap.Modal(document.getElementById('newBankModal'));
-    
-    var bankSearchTimeout;
-    bankSearch.addEventListener('input', function() {
-        clearTimeout(bankSearchTimeout);
-        var term = this.value.trim();
-        if (term.length < 1) {
-            bankResults.style.display = 'none';
-            return;
-        }
-        bankSearchTimeout = setTimeout(function() {
-            fetch('{{ route("banks.search") }}?term=' + encodeURIComponent(term), {
-                headers: { 'Accept': 'application/json' }
-            })
-            .then(function(res) { return res.json(); })
-            .then(function(data) {
-                bankResults.innerHTML = '';
-                if (data.length > 0) {
-                    data.forEach(function(b) {
-                        var item = document.createElement('a');
-                        item.href = '#';
-                        item.className = 'list-group-item list-group-item-action';
-                        item.textContent = b.name;
-                        item.dataset.name = b.name;
-                        bankResults.appendChild(item);
-                    });
-                    bankResults.style.display = 'block';
-                } else {
-                    bankResults.style.display = 'none';
-                }
-            });
-        }, 200);
-    });
-    
-    bankResults.addEventListener('click', function(e) {
-        e.preventDefault();
-        var item = e.target;
-        bankNameInput.value = item.dataset.name;
-        bankSearch.value = item.dataset.name;
-        bankResults.style.display = 'none';
-    });
-    
-    document.addEventListener('click', function(e) {
-        if (!bankSearch.contains(e.target) && !bankResults.contains(e.target)) {
-            bankResults.style.display = 'none';
-        }
-    });
-    
-    newBankForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        var formData = new FormData(this);
-        
-        fetch(this.action, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json'
-            },
-            body: formData
-        })
-        .then(function(response) { return response.json(); })
-        .then(function(data) {
-            if (data.success) {
-                bankNameInput.value = formData.get('name');
-                bankSearch.value = formData.get('name');
-                newBankModal.hide();
-                newBankForm.reset();
+    // Dynamic check payments
+    var checkIndex = 1;
+
+    function setupBankSearchForCheck(input) {
+        if (!input) return;
+        var results = input.closest('.col-md-6').querySelector('.bank-results');
+        if (!results) return;
+
+        var searchTimeout;
+
+        input.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            var term = this.value.trim();
+
+            if (term.length < 1) {
+                results.style.display = 'none';
+                return;
             }
-        })
-        .catch(function(error) {
-            console.error('Error:', error);
-            alert('Error creating bank');
-        });
-    });
 
-    var ttBankSearch = document.getElementById('ttBankSearch');
-    var ttBankNameInput = document.getElementById('ttBankNameInput');
-    var ttBankResults = document.getElementById('ttBankResults');
-    
-    var ttBankSearchTimeout;
-    ttBankSearch.addEventListener('input', function() {
-        clearTimeout(ttBankSearchTimeout);
-        var term = this.value.trim();
-        if (term.length < 1) {
-            ttBankResults.style.display = 'none';
-            return;
-        }
-        ttBankSearchTimeout = setTimeout(function() {
-            fetch('{{ route("banks.search") }}?term=' + encodeURIComponent(term), {
-                headers: { 'Accept': 'application/json' }
-            })
-            .then(function(res) { return res.json(); })
-            .then(function(data) {
-                ttBankResults.innerHTML = '';
-                if (data.length > 0) {
-                    data.forEach(function(b) {
-                        var item = document.createElement('a');
-                        item.href = '#';
-                        item.className = 'list-group-item list-group-item-action';
-                        item.textContent = b.name;
-                        item.dataset.name = b.name;
-                        ttBankResults.appendChild(item);
+            results.innerHTML = '<div class="list-group-item text-muted text-center py-2">Searching...</div>';
+            results.style.display = 'block';
+
+            searchTimeout = setTimeout(function() {
+                var url = banksSearchUrl + '?term=' + encodeURIComponent(term);
+
+                fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(function(res) {
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    return res.json();
+                })
+                .then(function(data) {
+                    results.innerHTML = '';
+
+                    if (!Array.isArray(data) || data.length === 0) {
+                        results.innerHTML = '<div class="list-group-item text-muted text-center py-2">No results found</div>';
+                        return;
+                    }
+
+                    data.forEach(function(item) {
+                        var el = document.createElement('a');
+                        el.href = '#';
+                        el.className = 'list-group-item list-group-item-action';
+                        el.setAttribute('data-json', JSON.stringify(item));
+                        el.textContent = item.name;
+                        results.appendChild(el);
                     });
-                    ttBankResults.style.display = 'block';
-                } else {
-                    ttBankResults.style.display = 'none';
-                }
-            });
-        }, 200);
+                })
+                .catch(function(err) {
+                    console.error('Search error:', err);
+                    results.innerHTML = '<div class="list-group-item text-danger text-center py-2">Error loading results</div>';
+                });
+            }, 250);
+        });
+
+        results.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var item = e.target.closest('.list-group-item');
+            if (!item || !item.hasAttribute('data-json')) return;
+            var data = JSON.parse(item.getAttribute('data-json'));
+            if (data && data.name) {
+                input.value = data.name;
+            }
+            results.style.display = 'none';
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!input.contains(e.target) && !results.contains(e.target)) {
+                results.style.display = 'none';
+            }
+        });
+    }
+
+    document.getElementById('addCheckBtn').addEventListener('click', function() {
+        var container = document.getElementById('checkPaymentsContainer');
+        var newCheck = document.createElement('div');
+        newCheck.className = 'card border border-warning mb-3 check-payment-item';
+        newCheck.setAttribute('data-index', checkIndex);
+
+        newCheck.innerHTML = `
+            <div class="card-header bg-warning text-dark py-2 d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-bank"></i> Check Payment #${checkIndex + 1}</span>
+                <button type="button" class="btn btn-sm btn-danger remove-check-btn">
+                    <i class="bi bi-trash"></i> Remove
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6" style="position: relative;">
+                        <label class="form-label">Bank Name <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="text" name="checks[${checkIndex}][bank_name]" class="form-control bank-search-input" placeholder="Search bank name..." autocomplete="off" required>
+                            <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#newBankModal">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                        </div>
+                        <div class="bank-results list-group position-absolute w-100 shadow search-dropdown" style="z-index: 1050; display: none; max-height: 250px; overflow-y: auto; top: 100%; left: 0; background: #fff;"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Check No <span class="text-danger">*</span></label>
+                        <input type="text" name="checks[${checkIndex}][check_no]" class="form-control" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Check Date <span class="text-danger">*</span></label>
+                        <input type="date" name="checks[${checkIndex}][check_date]" class="form-control" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Check Amount <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">৳</span>
+                            <input type="number" step="0.01" name="checks[${checkIndex}][check_amount]" class="form-control check-amount-input" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Reminder Date</label>
+                        <input type="date" name="checks[${checkIndex}][check_reminder_date]" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Check Photo</label>
+                        <input type="file" name="checks[${checkIndex}][check_photo]" class="form-control" accept="image/*">
+                    </div>
+                </div>
+            </div>
+        `;
+
+        container.appendChild(newCheck);
+        setupBankSearchForCheck(newCheck.querySelector('.bank-search-input'));
+        checkIndex++;
+        updateCheckButtons();
+        updateCheckTotal();
     });
-    
-    ttBankResults.addEventListener('click', function(e) {
-        e.preventDefault();
-        var item = e.target;
-        ttBankNameInput.value = item.dataset.name;
-        ttBankSearch.value = item.dataset.name;
-        ttBankResults.style.display = 'none';
-    });
-    
-    document.addEventListener('click', function(e) {
-        if (!ttBankSearch.contains(e.target) && !ttBankResults.contains(e.target)) {
-            ttBankResults.style.display = 'none';
+
+    document.getElementById('checkPaymentsContainer').addEventListener('click', function(e) {
+        if (e.target.closest('.remove-check-btn')) {
+            e.target.closest('.check-payment-item').remove();
+            updateCheckButtons();
+            updateCheckTotal();
         }
     });
 
-    var customerSearch = document.getElementById('customerSearch');
-    var customerId = document.getElementById('customerId');
-    var customerResults = document.getElementById('customerResults');
+    function updateCheckButtons() {
+        var items = document.querySelectorAll('.check-payment-item');
+        items.forEach(function(item, index) {
+            var btn = item.querySelector('.remove-check-btn');
+            if (btn) {
+                btn.style.display = items.length > 1 ? 'block' : 'none';
+            }
+            var header = item.querySelector('.card-header span');
+            if (header) {
+                header.innerHTML = '<i class="bi bi-bank"></i> Check Payment #' + (index + 1);
+            }
+        });
+    }
+
+    function updateCheckTotal() {
+        var total = 0;
+        document.querySelectorAll('.check-amount-input').forEach(function(input) {
+            total += parseFloat(input.value) || 0;
+        });
+        document.getElementById('totalCheckAmount').textContent = total.toFixed(2);
+        updateCheckRemainingDue();
+        updateDueCalculation();
+    }
+
+    function updateCheckRemainingDue() {
+        var bill = parseFloat(document.getElementById('bill_amount').value) || 0;
+        var disc = parseFloat(document.getElementById('discount').value) || 0;
+        var totalCheck = parseFloat(document.getElementById('totalCheckAmount').textContent) || 0;
+        var otherPayment = parseFloat(document.getElementById('payment_amount').value) || 0;
+        var remaining = bill - disc - totalCheck - otherPayment;
+        document.getElementById('checkRemainingDue').textContent = remaining.toFixed(2);
+    }
+
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('check-amount-input')) {
+            updateCheckTotal();
+        }
+    });
+
+    updateCheckButtons();
+    setupBankSearchForCheck(document.querySelector('.bank-search-input'));
+
+    // New Customer Form
     var newCustomerForm = document.getElementById('newCustomerForm');
-    var newCustomerModal = new bootstrap.Modal(document.getElementById('newCustomerModal'));
-    
-    var searchTimeout;
-    customerSearch.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        var term = this.value.trim();
-        if (term.length < 1) {
-            customerResults.style.display = 'none';
-            return;
-        }
-        searchTimeout = setTimeout(function() {
-            var url = '{{ route("customers.search") }}?term=' + encodeURIComponent(term);
-            console.log('Searching:', url);
-            fetch(url, {
-                headers: { 'Accept': 'application/json' }
+    if (newCustomerForm) {
+        var newCustomerModal = new bootstrap.Modal(document.getElementById('newCustomerModal'));
+        newCustomerForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+
+            fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData,
+                credentials: 'same-origin'
             })
-            .then(function(res) { 
-                console.log('Response:', res.status);
-                return res.json(); 
-            })
+            .then(function(res) { return res.json(); })
             .then(function(data) {
-                console.log('Data:', data);
-                customerResults.innerHTML = '';
-                if (data.length > 0) {
-                    data.forEach(function(c) {
-                        var item = document.createElement('a');
-                        item.href = '#';
-                        item.className = 'list-group-item list-group-item-action';
-                        item.textContent = c.name + ' (' + (c.mobile || 'N/A') + ')';
-                        item.dataset.id = c.id;
-                        item.dataset.name = c.name;
-                        item.dataset.mobile = c.mobile;
-                        customerResults.appendChild(item);
-                    });
-                    customerResults.style.display = 'block';
-                } else {
-                    customerResults.style.display = 'none';
+                if (data.id) {
+                    document.getElementById('customerId').value = data.id;
+                    document.getElementById('customerSearch').value = data.name + (data.mobile ? ' - ' + data.mobile : '');
+                    newCustomerModal.hide();
+                    newCustomerForm.reset();
                 }
+            })
+            .catch(function(error) {
+                console.error('Error creating customer:', error);
             });
-        }, 200);
-    });
-    
-    customerResults.addEventListener('click', function(e) {
-        e.preventDefault();
-        var item = e.target;
-        customerId.value = item.dataset.id;
-        customerSearch.value = item.dataset.name + ' (' + (item.dataset.mobile || 'N/A') + ')';
-        customerResults.style.display = 'none';
-    });
-    
-    document.addEventListener('click', function(e) {
-        if (!customerSearch.contains(e.target) && !customerResults.contains(e.target)) {
-            customerResults.style.display = 'none';
-        }
-    });
-    
-    newCustomerForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        var formData = new FormData(this);
-        
-        fetch(this.action, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json'
-            },
-            body: formData
-        })
-        .then(function(response) {
-            return response.json();
-        })
-        .then(function(data) {
-            if (data.id) {
-                customerId.value = data.id;
-                customerSearch.value = data.name + ' (' + (data.mobile || 'N/A') + ')';
-                newCustomerModal.hide();
-                newCustomerForm.reset();
-            }
-        })
-        .catch(function(error) {
-            console.error('Error:', error);
-            alert('Error creating customer');
         });
-    });
+    }
+
+    // New Bank Form
+    var newBankForm = document.getElementById('newBankForm');
+    if (newBankForm) {
+        var newBankModal = new bootstrap.Modal(document.getElementById('newBankModal'));
+        newBankForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+
+            fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData,
+                credentials: 'same-origin'
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    var bankName = formData.get('name');
+                    document.querySelectorAll('.bank-search-input').forEach(function(input) {
+                        if (input.value === '' || input.dataset.fromModal) {
+                            input.value = bankName;
+                            input.dataset.fromModal = 'true';
+                        }
+                    });
+                    document.getElementById('ttBankNameInput').value = bankName;
+                    document.getElementById('ttBankSearch').value = bankName;
+                    newBankModal.hide();
+                    newBankForm.reset();
+                }
+            })
+            .catch(function(error) {
+                console.error('Error creating bank:', error);
+            });
+        });
+    }
 });
 </script>
 @endsection

@@ -82,12 +82,13 @@ class BillController extends Controller
             'payment_amount' => 'nullable|numeric|min:0',
             'payment_details' => 'nullable|string',
             'due_date' => 'nullable|date|after_or_equal:today',
-            'bank_name' => 'nullable|string|max:255',
-            'check_no' => 'nullable|string|max:255',
-            'check_date' => 'nullable|date',
-            'check_reminder_date' => 'nullable|date',
-            'check_amount' => 'nullable|numeric|min:0',
-            'check_photo' => 'nullable|image|max:2048',
+            'checks' => 'nullable|array',
+            'checks.*.bank_name' => 'required_with:checks|string|max:255',
+            'checks.*.check_no' => 'required_with:checks|string|max:255',
+            'checks.*.check_date' => 'required_with:checks|date',
+            'checks.*.check_amount' => 'required_with:checks|numeric|min:0',
+            'checks.*.check_reminder_date' => 'nullable|date',
+            'checks.*.check_photo' => 'nullable|image|max:2048',
             'tt_bank_name' => 'nullable|string|max:255',
             'tt_account_no' => 'nullable|string|max:255',
             'tt_amount' => 'nullable|numeric|min:0',
@@ -97,6 +98,14 @@ class BillController extends Controller
             'card_amount' => 'nullable|numeric|min:0',
             'card_date' => 'nullable|date',
         ]);
+
+        // Validate that at least one check is provided when payment type is check
+        if ($request->payment_type === 'check') {
+            $checks = $request->input('checks', []);
+            if (empty($checks) || !is_array($checks) || count($checks) === 0) {
+                return back()->withInput()->withErrors(['checks' => 'At least one check payment is required when payment type is check.']);
+            }
+        }
 
         $bill = Bill::create([
             'bill_no' => $validated['bill_no'],
@@ -110,50 +119,89 @@ class BillController extends Controller
 
         $paymentAmount = $validated['payment_amount'] ?? 0;
         $dueDate = $validated['due_date'] ?? now()->addDays(7)->toDateString();
+        $totalCheckAmount = 0;
+        $totalReceived = 0;
 
-        $checkPhotoPath = null;
-        if ($request->hasFile('check_photo')) {
-            $checkPhotoPath = $request->file('check_photo')->store('check-photos', 'public');
+        // Handle multiple check payments
+        if ($validated['payment_type'] === 'check' && isset($validated['checks'])) {
+            foreach ($validated['checks'] as $index => $checkData) {
+                $checkPhotoPath = null;
+                if ($request->hasFile("checks.{$index}.check_photo")) {
+                    $checkPhotoPath = $request->file("checks.{$index}.check_photo")->store('check-photos', 'public');
+                }
+
+                Payment::create([
+                    'bill_id' => $bill->id,
+                    'payment_type' => 'check',
+                    'amount' => $checkData['check_amount'],
+                    'details' => $validated['payment_details'] ?? null,
+                    'bank_name' => $checkData['bank_name'],
+                    'check_no' => $checkData['check_no'],
+                    'check_date' => $checkData['check_date'],
+                    'check_reminder_date' => $checkData['check_reminder_date'] ?? null,
+                    'check_amount' => $checkData['check_amount'],
+                    'status' => 'pending',
+                    'check_photo' => $checkPhotoPath,
+                ]);
+
+                $totalCheckAmount += $checkData['check_amount'];
+            }
+
+            // Also create a payment record for payment_amount if > 0 (cash received alongside checks)
+            if ($paymentAmount > 0) {
+                Payment::create([
+                    'bill_id' => $bill->id,
+                    'payment_type' => 'cash',
+                    'amount' => $paymentAmount,
+                    'details' => $validated['payment_details'] ?? null,
+                    'status' => 'encashed',
+                ]);
+                $totalReceived += $paymentAmount;
+            }
+
+            $totalReceived += $totalCheckAmount;
+        } else {
+            // Handle single payment (non-check)
+            Payment::create([
+                'bill_id' => $bill->id,
+                'payment_type' => $validated['payment_type'],
+                'amount' => $paymentAmount,
+                'details' => $validated['payment_details'] ?? null,
+                'bank_name' => $validated['payment_type'] === 'check' ? null : null,
+                'check_no' => null,
+                'check_date' => null,
+                'check_reminder_date' => null,
+                'check_amount' => null,
+                'status' => in_array($validated['payment_type'], ['check', 'due']) ? 'pending' : 'encashed',
+                'check_photo' => null,
+                'tt_bank_name' => $validated['payment_type'] === 'tt' ? $validated['tt_bank_name'] : null,
+                'tt_account_no' => $validated['payment_type'] === 'tt' ? $validated['tt_account_no'] : null,
+                'tt_amount' => $validated['payment_type'] === 'tt' ? $validated['tt_amount'] : null,
+                'tt_date' => $validated['payment_type'] === 'tt' ? $validated['tt_date'] : null,
+                'card_name' => $validated['payment_type'] === 'card' ? $validated['card_name'] : null,
+                'card_location' => $validated['payment_type'] === 'card' ? $validated['card_location'] : null,
+                'card_amount' => $validated['payment_type'] === 'card' ? $validated['card_amount'] : null,
+                'card_date' => $validated['payment_type'] === 'card' ? $validated['card_date'] : null,
+                'due_date' => $validated['payment_type'] === 'due' ? $dueDate : null,
+            ]);
+            $totalReceived = $paymentAmount;
         }
-
-        Payment::create([
-            'bill_id' => $bill->id,
-            'payment_type' => $validated['payment_type'],
-            'amount' => $paymentAmount,
-            'details' => $validated['payment_details'] ?? null,
-            'bank_name' => $validated['payment_type'] === 'check' ? $validated['bank_name'] : null,
-            'check_no' => $validated['payment_type'] === 'check' ? $validated['check_no'] : null,
-            'check_date' => $validated['payment_type'] === 'check' ? $validated['check_date'] : null,
-            'check_reminder_date' => $validated['payment_type'] === 'check' ? $validated['check_reminder_date'] : null,
-            'check_amount' => $validated['payment_type'] === 'check' ? $validated['check_amount'] : null,
-            'status' => $validated['payment_type'] === 'check' ? 'pending' : 'encashed',
-            'check_photo' => $checkPhotoPath,
-            'tt_bank_name' => $validated['payment_type'] === 'tt' ? $validated['tt_bank_name'] : null,
-            'tt_account_no' => $validated['payment_type'] === 'tt' ? $validated['tt_account_no'] : null,
-            'tt_amount' => $validated['payment_type'] === 'tt' ? $validated['tt_amount'] : null,
-            'tt_date' => $validated['payment_type'] === 'tt' ? $validated['tt_date'] : null,
-            'card_name' => $validated['payment_type'] === 'card' ? $validated['card_name'] : null,
-            'card_location' => $validated['payment_type'] === 'card' ? $validated['card_location'] : null,
-            'card_amount' => $validated['payment_type'] === 'card' ? $validated['card_amount'] : null,
-            'card_date' => $validated['payment_type'] === 'card' ? $validated['card_date'] : null,
-            'due_date' => $validated['payment_type'] === 'due' ? $dueDate : null,
-        ]);
 
         $netAmount = $validated['bill_amount'] - ($validated['discount'] ?? 0);
 
-        if ($paymentAmount > 0) {
+        if ($totalReceived > 0) {
             MainBalance::create([
                 'name' => 'Sales - Bill #' . $bill->bill_no,
-                'amount' => $paymentAmount,
+                'amount' => $totalReceived,
                 'type' => 'credit',
-                'note' => 'Received: ' . $validated['payment_type'],
+                'note' => 'Received: ' . $validated['payment_type'] . ($totalCheckAmount > 0 ? ' (Checks: ' . $totalCheckAmount . ')' : ''),
                 'user_id' => Auth::id(),
                 'branch_id' => Auth::id(),
             ]);
         }
 
         if ($validated['payment_type'] === 'due') {
-            $dueAmount = $netAmount - $paymentAmount;
+            $dueAmount = $netAmount - $totalReceived;
 
             if ($dueAmount > 0) {
                 Due::create([
@@ -204,9 +252,33 @@ class BillController extends Controller
             'bill_man' => 'nullable|string|max:255',
             'bill_amount' => 'required|numeric|min:0',
             'discount' => 'nullable|numeric|min:0',
+            'check_bank_name' => 'nullable|string|max:255',
+            'check_no' => 'nullable|string|max:100',
+            'check_amount' => 'nullable|numeric|min:0',
+            'check_date' => 'nullable|date',
+            'check_reminder_date' => 'nullable|date',
+            'check_photo' => 'nullable|image|max:2048',
         ]);
 
         $bill->update($validated);
+
+        $checkPayment = $bill->payments()->where('payment_type', 'check')->first();
+        if ($checkPayment) {
+            $updateData = [
+                'bank_name' => $validated['check_bank_name'] ?? $checkPayment->bank_name,
+                'check_no' => $validated['check_no'] ?? $checkPayment->check_no,
+                'check_amount' => $validated['check_amount'] ?? $checkPayment->check_amount,
+                'check_date' => $validated['check_date'] ?? $checkPayment->check_date,
+                'check_reminder_date' => $validated['check_reminder_date'] ?? $checkPayment->check_reminder_date,
+            ];
+
+            if ($request->hasFile('check_photo')) {
+                $path = $request->file('check_photo')->store('check_photos');
+                $updateData['check_photo'] = $path;
+            }
+
+            $checkPayment->update($updateData);
+        }
 
         return redirect()->route('bills.index')
             ->with('success', 'Bill updated successfully');

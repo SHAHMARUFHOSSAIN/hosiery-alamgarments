@@ -1,0 +1,416 @@
+document.addEventListener('DOMContentLoaded', function() {
+    var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
+    // Generic search setup function
+    function setupSearch(inputId, resultsId, routeUrl, onSelect) {
+        var input = document.getElementById(inputId);
+        var results = document.getElementById(resultsId);
+        if (!input || !results) return;
+
+        var searchTimeout;
+
+        input.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            var term = this.value.trim();
+
+            if (term.length < 1) {
+                results.style.display = 'none';
+                return;
+            }
+
+            results.innerHTML = '<div class="list-group-item text-muted text-center py-2">Searching...</div>';
+            results.style.display = 'block';
+
+            searchTimeout = setTimeout(function() {
+                var url = routeUrl + '?term=' + encodeURIComponent(term);
+
+                fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(function(res) {
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    return res.json();
+                })
+                .then(function(data) {
+                    results.innerHTML = '';
+
+                    if (!Array.isArray(data) || data.length === 0) {
+                        results.innerHTML = '<div class="list-group-item text-muted text-center py-2">No results found</div>';
+                        return;
+                    }
+
+                    data.forEach(function(item) {
+                        var el = document.createElement('a');
+                        el.href = '#';
+                        el.className = 'list-group-item list-group-item-action';
+                        el.setAttribute('data-json', JSON.stringify(item));
+                        el.textContent = item.name + (item.mobile ? ' - ' + item.mobile : '');
+                        results.appendChild(el);
+                    });
+                })
+                .catch(function(err) {
+                    console.error('Search error:', err);
+                    results.innerHTML = '<div class="list-group-item text-danger text-center py-2">Error loading results</div>';
+                });
+            }, 250);
+        });
+
+        results.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var item = e.target.closest('.list-group-item');
+            if (!item || !item.hasAttribute('data-json')) return;
+            var data = JSON.parse(item.getAttribute('data-json'));
+            if (data) onSelect(data);
+            results.style.display = 'none';
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!input.contains(e.target) && !results.contains(e.target)) {
+                results.style.display = 'none';
+            }
+        });
+    }
+
+    // Setup static search fields
+    setupSearch('customerSearch', 'customerResults', '{{ route("customers.search") }}', function(data) {
+        document.getElementById('customerId').value = data.id;
+        document.getElementById('customerSearch').value = data.name + (data.mobile ? ' - ' + data.mobile : '');
+    });
+
+    setupSearch('ttBankSearch', 'ttBankResults', '{{ route("banks.search") }}', function(data) {
+        document.getElementById('ttBankNameInput').value = data.name;
+        document.getElementById('ttBankSearch').value = data.name;
+    });
+
+    // Payment type toggle - Issue #1: Always show payment_amount field (never hide it)
+    var paymentType = document.getElementById('payment_type');
+    var dueDateSection = document.getElementById('dueDateSection');
+    var dueDateInput = document.getElementById('due_date');
+    var checkFields = document.getElementById('checkFields');
+    var ttFields = document.getElementById('ttFields');
+    var cardFields = document.getElementById('cardFields');
+
+    paymentType.addEventListener('change', function() {
+        var val = this.value;
+        dueDateSection.style.display = val === 'due' ? 'block' : 'none';
+        dueDateInput.required = val === 'due';
+        checkFields.style.display = val === 'check' ? 'block' : 'none';
+        ttFields.style.display = val === 'tt' ? 'block' : 'none';
+        cardFields.style.display = val === 'card' ? 'block' : 'none';
+
+        if (val === 'due') {
+            cardFields.style.display = 'none';
+        }
+
+        updateDueCalculation();
+    });
+
+    var billAmount = document.getElementById('bill_amount');
+    var discount = document.getElementById('discount');
+    var paymentAmount = document.getElementById('payment_amount');
+
+    // Issue #1 fix: Always include payment_amount in calculation
+    function updateDueCalculation() {
+        var bill = parseFloat(billAmount.value) || 0;
+        var disc = parseFloat(discount.value) || 0;
+        var paid = parseFloat(paymentAmount.value) || 0;
+
+        // Always add total check amount to paid (payment_amount is always visible)
+        var totalCheck = parseFloat(document.getElementById('totalCheckAmount').textContent) || 0;
+        paid = paid + totalCheck;
+
+        var due = bill - disc - paid;
+
+        document.getElementById('calculatedDue').textContent = due.toFixed(2);
+        document.getElementById('netPayable').textContent = (bill - disc).toFixed(2);
+
+        if (due <= 0) {
+            document.getElementById('calculatedDue').className = 'fs-5 fw-bold text-success';
+            document.getElementById('calculatedDue').textContent = '0.00';
+        } else {
+            document.getElementById('calculatedDue').className = 'fs-5 fw-bold text-danger';
+        }
+
+        updateCheckRemainingDue();
+    }
+
+    [billAmount, discount, paymentAmount].forEach(function(el) {
+        el.addEventListener('input', updateDueCalculation);
+    });
+
+    updateDueCalculation();
+    paymentType.dispatchEvent(new Event('change'));
+
+    // Dynamic check payments
+    var checkIndex = 1;
+
+    // Issue #2 fix: Properly setup bank search for check inputs
+    function setupBankSearchForCheck(input) {
+        if (!input) return;
+        var results = input.closest('.col-md-6').querySelector('.bank-results');
+        if (!results) return;
+
+        var searchTimeout;
+
+        input.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            var term = this.value.trim();
+
+            if (term.length < 1) {
+                results.style.display = 'none';
+                return;
+            }
+
+            results.innerHTML = '<div class="list-group-item text-muted text-center py-2">Searching...</div>';
+            results.style.display = 'block';
+
+            searchTimeout = setTimeout(function() {
+                var url = '{{ route("banks.search") }}?term=' + encodeURIComponent(term);
+
+                fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(function(res) {
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    return res.json();
+                })
+                .then(function(data) {
+                    results.innerHTML = '';
+
+                    if (!Array.isArray(data) || data.length === 0) {
+                        results.innerHTML = '<div class="list-group-item text-muted text-center py-2">No results found</div>';
+                        return;
+                    }
+
+                    data.forEach(function(item) {
+                        var el = document.createElement('a');
+                        el.href = '#';
+                        el.className = 'list-group-item list-group-item-action';
+                        el.setAttribute('data-json', JSON.stringify(item));
+                        el.textContent = item.name;
+                        results.appendChild(el);
+                    });
+                })
+                .catch(function(err) {
+                    console.error('Search error:', err);
+                    results.innerHTML = '<div class="list-group-item text-danger text-center py-2">Error loading results</div>';
+                });
+            }, 250);
+        });
+
+        results.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            var item = e.target.closest('.list-group-item');
+            if (!item || !item.hasAttribute('data-json')) return;
+            var data = JSON.parse(item.getAttribute('data-json'));
+            if (data && data.name) {
+                input.value = data.name;
+            }
+            results.style.display = 'none';
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!input.contains(e.target) && !results.contains(e.target)) {
+                results.style.display = 'none';
+            }
+        });
+    }
+
+    // Issue #3 fix: Allow adding checks even when due is 0
+    document.getElementById('addCheckBtn').addEventListener('click', function() {
+        var container = document.getElementById('checkPaymentsContainer');
+        var newCheck = document.createElement('div');
+        newCheck.className = 'card border border-warning mb-3 check-payment-item';
+        newCheck.setAttribute('data-index', checkIndex);
+
+        newCheck.innerHTML = `
+            <div class="card-header bg-warning text-dark py-2 d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-bank"></i> Check Payment #${checkIndex + 1}</span>
+                <button type="button" class="btn btn-sm btn-danger remove-check-btn">
+                    <i class="bi bi-trash"></i> Remove
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6" style="position: relative;">
+                        <label class="form-label">Bank Name <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="text" name="checks[${checkIndex}][bank_name]" class="form-control bank-search-input" placeholder="Search bank name..." autocomplete="off" required>
+                            <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#newBankModal">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                        </div>
+                        <div class="bank-results list-group position-absolute w-100 shadow search-dropdown" style="z-index: 1050; display: none; max-height: 250px; overflow-y: auto; top: 100%; left: 0; background: #fff;"></div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Check No <span class="text-danger">*</span></label>
+                        <input type="text" name="checks[${checkIndex}][check_no]" class="form-control" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Check Date <span class="text-danger">*</span></label>
+                        <input type="date" name="checks[${checkIndex}][check_date]" class="form-control" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Check Amount <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text">৳</span>
+                            <input type="number" step="0.01" name="checks[${checkIndex}][check_amount]" class="form-control check-amount-input" required>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Reminder Date</label>
+                        <input type="date" name="checks[${checkIndex}][check_reminder_date]" class="form-control">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Check Photo</label>
+                        <input type="file" name="checks[${checkIndex}][check_photo]" class="form-control" accept="image/*">
+                    </div>
+                </div>
+            </div>
+        `;
+
+        container.appendChild(newCheck);
+        setupBankSearchForCheck(newCheck.querySelector('.bank-search-input'));
+        checkIndex++;
+        updateCheckTotal();
+    });
+
+    // Remove check payment
+    document.getElementById('checkPaymentsContainer').addEventListener('click', function(e) {
+        if (e.target.closest('.remove-check-btn')) {
+            e.target.closest('.check-payment-item').remove();
+            updateCheckButtons();
+            updateCheckTotal();
+        }
+    });
+
+    function updateCheckButtons() {
+        var items = document.querySelectorAll('.check-payment-item');
+        items.forEach(function(item, index) {
+            var btn = item.querySelector('.remove-check-btn');
+            if (btn) {
+                btn.style.display = items.length > 1 ? 'block' : 'none';
+            }
+            var header = item.querySelector('.card-header span');
+            if (header) {
+                header.innerHTML = '<i class="bi bi-bank"></i> Check Payment #' + (index + 1);
+            }
+        });
+    }
+
+    // Issue #3 fix: Properly calculate check total and update due
+    function updateCheckTotal() {
+        var total = 0;
+        document.querySelectorAll('.check-amount-input').forEach(function(input) {
+            total += parseFloat(input.value) || 0;
+        });
+        document.getElementById('totalCheckAmount').textContent = total.toFixed(2);
+        updateCheckRemainingDue();
+        updateDueCalculation();
+    }
+
+    function updateCheckRemainingDue() {
+        var bill = parseFloat(document.getElementById('bill_amount').value) || 0;
+        var disc = parseFloat(document.getElementById('discount').value) || 0;
+        var totalCheck = parseFloat(document.getElementById('totalCheckAmount').textContent) || 0;
+        var otherPayment = parseFloat(document.getElementById('payment_amount').value) || 0;
+        var remaining = bill - disc - totalCheck - otherPayment;
+        document.getElementById('checkRemainingDue').textContent = remaining.toFixed(2);
+    }
+
+    // Initialize event listeners for check amount inputs
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('check-amount-input')) {
+            updateCheckTotal();
+        }
+    });
+
+    updateCheckButtons();
+    setupBankSearchForCheck(document.querySelector('.bank-search-input'));
+
+    // New Customer Form
+    var newCustomerForm = document.getElementById('newCustomerForm');
+    if (newCustomerForm) {
+        var newCustomerModal = new bootstrap.Modal(document.getElementById('newCustomerModal'));
+        newCustomerForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+
+            fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData,
+                credentials: 'same-origin'
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.id) {
+                    document.getElementById('customerId').value = data.id;
+                    document.getElementById('customerSearch').value = data.name + (data.mobile ? ' - ' + data.mobile : '');
+                    newCustomerModal.hide();
+                    newCustomerForm.reset();
+                }
+            })
+            .catch(function(error) {
+                console.error('Error creating customer:', error);
+            });
+        });
+    }
+
+    // New Bank Form
+    var newBankForm = document.getElementById('newBankForm');
+    if (newBankForm) {
+        var newBankModal = new bootstrap.Modal(document.getElementById('newBankModal'));
+        newBankForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var formData = new FormData(this);
+
+            fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken,
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: formData,
+                credentials: 'same-origin'
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    var bankName = formData.get('name');
+                    document.querySelectorAll('.bank-search-input').forEach(function(input) {
+                        if (input.value === '' || input.dataset.fromModal) {
+                            input.value = bankName;
+                            input.dataset.fromModal = 'true';
+                        }
+                    });
+                    document.getElementById('ttBankNameInput').value = bankName;
+                    document.getElementById('ttBankSearch').value = bankName;
+                    newBankModal.hide();
+                    newBankForm.reset();
+                }
+            })
+            .catch(function(error) {
+                console.error('Error creating bank:', error);
+            });
+        });
+    }
+});

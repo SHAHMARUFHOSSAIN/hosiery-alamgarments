@@ -69,8 +69,10 @@
                     <th><a href="{{ route('bills.index', ['sort' => 'bill_man', 'direction' => request('sort') == 'bill_man' && request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="text-decoration-none">Bill Man @if(request('sort') == 'bill_man'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif</a></th>
                     <th>Payment</th>
                     <th><a href="{{ route('bills.index', ['sort' => 'bill_amount', 'direction' => request('sort') == 'bill_amount' && request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="text-decoration-none">Amount @if(request('sort') == 'bill_amount'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif</a></th>
+                    <th>Received</th>
                     <th><a href="{{ route('bills.index', ['sort' => 'check_amount', 'direction' => request('sort') == 'check_amount' && request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="text-decoration-none">Check Amt @if(request('sort') == 'check_amount'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif</a></th>
                     <th>Discount</th>
+                    <th>Due</th>
                     <th>User</th>
                     <th><a href="{{ route('bills.index', ['sort' => 'created_at', 'direction' => request('sort') == 'created_at' && request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="text-decoration-none">Date @if(request('sort') == 'created_at'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif</a></th>
                     <th>Actions</th>
@@ -79,8 +81,13 @@
             <tbody>
                 @forelse($bills as $bill)
                 @php
-                    $checkPayment = $bill->payments->where('payment_type', 'check')->first();
-                    $paymentType = $bill->payments->first()?->payment_type;
+                    $checkPayments = $bill->payments->where('payment_type', 'check');
+                    $nonCheckPayments = $bill->payments->where('payment_type', '!=', 'check');
+                    $firstPayment = $bill->payments->first();
+                    $paymentType = $firstPayment?->payment_type;
+                    $receivedAmount = $nonCheckPayments->sum('amount');
+                    $totalCheckAmount = $checkPayments->sum('check_amount');
+                    $dueAmount = $bill->bill_amount - $bill->discount - $receivedAmount - $totalCheckAmount;
                 @endphp
                 <tr>
                     <td>{{ $bill->id }}</td>
@@ -91,7 +98,7 @@
                     <td>
                         @if($paymentType === 'check')
                         <span class="badge bg-warning text-dark">CHECK</span>
-                        @if($checkPayment && $checkPayment->status === 'encashed')
+                        @if($checkPayments->where('status', 'encashed')->count() > 0)
                         <i class="bi bi-check-circle-fill text-success"></i>
                         @endif
                         @elseif($paymentType === 'due')
@@ -105,14 +112,16 @@
                         @endif
                     </td>
                     <td class="fw-bold">{{ number_format($bill->bill_amount, 2) }}</td>
+                    <td class="fw-bold text-success">{{ number_format($receivedAmount, 2) }}</td>
                     <td>
-                        @if($checkPayment)
-                        <span class="fw-bold text-warning">{{ number_format($checkPayment->check_amount, 2) }}</span>
+                        @if($totalCheckAmount > 0)
+                        <span class="fw-bold text-warning">{{ number_format($totalCheckAmount, 2) }}</span>
                         @else
                         -
                         @endif
                     </td>
                     <td>{{ number_format($bill->discount, 2) }}</td>
+                    <td class="fw-bold {{ $dueAmount > 0 ? 'text-danger' : 'text-success' }}">{{ number_format($dueAmount > 0 ? $dueAmount : 0, 2) }}</td>
                     <td><span class="badge bg-secondary">{{ $bill->user->name ?? 'N/A' }}</span></td>
                     <td>{{ $bill->created_at->format('M d, Y') }}</td>
                     <td>
@@ -133,7 +142,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="12" class="text-center py-3">No bills found</td></tr>
+                <tr><td colspan="14" class="text-center py-3">No bills found</td></tr>
                 @endforelse
             </tbody>
         </table>

@@ -24,7 +24,7 @@
 
 <div class="card border-0 shadow-sm">
     <div class="card-body">
-        <form method="POST" action="{{ route('bills.update', $bill) }}">
+        <form method="POST" action="{{ route('bills.update', $bill) }}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
             <div class="row g-3">
@@ -89,27 +89,36 @@
                         <div class="card-body">
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label">Bank Name</label>
-                                    <input type="text" class="form-control" value="{{ $checkPayment->bank_name ?? 'N/A' }}" readonly>
+                                    <label for="check_bank_name" class="form-label">Bank Name</label>
+                                    <input type="text" name="check_bank_name" id="check_bank_name" class="form-control" value="{{ old('check_bank_name', $checkPayment->bank_name) }}">
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Check No</label>
-                                    <input type="text" class="form-control" value="{{ $checkPayment->check_no ?? 'N/A' }}" readonly>
+                                    <label for="check_no" class="form-label">Check No</label>
+                                    <input type="text" name="check_no" id="check_no" class="form-control @error('check_no') is-invalid @enderror" value="{{ old('check_no', $checkPayment->check_no) }}">
+                                    @error('check_no')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">Check Amount</label>
+                                    <label for="check_amount" class="form-label">Check Amount</label>
                                     <div class="input-group">
                                         <span class="input-group-text">৳</span>
-                                        <input type="text" class="form-control" value="{{ number_format($checkPayment->check_amount, 2) }}" readonly>
+                                        <input type="number" step="0.01" name="check_amount" id="check_amount" class="form-control @error('check_amount') is-invalid @enderror" value="{{ old('check_amount', $checkPayment->check_amount) }}">
                                     </div>
+                                    @error('check_amount')
+                                    <div class="text-danger small">{{ $message }}</div>
+                                    @enderror
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">Check Date</label>
-                                    <input type="date" class="form-control" value="{{ $checkPayment->check_date?->format('Y-m-d') }}" readonly>
+                                    <label for="check_date" class="form-label">Check Date</label>
+                                    <input type="date" name="check_date" id="check_date" class="form-control @error('check_date') is-invalid @enderror" value="{{ old('check_date', $checkPayment->check_date?->format('Y-m-d')) }}">
+                                    @error('check_date')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">Reminder Date</label>
-                                    <input type="date" class="form-control" value="{{ $checkPayment->check_reminder_date?->format('Y-m-d') }}" readonly>
+                                    <label for="check_reminder_date" class="form-label">Reminder Date</label>
+                                    <input type="date" name="check_reminder_date" id="check_reminder_date" class="form-control" value="{{ old('check_reminder_date', $checkPayment->check_reminder_date?->format('Y-m-d')) }}">
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Status</label>
@@ -124,10 +133,11 @@
                                 <div class="col-md-4">
                                     <label class="form-label">Check Photo</label>
                                     @if($checkPayment->check_photo)
-                                    <div><a href="{{ asset('storage/' . $checkPayment->check_photo) }}" target="_blank" class="btn btn-sm btn-outline-primary">View Photo</a></div>
+                                    <div class="mb-2"><a href="{{ asset('storage/' . $checkPayment->check_photo) }}" target="_blank" class="btn btn-sm btn-outline-primary">View Photo</a></div>
                                     @else
                                     <span class="text-muted">No photo uploaded</span>
                                     @endif
+                                    <input type="file" name="check_photo" id="check_photo" class="form-control form-control-sm" accept="image/*">
                                 </div>
                             </div>
                         </div>

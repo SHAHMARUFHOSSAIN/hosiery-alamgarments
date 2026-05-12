@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Alam Hosiary & Store')</title>
+    <title>@yield('title', 'Alam Hosiery & Store')</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     @stack('styles')
@@ -13,7 +13,7 @@
     <div class="d-flex">
         <nav class="sidebar text-white sidebar p-3" style="width: 250px; min-height: 100vh; background: linear-gradient(180deg, #1a237e 0%, #283593 100%);">
             <div class="mb-4 text-center border-bottom border-secondary pb-3">
-                <h5 class="mb-0"><i class="bi bi-shop"></i> Alam Hosiary</h5>
+                <h5 class="mb-0"><i class="bi bi-shop"></i> Alam Hosiery</h5>
                 <small class="text-white-50">& Store</small>
             </div>
 
