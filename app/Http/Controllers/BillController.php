@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\VoucherHelper;
 use App\Models\Bill;
 use App\Models\Customer;
 use App\Models\Due;
@@ -11,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
 use Illuminate\View\View;
 
 class BillController extends Controller
@@ -18,6 +20,7 @@ class BillController extends Controller
     public function index(Request $request): View
     {
         $query = Bill::with(['customer', 'user', 'payments']);
+        
 
         if (Auth::user()->isAdmin()) {
             $users = \App\Models\User::where('role', 'user')->get(['id', 'name']);
@@ -69,7 +72,7 @@ class BillController extends Controller
         return view('bills.create');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validate([
             'customer_id' => 'required|exists:customers,id',
@@ -79,31 +82,31 @@ class BillController extends Controller
             'bill_amount' => 'required|numeric|min:0',
             'discount' => 'nullable|numeric|min:0',
             'payment_type' => 'required|in:cash,check,tt,card,due',
-            'payment_amount' => 'nullable|numeric|min:0',
+            'payment_amount' => 'nullable|required_if:payment_type,cash|numeric|min:0',
             'payment_details' => 'nullable|string',
             'due_date' => 'nullable|date|after_or_equal:today',
             'checks' => 'nullable|array',
-            'checks.*.bank_name' => 'required_with:checks|string|max:255',
-            'checks.*.check_no' => 'required_with:checks|string|max:255',
-            'checks.*.check_date' => 'required_with:checks|date',
-            'checks.*.check_amount' => 'required_with:checks|numeric|min:0',
+            'checks.*.bank_name' => 'nullable|required_if:payment_type,check|string|max:255',
+            'checks.*.check_no' => 'nullable|required_if:payment_type,check|string|max:255',
+            'checks.*.check_date' => 'nullable|required_if:payment_type,check|date',
+            'checks.*.check_amount' => 'nullable|required_if:payment_type,check|numeric|min:0',
             'checks.*.check_reminder_date' => 'nullable|date',
             'checks.*.check_photo' => 'nullable|image|max:2048',
-            'tt_bank_name' => 'nullable|string|max:255',
-            'tt_account_no' => 'nullable|string|max:255',
-            'tt_amount' => 'nullable|numeric|min:0',
-            'tt_date' => 'nullable|date',
-            'card_name' => 'nullable|string|max:255',
-            'card_location' => 'nullable|string|max:255',
-            'card_amount' => 'nullable|numeric|min:0',
-            'card_date' => 'nullable|date',
+            'tt_bank_name' => 'nullable|required_if:payment_type,tt|string|max:255',
+            'tt_account_no' => 'nullable|required_if:payment_type,tt|string|max:255',
+            'tt_amount' => 'nullable|required_if:payment_type,tt|numeric|min:0',
+            'tt_date' => 'nullable|required_if:payment_type,tt|date',
+            'card_reference' => 'nullable|required_if:payment_type,card|string|max:255',
+            'card_location' => 'nullable|required_if:payment_type,card|string|max:255',
+            'card_amount' => 'nullable|required_if:payment_type,card|numeric|min:0',
+            'card_date' => 'nullable|required_if:payment_type,card|date',
         ]);
 
         // Validate that at least one check is provided when payment type is check
         if ($request->payment_type === 'check') {
             $checks = $request->input('checks', []);
             if (empty($checks) || !is_array($checks) || count($checks) === 0) {
-                return back()->withInput()->withErrors(['checks' => 'At least one check payment is required when payment type is check.']);
+                return back()->withInput()->withErrors(['checks' => 'At least one cheque payment is required when payment type is cheque.']);
             }
         }
 
@@ -117,17 +120,16 @@ class BillController extends Controller
             'user_id' => Auth::id(),
         ]);
 
-        $paymentAmount = $validated['payment_amount'] ?? 0;
+        $cashAmount = $validated['payment_amount'] ?? 0;
         $dueDate = $validated['due_date'] ?? now()->addDays(7)->toDateString();
         $totalCheckAmount = 0;
         $totalReceived = 0;
 
-        // Handle multiple check payments
         if ($validated['payment_type'] === 'check' && isset($validated['checks'])) {
             foreach ($validated['checks'] as $index => $checkData) {
                 $checkPhotoPath = null;
                 if ($request->hasFile("checks.{$index}.check_photo")) {
-                    $checkPhotoPath = $request->file("checks.{$index}.check_photo")->store('check-photos', 'public');
+                    $checkPhotoPath = $request->file("checks.{$index}.check_photo")->store('cheque', 'public');
                 }
 
                 Payment::create([
@@ -147,54 +149,61 @@ class BillController extends Controller
                 $totalCheckAmount += $checkData['check_amount'];
             }
 
-            // Also create a payment record for payment_amount if > 0 (cash received alongside checks)
-            if ($paymentAmount > 0) {
+            if ($cashAmount > 0) {
                 Payment::create([
                     'bill_id' => $bill->id,
                     'payment_type' => 'cash',
-                    'amount' => $paymentAmount,
+                    'amount' => $cashAmount,
                     'details' => $validated['payment_details'] ?? null,
                     'status' => 'encashed',
                 ]);
-                $totalReceived += $paymentAmount;
+                $totalReceived += $cashAmount;
             }
 
             $totalReceived += $totalCheckAmount;
         } else {
-            // Handle single payment (non-check)
+            $effectiveAmount = match ($validated['payment_type']) {
+                'tt' => $validated['tt_amount'] ?? $cashAmount,
+                'card' => $validated['card_amount'] ?? $cashAmount,
+                default => $cashAmount,
+            };
+
+            $isPendingPayment = in_array($validated['payment_type'], ['due', 'card']);
+
             Payment::create([
                 'bill_id' => $bill->id,
                 'payment_type' => $validated['payment_type'],
-                'amount' => $paymentAmount,
+                'amount' => $effectiveAmount,
                 'details' => $validated['payment_details'] ?? null,
-                'bank_name' => $validated['payment_type'] === 'check' ? null : null,
-                'check_no' => null,
-                'check_date' => null,
-                'check_reminder_date' => null,
-                'check_amount' => null,
-                'status' => in_array($validated['payment_type'], ['check', 'due']) ? 'pending' : 'encashed',
-                'check_photo' => null,
+                'status' => $isPendingPayment ? 'pending' : 'encashed',
                 'tt_bank_name' => $validated['payment_type'] === 'tt' ? $validated['tt_bank_name'] : null,
                 'tt_account_no' => $validated['payment_type'] === 'tt' ? $validated['tt_account_no'] : null,
                 'tt_amount' => $validated['payment_type'] === 'tt' ? $validated['tt_amount'] : null,
                 'tt_date' => $validated['payment_type'] === 'tt' ? $validated['tt_date'] : null,
-                'card_name' => $validated['payment_type'] === 'card' ? $validated['card_name'] : null,
+                'card_reference' => $validated['payment_type'] === 'card' ? $validated['card_reference'] : null,
                 'card_location' => $validated['payment_type'] === 'card' ? $validated['card_location'] : null,
                 'card_amount' => $validated['payment_type'] === 'card' ? $validated['card_amount'] : null,
                 'card_date' => $validated['payment_type'] === 'card' ? $validated['card_date'] : null,
                 'due_date' => $validated['payment_type'] === 'due' ? $dueDate : null,
             ]);
-            $totalReceived = $paymentAmount;
+
+            $totalReceived = $isPendingPayment ? 0 : $effectiveAmount;
         }
 
         $netAmount = $validated['bill_amount'] - ($validated['discount'] ?? 0);
 
         if ($totalReceived > 0) {
+            $lastBal = MainBalance::where('branch_id', Auth::id())->orderBy('id', 'desc')->value('balance') ?? 0;
+            $customer = Customer::find($validated['customer_id']);
             MainBalance::create([
+                'voucher_no' => VoucherHelper::generateVoucherNo(),
                 'name' => 'Sales - Bill #' . $bill->bill_no,
                 'amount' => $totalReceived,
+                'balance' => $lastBal + $totalReceived,
                 'type' => 'credit',
-                'note' => 'Received: ' . $validated['payment_type'] . ($totalCheckAmount > 0 ? ' (Checks: ' . $totalCheckAmount . ')' : ''),
+                'invoice_no' => $bill->bill_no,
+                'party_name' => $customer?->name,
+                'note' => 'Bill: ৳' . number_format($netAmount, 2) . ' | Received: ' . $validated['payment_type'] . ($totalCheckAmount > 0 ? ' (Cheques: ' . $totalCheckAmount . ')' : ''),
                 'user_id' => Auth::id(),
                 'branch_id' => Auth::id(),
             ]);
@@ -214,6 +223,16 @@ class BillController extends Controller
                     'created_by' => Auth::id(),
                 ]);
             }
+        }
+
+        // Return JSON for AJAX requests, redirect for standard form submission
+        if ($request->expectsJson() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Bill created successfully',
+                'bill_id' => $bill->id,
+                'redirect_url' => route('bills.index')
+            ]);
         }
 
         return redirect()->route('bills.index')
@@ -273,7 +292,7 @@ class BillController extends Controller
             ];
 
             if ($request->hasFile('check_photo')) {
-                $path = $request->file('check_photo')->store('check_photos');
+                $path = $request->file('check_photo')->store('cheque', 'public');
                 $updateData['check_photo'] = $path;
             }
 

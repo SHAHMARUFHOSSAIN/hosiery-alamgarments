@@ -1,14 +1,14 @@
 @extends('layouts.admin')
 
-@section('title', 'Check Reports')
+@section('title', 'Cheque Reports')
 
-@section('header', 'Check Reports')
+@section('header', 'Cheque Reports')
 
 @section('breadcrumb')
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-        <li class="breadcrumb-item active">Check Reports</li>
+        <li class="breadcrumb-item active">Cheque Reports</li>
     </ol>
 </nav>
 @endsection
@@ -59,7 +59,7 @@
     </div>
 </div>
 
-<h5 class="mb-3">Check Reports ({{ $allChecks->total() }})</h5>
+<h5 class="mb-3">Cheque Reports ({{ $allChecks->total() }})</h5>
 
 <div class="card border-0 shadow-sm">
     <div class="table-responsive">
@@ -73,7 +73,7 @@
                             Bank @if(request('sort') == 'bank_name'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif
                         </a>
                     </th>
-                    <th>Check No</th>
+                    <th>Cheque No</th>
                     <th>Original</th>
                     <th>
                         <a href="{{ route('dues.checks-report', ['sort' => 'encashed_amount', 'direction' => request('sort') == 'encashed_amount' && request('direction') == 'asc' ? 'desc' : 'asc'] + request()->only('status', 'bank', 'date_from', 'date_to', 'search')) }}" class="text-decoration-none">
@@ -83,7 +83,7 @@
                     <th>Remaining</th>
                     <th>
                         <a href="{{ route('dues.checks-report', ['sort' => 'check_date', 'direction' => request('sort') == 'check_date' && request('direction') == 'asc' ? 'desc' : 'asc'] + request()->only('status', 'bank', 'date_from', 'date_to', 'search')) }}" class="text-decoration-none">
-                            Check Date @if(request('sort') == 'check_date'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif
+                            Cheque Date @if(request('sort') == 'check_date'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif
                         </a>
                     </th>
                     <th>Reminder</th>
@@ -144,14 +144,14 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="11" class="text-center py-3">No checks found</td></tr>
+                <tr><td colspan="11" class="text-center py-3">No cheques found</td></tr>
                 @endforelse
             </tbody>
         </table>
     </div>
     @if($allChecks->hasPages())
     <div class="card-footer bg-white text-center">
-        {!! str_replace('page-link', 'page-link btn btn-sm btn-outline-secondary', $allChecks->appends(request()->only('status', 'bank', 'date_from', 'date_to', 'search', 'sort', 'direction'))->links()) !!}
+        {!! $allChecks->appends(request()->only('status', 'bank', 'date_from', 'date_to', 'search', 'sort', 'direction'))->links() !!}
     </div>
     @endif
 </div>
@@ -178,7 +178,7 @@
                         <strong>Bank:</strong> {{ $check->bank_name ?? 'N/A' }}
                     </div>
                     <div class="mb-3">
-                        <strong>Check No:</strong> {{ $check->check_no ?? 'N/A' }}
+                        <strong>Cheque No:</strong> {{ $check->check_no ?? 'N/A' }}
                     </div>
                     <div class="mb-3">
                         <strong>Original Amount:</strong> ৳{{ number_format($check->check_amount, 2) }}

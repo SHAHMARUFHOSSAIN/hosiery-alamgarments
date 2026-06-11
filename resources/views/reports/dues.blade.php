@@ -158,7 +158,7 @@
     </div>
     @if($dues->hasPages())
     <div class="mt-3 text-center">
-        {!! str_replace('page-link', 'page-link btn btn-sm btn-outline-secondary', $dues->appends(request()->only('user_id', 'status', 'date_from', 'date_to', 'search', 'sort', 'direction'))->links()) !!}
+        {!! $dues->appends(request()->only('user_id', 'status', 'date_from', 'date_to', 'search', 'sort', 'direction'))->links() !!}
     </div>
     @endif
 </div>
@@ -206,7 +206,7 @@
                         <label class="form-label">Payment Type <span class="text-danger">*</span></label>
                         <select name="payment_type" class="form-select" required>
                             <option value="cash">Cash</option>
-                            <option value="check">Check</option>
+                            <option value="check">Cheque</option>
                             <option value="mobile_banking">Mobile Banking</option>
                         </select>
                     </div>

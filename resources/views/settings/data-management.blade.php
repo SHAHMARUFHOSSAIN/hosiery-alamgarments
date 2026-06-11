@@ -42,7 +42,7 @@
         <button class="nav-link" id="banks-tab" data-bs-toggle="tab" data-bs-target="#banks" type="button">Banks</button>
     </li>
     <li class="nav-item">
-        <button class="nav-link" id="checks-tab" data-bs-toggle="tab" data-bs-target="#checks" type="button">Checks</button>
+        <button class="nav-link" id="checks-tab" data-bs-toggle="tab" data-bs-target="#checks" type="button">Cheques</button>
     </li>
 </ul>
 
@@ -95,7 +95,7 @@
             </div>
             @if($recentBills->hasPages())
             <div class="card-footer bg-white text-center">
-                {!! str_replace('page-link', 'page-link btn btn-sm btn-outline-secondary', $recentBills->links()) !!}
+                {!! $recentBills->links() !!}
             </div>
             @endif
         </div>
@@ -147,7 +147,7 @@
             </div>
             @if($recentCustomers->hasPages())
             <div class="card-footer bg-white text-center">
-                {!! str_replace('page-link', 'page-link btn btn-sm btn-outline-secondary', $recentCustomers->links()) !!}
+                {!! $recentCustomers->links() !!}
             </div>
             @endif
         </div>
@@ -205,7 +205,7 @@
             </div>
             @if($recentDues->hasPages())
             <div class="card-footer bg-white text-center">
-                {!! str_replace('page-link', 'page-link btn btn-sm btn-outline-secondary', $recentDues->links()) !!}
+                {!! $recentDues->links() !!}
             </div>
             @endif
         </div>
@@ -262,7 +262,7 @@
             </div>
             @if($recentBanks->hasPages())
             <div class="card-footer bg-white text-center">
-                {!! str_replace('page-link', 'page-link btn btn-sm btn-outline-secondary', $recentBanks->links()) !!}
+                {!! $recentBanks->links() !!}
             </div>
             @endif
         </div>
@@ -271,7 +271,7 @@
     <div class="tab-pane fade" id="checks">
         <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white py-3">
-                <h5 class="mb-0">Recent Check Payments</h5>
+                <h5 class="mb-0">Recent Cheque Payments</h5>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
@@ -280,9 +280,9 @@
                             <th>Bill No</th>
                             <th>Customer</th>
                             <th>Bank</th>
-                            <th>Check No</th>
-                            <th>Check Amount</th>
-                            <th>Check Date</th>
+                            <th>Cheque No</th>
+                            <th>Cheque Amount</th>
+                            <th>Cheque Date</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -317,14 +317,14 @@
                             </td>
                         </tr>
                         @empty
-                        <tr><td colspan="8" class="text-center py-3">No checks found</td></tr>
+                        <tr><td colspan="8" class="text-center py-3">No cheques found</td></tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
             @if($recentChecks->hasPages())
             <div class="card-footer bg-white text-center">
-                {!! str_replace('page-link', 'page-link btn btn-sm btn-outline-secondary', $recentChecks->links()) !!}
+                {!! $recentChecks->links() !!}
             </div>
             @endif
         </div>

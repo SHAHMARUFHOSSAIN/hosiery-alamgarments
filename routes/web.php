@@ -2,10 +2,12 @@
 
 use App\Http\Controllers\BankController;
 use App\Http\Controllers\BillController;
+use App\Http\Controllers\CardPaymentController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DueController;
 use App\Http\Controllers\ExportController;
+use App\Http\Controllers\ImportController;
 use App\Http\Controllers\MainBalanceController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
@@ -67,15 +69,30 @@ Route::middleware('auth')->group(function () {
         Route::post('/encash/{id}', [DueController::class, 'encashCheck'])->name('dues.encash');
     });
 
+    Route::prefix('card-payments')->group(function () {
+        Route::get('/', [CardPaymentController::class, 'index'])->name('card-payments.index');
+        Route::post('/encash/{id}', [CardPaymentController::class, 'encash'])->name('card-payments.encash');
+    });
+
+    Route::prefix('imports')->group(function () {
+        Route::get('/', [ImportController::class, 'index'])->name('imports.index');
+        Route::post('/preview', [ImportController::class, 'preview'])->name('imports.preview');
+        Route::post('/confirm', [ImportController::class, 'confirm'])->name('imports.confirm');
+        Route::get('/history', [ImportController::class, 'history'])->name('imports.history');
+        Route::get('/sample/{type}', [ImportController::class, 'downloadSample'])->name('imports.sample');
+    });
+
     Route::prefix('main-balance')->group(function () {
         Route::get('/', [MainBalanceController::class, 'index'])->name('main-balance.index');
         Route::post('/', [MainBalanceController::class, 'store'])->name('main-balance.store');
         Route::get('/report', [MainBalanceController::class, 'balanceReport'])->name('main-balance.report');
+        Route::get('/{mainBalance}/voucher', [MainBalanceController::class, 'voucher'])->name('main-balance.voucher');
     });
 
     Route::prefix('user-balance')->group(function () {
         Route::get('/', [UserBalanceController::class, 'index'])->name('user-balance.index');
         Route::post('/', [UserBalanceController::class, 'store'])->name('user-balance.store');
+        Route::get('/{mainBalance}/voucher', [UserBalanceController::class, 'voucher'])->name('user-balance.voucher');
     });
 
     Route::prefix('user-reports')->group(function () {
@@ -85,6 +102,7 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::middleware(['admin'])->group(function () {
+        Route::delete('/imports/{importLog}', [ImportController::class, 'destroy'])->name('imports.destroy');
         Route::prefix('users')->group(function () {
             Route::get('/', [UserController::class, 'index'])->name('users.index');
             Route::get('/create', [UserController::class, 'create'])->name('users.create');
@@ -117,6 +135,8 @@ Route::middleware('auth')->group(function () {
             Route::get('/transactions', [SettingsController::class, 'allTransactions'])->name('settings.transactions');
             Route::get('/system-info', [SettingsController::class, 'systemInfo'])->name('settings.system-info');
             Route::get('/data', [SettingsController::class, 'dataManagement'])->name('settings.data');
+            Route::get('/company', [SettingsController::class, 'company'])->name('settings.company');
+            Route::post('/company', [SettingsController::class, 'updateCompany'])->name('settings.company.update');
             Route::delete('/bills/{bill}', [SettingsController::class, 'deleteBill'])->name('settings.bills.delete');
             Route::put('/bills/{bill}', [SettingsController::class, 'editBill'])->name('settings.bills.update');
             Route::delete('/customers/{customer}', [SettingsController::class, 'deleteCustomer'])->name('settings.customers.delete');

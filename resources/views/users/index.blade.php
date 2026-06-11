@@ -68,7 +68,7 @@
     </div>
     @if($users->hasPages())
     <div class="card-footer bg-white text-center">
-        {!! str_replace('page-link', 'page-link btn btn-sm btn-outline-secondary', $users->links()) !!}
+        {!! $users->links() !!}
     </div>
     @endif
 </div>

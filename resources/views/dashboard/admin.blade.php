@@ -169,7 +169,7 @@
                         <label class="form-label">Payment Type <span class="text-danger">*</span></label>
                         <select name="payment_type" class="form-select" required>
                             <option value="cash">Cash</option>
-                            <option value="check">Check</option>
+                            <option value="check">Cheque</option>
                             <option value="mobile_banking">Mobile Banking</option>
                         </select>
                     </div>

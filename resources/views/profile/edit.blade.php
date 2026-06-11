@@ -27,6 +27,16 @@
                     </div>
                     
                     <div class="mb-3">
+                        <label class="form-label">Phone</label>
+                        <input type="text" name="phone" class="form-control" value="{{ Auth::user()->phone }}" placeholder="e.g. 01711-111111">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        <textarea name="address" class="form-control" rows="2" placeholder="Your address">{{ Auth::user()->address }}</textarea>
+                    </div>
+                    
+                    <div class="mb-3">
                         <label class="form-label">Role</label>
                         <input type="text" class="form-control" value="{{ Auth::user()->role === 'admin' ? 'Super Admin' : 'User' }}" disabled>
                     </div>

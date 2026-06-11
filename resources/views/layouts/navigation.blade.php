@@ -21,6 +21,9 @@
                     <x-nav-link :href="route('dues.index')" :active="request()->routeIs('dues.*')">
                         {{ __('Dues') }}
                     </x-nav-link>
+                    <x-nav-link :href="route('card-payments.index')" :active="request()->routeIs('card-payments.*')">
+                        {{ __('Reference Card Payments') }}
+                    </x-nav-link>
                     @if(auth()->user()->isAdmin())
                     <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
                         {{ __('Users') }}
@@ -84,6 +87,9 @@
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('dues.index')" :active="request()->routeIs('dues.*')">
                 {{ __('Dues') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('card-payments.index')" :active="request()->routeIs('card-payments.*')">
+                {{ __('Reference Card Payments') }}
             </x-responsive-nav-link>
             @if(auth()->user()->isAdmin())
             <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">

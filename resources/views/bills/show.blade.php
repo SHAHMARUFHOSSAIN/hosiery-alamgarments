@@ -63,7 +63,7 @@
                         @forelse($bill->payments as $payment)
                         <tr>
                             <td><span class="badge bg-{{ $payment->payment_type === 'due' ? 'danger' : ($payment->payment_type === 'check' ? 'warning text-dark' : ($payment->payment_type === 'tt' ? 'info text-dark' : ($payment->payment_type === 'card' ? 'secondary text-white' : 'primary'))) }}">
-                                {{ strtoupper($payment->payment_type) }}
+                                {{ $payment->payment_type === 'check' ? 'CHEQUE' : ($payment->payment_type === 'card' ? 'REFERENCE CARD' : strtoupper($payment->payment_type)) }}
                             </span></td>
                             <td>{{ number_format($payment->amount, 2) }}</td>
                             <td>{{ $payment->details ?? 'N/A' }}</td>
@@ -75,9 +75,9 @@
                             <td colspan="5">
                                 <div class="row g-2">
                                     <div class="col-md-2"><strong>Bank:</strong> {{ $payment->bank_name ?? 'N/A' }}</div>
-                                    <div class="col-md-2"><strong>Check No:</strong> {{ $payment->check_no ?? 'N/A' }}</div>
-                                    <div class="col-md-2"><strong>Check Amt:</strong> {{ number_format($payment->check_amount, 2) }}</div>
-                                    <div class="col-md-2"><strong>Check Date:</strong> {{ $payment->check_date?->format('M d, Y') ?? 'N/A' }}</div>
+                                    <div class="col-md-2"><strong>Cheque No:</strong> {{ $payment->check_no ?? 'N/A' }}</div>
+                                    <div class="col-md-2"><strong>Cheque Amt:</strong> {{ number_format($payment->check_amount, 2) }}</div>
+                                    <div class="col-md-2"><strong>Cheque Date:</strong> {{ $payment->check_date?->format('M d, Y') ?? 'N/A' }}</div>
                                     <div class="col-md-2"><strong>Reminder:</strong> {{ $payment->check_reminder_date?->format('M d, Y') ?? 'N/A' }}</div>
                                     <div class="col-md-2"><strong>Status:</strong> 
                                         @if($payment->status === 'encashed')
@@ -87,15 +87,15 @@
                                         @endif
                                     </div>
                                     @if($payment->check_photo)
-                                    <div class="col-12"><a href="{{ asset('storage/' . $payment->check_photo) }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-image"></i> View Check Photo</a></div>
+                                    <div class="col-12"><a href="{{ asset('storage/' . $payment->check_photo) }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-image"></i> View Cheque Photo</a></div>
                                     @endif
                                     @if($payment->status === 'pending' && $payment->check_amount > 0)
                                     <div class="col-12">
                                         <form method="POST" action="{{ route('dues.encash', $payment) }}" class="d-inline" 
-                                              onsubmit="return confirm('Mark this check as encashed?')">
+                                              onsubmit="return confirm('Mark this cheque as encashed?')">
                                             @csrf
                                             <button type="submit" class="btn btn-sm btn-success">
-                                                <i class="bi bi-check-circle"></i> Encash Check
+                                                <i class="bi bi-check-circle"></i> Encash Cheque
                                             </button>
                                         </form>
                                     </div>
@@ -120,7 +120,7 @@
                         <tr class="table-secondary">
                             <td colspan="5">
                                 <div class="row g-2">
-                                    <div class="col-md-3"><strong>Name:</strong> {{ $payment->card_name ?? 'N/A' }}</div>
+                                    <div class="col-md-3"><strong>Reference Card:</strong> {{ $payment->card_reference ?? 'N/A' }}</div>
                                     <div class="col-md-3"><strong>Location:</strong> {{ $payment->card_location ?? 'N/A' }}</div>
                                     <div class="col-md-3"><strong>Card Amt:</strong> {{ number_format($payment->card_amount, 2) }}</div>
                                     <div class="col-md-3"><strong>Card Date:</strong> {{ $payment->card_date?->format('M d, Y') ?? 'N/A' }}</div>
@@ -225,7 +225,7 @@
                         <label class="form-label">Payment Type <span class="text-danger">*</span></label>
                         <select name="payment_type" class="form-select" required>
                             <option value="cash">Cash</option>
-                            <option value="check">Check</option>
+                            <option value="check">Cheque</option>
                             <option value="mobile_banking">Mobile Banking</option>
                         </select>
                     </div>

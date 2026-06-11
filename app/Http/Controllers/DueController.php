@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\VoucherHelper;
+use App\Models\Bill;
 use App\Models\Due;
+use App\Models\DuePayment;
 use App\Models\MainBalance;
 use App\Models\Payment;
-use App\Models\Bill;
-use App\Models\DuePayment;
-use App\Models\CheckEncashment;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -176,16 +177,19 @@ class DueController extends Controller
             $payment->update(['check_reminder_date' => $validated['next_due_date']]);
         }
 
+        $lastBal = MainBalance::where('branch_id', Auth::id())->orderBy('id', 'desc')->value('balance') ?? 0;
         MainBalance::create([
-            'name' => 'Check Encashed - Bill #' . ($payment->bill->bill_no ?? 'N/A'),
+            'voucher_no' => VoucherHelper::generateVoucherNo(),
+            'name' => 'Cheque Encashed - Bill #' . ($payment->bill->bill_no ?? 'N/A'),
             'amount' => $validated['encash_amount'],
+            'balance' => $lastBal + $validated['encash_amount'],
             'type' => 'credit',
-            'note' => 'Check encashed: ' . ($payment->bank_name ?? 'N/A') . ' - ' . ($payment->check_no ?? 'N/A') . ' (Partial)',
+            'note' => 'Cheque encashed: ' . ($payment->bank_name ?? 'N/A') . ' - ' . ($payment->check_no ?? 'N/A') . ' (Partial)',
             'user_id' => Auth::id(),
             'branch_id' => Auth::id(),
         ]);
 
-        return redirect()->back()->with('success', 'Check encashed successfully');
+        return redirect()->back()->with('success', 'Cheque encashed successfully');
     }
 
     public function addPayment(Request $request): \Illuminate\Http\RedirectResponse
@@ -226,9 +230,12 @@ class DueController extends Controller
             $due->update(['due_date' => $validated['next_due_date']]);
         }
 
+        $lastBal = MainBalance::where('branch_id', Auth::id())->orderBy('id', 'desc')->value('balance') ?? 0;
         MainBalance::create([
+            'voucher_no' => VoucherHelper::generateVoucherNo(),
             'name' => 'Due Payment - ' . ($due->customer->name ?? 'Customer'),
             'amount' => $validated['payment_amount'],
+            'balance' => $lastBal + $validated['payment_amount'],
             'type' => 'credit',
             'note' => 'Partial payment via ' . $validated['payment_type'] . ' (Bill: ' . ($due->bill->bill_no ?? 'N/A') . ')',
             'user_id' => Auth::id(),
@@ -254,9 +261,12 @@ class DueController extends Controller
 
             $due->update(['status' => 'paid', 'amount' => 0]);
 
+            $lastBal = MainBalance::where('branch_id', $due->created_by)->orderBy('id', 'desc')->value('balance') ?? 0;
             MainBalance::create([
+                'voucher_no' => VoucherHelper::generateVoucherNo(),
                 'name' => 'Due Collection - ' . ($due->customer->name ?? 'Customer'),
                 'amount' => $due->original_amount,
+                'balance' => $lastBal + $due->original_amount,
                 'type' => 'credit',
                 'note' => 'Due collected',
                 'user_id' => Auth::id(),

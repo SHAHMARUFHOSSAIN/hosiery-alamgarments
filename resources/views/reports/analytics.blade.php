@@ -191,7 +191,7 @@
                     </div>
                     <div class="col-6">
                         <div class="p-3 bg-info bg-opacity-10 rounded">
-                            <small class="text-muted d-block">Pending Checks</small>
+                            <small class="text-muted d-block">Pending Cheques</small>
                             <h5 class="mb-0 text-info fw-bold">৳{{ number_format($checkPending, 2) }}</h5>
                             <small class="text-muted">Awaiting encash</small>
                         </div>
@@ -356,7 +356,7 @@ document.addEventListener('DOMContentLoaded', function() {
     new Chart(document.getElementById('paymentChart'), {
         type: 'doughnut',
         data: {
-            labels: ['Cash', 'Check', 'TT', 'Card', 'Due'],
+            labels: ['Cash', 'Cheque', 'TT', 'Reference Card', 'Due'],
             datasets: [{
                 data: [paymentData.cash.total, paymentData.check.total, paymentData.tt.total, paymentData.card.total, paymentData.due.total],
                 backgroundColor: [successColor, warningColor, infoColor, '#6c757d', dangerColor],

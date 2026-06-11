@@ -133,7 +133,7 @@
     </div>
     @if($bills->hasPages())
     <div class="card-footer bg-white text-center">
-        {!! str_replace('page-link', 'page-link btn btn-sm btn-outline-secondary', $bills->links()) !!}
+        {!! $bills->links() !!}
     </div>
     @endif
 </div>

@@ -130,7 +130,7 @@
     </div>
     @if($bills->hasPages())
     <div class="mt-3 text-center">
-        {!! str_replace('page-link', 'page-link btn btn-sm btn-outline-secondary', $bills->appends(request()->only('user_id', 'date_from', 'date_to', 'search', 'sort', 'direction'))->links()) !!}
+        {!! $bills->appends(request()->only('user_id', 'date_from', 'date_to', 'search', 'sort', 'direction'))->links() !!}
     </div>
     @endif
 </div>

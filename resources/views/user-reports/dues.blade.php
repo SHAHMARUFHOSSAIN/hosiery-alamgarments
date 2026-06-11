@@ -109,7 +109,7 @@
     </div>
     @if($dues->hasPages())
     <div class="card-footer bg-white text-center">
-        {!! str_replace('page-link', 'page-link btn btn-sm btn-outline-secondary', $dues->links()) !!}
+        {!! $dues->links() !!}
     </div>
     @endif
 </div>

@@ -7,11 +7,13 @@ use App\Models\Customer;
 use App\Models\Bill;
 use App\Models\Due;
 use App\Models\MainBalance;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class SettingsController extends Controller
 {
@@ -239,5 +241,52 @@ class SettingsController extends Controller
     {
         $due->update($request->only(['amount', 'due_date', 'status']));
         return redirect()->route('settings.data')->with('success', 'Due updated successfully');
+    }
+
+    public function company(): View
+    {
+        $settings = [
+            'company_name' => Setting::get('company_name', config('app.name')),
+            'company_address' => Setting::get('company_address', ''),
+            'company_phone' => Setting::get('company_phone', ''),
+            'company_email' => Setting::get('company_email', ''),
+            'voucher_prefix' => Setting::get('voucher_prefix', 'V'),
+            'company_logo' => Setting::get('company_logo'),
+            'company_favicon' => Setting::get('company_favicon'),
+        ];
+
+        return view('settings.company', compact('settings'));
+    }
+
+    public function updateCompany(Request $request)
+    {
+        $validated = $request->validate([
+            'company_name' => 'required|string|max:255',
+            'company_address' => 'nullable|string',
+            'company_phone' => 'nullable|string|max:50',
+            'company_email' => 'nullable|email|max:255',
+            'voucher_prefix' => 'nullable|string|max:10',
+            'company_logo' => 'nullable|image|max:2048',
+            'company_favicon' => 'nullable|image|max:1024',
+        ]);
+
+        foreach ($validated as $key => $value) {
+            if (in_array($key, ['company_logo', 'company_favicon'])) {
+                continue;
+            }
+            Setting::set($key, $value);
+        }
+
+        if ($request->hasFile('company_logo')) {
+            $path = $request->file('company_logo')->store('company', 'public');
+            Setting::set('company_logo', $path);
+        }
+
+        if ($request->hasFile('company_favicon')) {
+            $path = $request->file('company_favicon')->store('company', 'public');
+            Setting::set('company_favicon', $path);
+        }
+
+        return redirect()->route('settings.company')->with('success', 'Company settings updated successfully.');
     }
 }

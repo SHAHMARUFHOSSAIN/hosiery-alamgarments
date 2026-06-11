@@ -27,7 +27,7 @@ class Payment extends Model
         'tt_account_no',
         'tt_amount',
         'tt_date',
-        'card_name',
+        'card_reference',
         'card_location',
         'card_amount',
         'card_date',

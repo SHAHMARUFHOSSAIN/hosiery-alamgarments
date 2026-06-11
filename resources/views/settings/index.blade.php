@@ -63,7 +63,7 @@
 </div>
 
 <div class="row g-4">
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card border-0 shadow-sm h-100 text-center p-4">
             <div class="bg-primary bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
                 <i class="bi bi-people text-primary fs-2"></i>
@@ -73,7 +73,7 @@
             <a href="{{ route('settings.users') }}" class="btn btn-primary">Manage Users</a>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card border-0 shadow-sm h-100 text-center p-4">
             <div class="bg-success bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
                 <i class="bi bi-credit-card text-success fs-2"></i>
@@ -83,7 +83,7 @@
             <a href="{{ route('settings.transactions') }}" class="btn btn-success">View Transactions</a>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card border-0 shadow-sm h-100 text-center p-4">
             <div class="bg-info bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
                 <i class="bi bi-database text-info fs-2"></i>
@@ -91,6 +91,16 @@
             <h5>Data Management</h5>
             <p class="text-muted">View, edit and delete all data across the system</p>
             <a href="{{ route('settings.data') }}" class="btn btn-info">Manage Data</a>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100 text-center p-4">
+            <div class="bg-secondary bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
+                <i class="bi bi-building text-secondary fs-2"></i>
+            </div>
+            <h5>Company Info</h5>
+            <p class="text-muted">Update company name, address, phone and email</p>
+            <a href="{{ route('settings.company') }}" class="btn btn-secondary">Edit Company</a>
         </div>
     </div>
 </div>

@@ -84,7 +84,7 @@
                 <div class="col-12">
                     <div class="card border border-warning">
                         <div class="card-header bg-warning text-dark py-2">
-                            <h6 class="mb-0"><i class="bi bi-bank"></i> Check Payment Details</h6>
+                            <h6 class="mb-0"><i class="bi bi-bank"></i> Cheque Payment Details</h6>
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
@@ -93,14 +93,14 @@
                                     <input type="text" name="check_bank_name" id="check_bank_name" class="form-control" value="{{ old('check_bank_name', $checkPayment->bank_name) }}">
                                 </div>
                                 <div class="col-md-6">
-                                    <label for="check_no" class="form-label">Check No</label>
+                                    <label for="check_no" class="form-label">Cheque No</label>
                                     <input type="text" name="check_no" id="check_no" class="form-control @error('check_no') is-invalid @enderror" value="{{ old('check_no', $checkPayment->check_no) }}">
                                     @error('check_no')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
                                 <div class="col-md-4">
-                                    <label for="check_amount" class="form-label">Check Amount</label>
+                                    <label for="check_amount" class="form-label">Cheque Amount</label>
                                     <div class="input-group">
                                         <span class="input-group-text">৳</span>
                                         <input type="number" step="0.01" name="check_amount" id="check_amount" class="form-control @error('check_amount') is-invalid @enderror" value="{{ old('check_amount', $checkPayment->check_amount) }}">
@@ -110,7 +110,7 @@
                                     @enderror
                                 </div>
                                 <div class="col-md-4">
-                                    <label for="check_date" class="form-label">Check Date</label>
+                                    <label for="check_date" class="form-label">Cheque Date</label>
                                     <input type="date" name="check_date" id="check_date" class="form-control @error('check_date') is-invalid @enderror" value="{{ old('check_date', $checkPayment->check_date?->format('Y-m-d')) }}">
                                     @error('check_date')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -131,7 +131,7 @@
                                     </div>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">Check Photo</label>
+                                    <label class="form-label">Cheque Photo</label>
                                     @if($checkPayment->check_photo)
                                     <div class="mb-2"><a href="{{ asset('storage/' . $checkPayment->check_photo) }}" target="_blank" class="btn btn-sm btn-outline-primary">View Photo</a></div>
                                     @else

@@ -82,6 +82,7 @@
                     <th>Type</th>
                     <th class="text-end">Amount</th>
                     <th>Note</th>
+                    <th class="text-center">Voucher</th>
                 </tr>
             </thead>
             <tbody>
@@ -97,16 +98,21 @@
                     </td>
                     <td class="text-end">৳{{ number_format($balance->amount, 2) }}</td>
                     <td>{{ $balance->note ?? '-' }}</td>
+                    <td class="text-center">
+                        <a href="{{ route('main-balance.voucher', $balance) }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                            <i class="bi bi-receipt"></i>
+                        </a>
+                    </td>
                 </tr>
                 @empty
-                <tr><td colspan="6" class="text-center py-4">No transactions found</td></tr>
+                <tr><td colspan="7" class="text-center py-4">No transactions found</td></tr>
                 @endforelse
             </tbody>
         </table>
     </div>
     @if($transactions->hasPages())
-    <div class="card-footer bg-white text-center">
-        {!! str_replace('page-link', 'page-link btn btn-sm btn-outline-secondary', $transactions->links()) !!}
+    <div class="px-3 pb-3">
+        {!! $transactions->links() !!}
     </div>
     @endif
 </div>

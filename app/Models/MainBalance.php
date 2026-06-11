@@ -11,10 +11,15 @@ class MainBalance extends Model
     use HasFactory;
 
     protected $fillable = [
+        'voucher_no',
         'name',
         'amount',
+        'balance',
         'type',
         'note',
+        'invoice_no',
+        'reference',
+        'party_name',
         'user_id',
         'branch_id',
     ];
@@ -23,6 +28,7 @@ class MainBalance extends Model
     {
         return [
             'amount' => 'decimal:2',
+            'balance' => 'decimal:2',
         ];
     }
 

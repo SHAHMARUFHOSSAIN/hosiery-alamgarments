@@ -14,6 +14,13 @@
 @endsection
 
 @section('content')
+@if (session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+@endif
+
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2 class="mb-0">Bills</h2>
     <a href="{{ route('bills.create') }}" class="btn btn-primary">
@@ -70,7 +77,7 @@
                     <th>Payment</th>
                     <th><a href="{{ route('bills.index', ['sort' => 'bill_amount', 'direction' => request('sort') == 'bill_amount' && request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="text-decoration-none">Amount @if(request('sort') == 'bill_amount'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif</a></th>
                     <th>Received</th>
-                    <th><a href="{{ route('bills.index', ['sort' => 'check_amount', 'direction' => request('sort') == 'check_amount' && request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="text-decoration-none">Check Amt @if(request('sort') == 'check_amount'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif</a></th>
+                    <th><a href="{{ route('bills.index', ['sort' => 'check_amount', 'direction' => request('sort') == 'check_amount' && request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="text-decoration-none">Cheque Amt @if(request('sort') == 'check_amount'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif</a></th>
                     <th>Discount</th>
                     <th>Due</th>
                     <th>User</th>
@@ -97,7 +104,7 @@
                     <td>{{ $bill->bill_man ?? 'N/A' }}</td>
                     <td>
                         @if($paymentType === 'check')
-                        <span class="badge bg-warning text-dark">CHECK</span>
+                        <span class="badge bg-warning text-dark">CHEQUE</span>
                         @if($checkPayments->where('status', 'encashed')->count() > 0)
                         <i class="bi bi-check-circle-fill text-success"></i>
                         @endif
@@ -107,6 +114,8 @@
                         <span class="badge bg-info text-dark">TT</span>
                         @elseif($paymentType === 'cash')
                         <span class="badge bg-success">CASH</span>
+                        @elseif($paymentType === 'card')
+                        <span class="badge bg-secondary">REFERENCE CARD</span>
                         @else
                         <span class="badge bg-secondary">-</span>
                         @endif
@@ -149,7 +158,7 @@
     </div>
     @if($bills->hasPages())
     <div class="card-footer bg-white text-center">
-        {!! str_replace('page-link', 'page-link btn btn-sm btn-outline-secondary', $bills->links()) !!}
+        {!! $bills->links() !!}
     </div>
     @endif
 </div>

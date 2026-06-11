@@ -112,7 +112,7 @@
                         <span class="fw-bold">৳{{ number_format($stats['cashSales'], 2) }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                        <span><i class="bi bi-bank text-warning me-2"></i>Check</span>
+                        <span><i class="bi bi-bank text-warning me-2"></i>Cheque</span>
                         <span class="fw-bold">৳{{ number_format($stats['checkSales'], 2) }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center px-0">
@@ -120,7 +120,7 @@
                         <span class="fw-bold">৳{{ number_format($stats['ttSales'], 2) }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                        <span><i class="bi bi-credit-card text-secondary me-2"></i>Card</span>
+                        <span><i class="bi bi-credit-card text-secondary me-2"></i>Reference Card</span>
                         <span class="fw-bold">৳{{ number_format($stats['cardSales'], 2) }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center px-0">
@@ -351,7 +351,7 @@
                         <label class="form-label">Payment Type <span class="text-danger">*</span></label>
                         <select name="payment_type" class="form-select" required>
                             <option value="cash">Cash</option>
-                            <option value="check">Check</option>
+                            <option value="check">Cheque</option>
                             <option value="mobile_banking">Mobile Banking</option>
                         </select>
                     </div>
