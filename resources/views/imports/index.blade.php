@@ -519,6 +519,21 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         previewStats.innerHTML = statsHtml;
 
+        var missingAlert = document.getElementById('missingHeadingsAlert');
+        if (data.missing_headings && data.missing_headings.length > 0) {
+            if (!missingAlert) {
+                missingAlert = document.createElement('div');
+                missingAlert.id = 'missingHeadingsAlert';
+                missingAlert.className = 'alert alert-warning mb-3';
+                missingAlert.innerHTML = '<strong>Missing columns:</strong> The file is missing these expected headings: <span id="missingList"></span>. Row validation may fail.';
+                document.getElementById('previewTable').parentNode.insertBefore(missingAlert, document.getElementById('previewTable'));
+            }
+            document.getElementById('missingList').textContent = data.missing_headings.join(', ');
+            missingAlert.style.display = 'block';
+        } else if (missingAlert) {
+            missingAlert.style.display = 'none';
+        }
+
         if (data.error_rows && data.error_rows.length > 0) {
             errorArea.style.display = 'block';
             data.error_rows.forEach(function (er) {

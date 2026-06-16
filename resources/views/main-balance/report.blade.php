@@ -151,5 +151,10 @@
             </table>
         </div>
     </div>
+    @if($balances->hasPages())
+    <div class="card-footer bg-white text-center">
+        {!! $balances->appends(request()->only('branch_id'))->links() !!}
+    </div>
+    @endif
 </div>
 @endsection

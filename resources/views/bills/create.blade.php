@@ -610,9 +610,15 @@
     function updateDue() {
         var bill = parseFloat(billAmt ? billAmt.value : 0) || 0;
         var disc = parseFloat(discAmt ? discAmt.value : 0) || 0;
-        var paid = parseFloat(payAmt ? payAmt.value : 0) || 0;
-        var totalCheck = parseFloat((document.getElementById('totalCheckAmount') || {}).textContent) || 0;
-        paid = paid + totalCheck;
+        var paymentType = (document.getElementById('payment_type') || {}).value;
+        var paid = 0;
+        if (paymentType === 'card') {
+            paid = parseFloat(payAmt ? payAmt.value : 0) || 0;
+            paid += parseFloat((document.getElementById('card_amount') || {}).value) || 0;
+        } else {
+            paid = parseFloat(payAmt ? payAmt.value : 0) || 0;
+            paid += parseFloat((document.getElementById('totalCheckAmount') || {}).textContent) || 0;
+        }
         var due = bill - disc - paid;
         if (calcDue) {
             calcDue.textContent = (due <= 0 ? '0.00' : due.toFixed(2));
@@ -625,6 +631,9 @@
     if (billAmt) billAmt.addEventListener('input', updateDue);
     if (discAmt) discAmt.addEventListener('input', updateDue);
     if (payAmt) payAmt.addEventListener('input', updateDue);
+
+    var cardAmtInput = document.getElementById('card_amount');
+    if (cardAmtInput) cardAmtInput.addEventListener('input', updateDue);
 
     // ---- Dynamic check payments ----
     var checkIndex = 1;

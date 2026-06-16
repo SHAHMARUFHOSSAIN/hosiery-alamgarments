@@ -42,7 +42,7 @@
     </div>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
     <h2 class="mb-0">My Dues</h2>
 </div>
 

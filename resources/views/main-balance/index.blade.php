@@ -183,6 +183,46 @@
     </div>
 </div>
 
+@if(auth()->user()->isAdmin())
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0"><i class="bi bi-people me-2 text-secondary"></i>User-wise Balance</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>User</th>
+                        <th class="text-end">Credit</th>
+                        <th class="text-end">Debit</th>
+                        <th class="text-end">Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($userWiseBalance as $uwb)
+                    <tr>
+                        <td class="fw-semibold">{{ $uwb['name'] }}</td>
+                        <td class="text-end text-success">৳{{ number_format($uwb['credit'], 2) }}</td>
+                        <td class="text-end text-danger">৳{{ number_format($uwb['debit'], 2) }}</td>
+                        <td class="text-end fw-bold {{ $uwb['balance'] >= 0 ? 'text-success' : 'text-danger' }}">৳{{ number_format($uwb['balance'], 2) }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+                <tfoot class="table-primary">
+                    <tr>
+                        <th>Total</th>
+                        <th class="text-end">৳{{ number_format($totalCredit, 2) }}</th>
+                        <th class="text-end">৳{{ number_format($totalDebit, 2) }}</th>
+                        <th class="text-end">৳{{ number_format($mainBalance, 2) }}</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+@endif
+
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-white py-3">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">

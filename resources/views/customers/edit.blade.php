@@ -15,7 +15,7 @@
 @endsection
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
     <h2 class="mb-0">Edit Customer</h2>
     <a href="{{ route('customers.index') }}" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left"></i> Back
@@ -46,7 +46,7 @@
                     <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
                 </div>
-                <div class="col-md-12">
+                <div class="col-md-6">
                     <label for="location" class="form-label">Location</label>
                     <input type="text" name="location" id="location" 
                            class="form-control @error('location') is-invalid @enderror" 
@@ -54,6 +54,18 @@
                     @error('location')
                     <div class="invalid-feedback">{{ $message }}</div>
                     @enderror
+                </div>
+                <div class="col-md-6">
+                    <label for="opening_balance" class="form-label">Opening Balance <small class="text-muted">(previous due)</small></label>
+                    <div class="input-group">
+                        <span class="input-group-text">৳</span>
+                        <input type="number" step="0.01" min="0" name="opening_balance" id="opening_balance" 
+                               class="form-control @error('opening_balance') is-invalid @enderror" 
+                               value="{{ old('opening_balance', $customer->opening_balance) }}">
+                        @error('opening_balance')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
                 <div class="col-12">
                     <button type="submit" class="btn btn-primary">

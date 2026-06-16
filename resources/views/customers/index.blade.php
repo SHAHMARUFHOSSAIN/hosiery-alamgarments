@@ -14,17 +14,36 @@
 @endsection
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
     <h2 class="mb-0">Customers</h2>
-    <a href="{{ route('customers.create') }}" class="btn btn-primary">
-        <i class="bi bi-plus"></i> Add Customer
-    </a>
+    <div class="d-flex gap-2">
+        <a href="{{ route('export.customers', request()->only('search', 'user_id', 'location')) }}" class="btn btn-success">
+            <i class="bi bi-download"></i> Excel
+        </a>
+        <a href="{{ route('customers.create') }}" class="btn btn-primary">
+            <i class="bi bi-plus"></i> Add Customer
+        </a>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <div class="bg-primary bg-opacity-10 p-3 rounded-circle d-inline-block mb-2">
+                    <i class="bi bi-people text-primary fs-2"></i>
+                </div>
+                <h3 class="mb-1">{{ number_format($totalCustomers) }}</h3>
+                <p class="text-muted mb-0">Total Customers</p>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-white py-3">
         <form method="GET" class="row g-3">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <input type="text" name="search" class="form-control" 
                        placeholder="Search by name or mobile..." 
                        value="{{ request('search') }}">
@@ -41,6 +60,16 @@
                 </select>
             </div>
             @endif
+            <div class="col-md-3">
+                <select name="location" class="form-select">
+                    <option value="">All Locations</option>
+                    @foreach($locations ?? [] as $location)
+                    <option value="{{ $location }}" {{ request('location') == $location ? 'selected' : '' }}>
+                        {{ $location }}
+                    </option>
+                    @endforeach
+                </select>
+            </div>
             <div class="col-md-3">
                 <button type="submit" class="btn btn-secondary"><i class="bi bi-search"></i> Filter</button>
                 <a href="{{ route('customers.index') }}" class="btn btn-outline-secondary">Clear</a>

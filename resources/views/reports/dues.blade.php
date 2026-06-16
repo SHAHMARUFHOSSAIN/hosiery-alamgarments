@@ -59,7 +59,7 @@
     </div>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
     <h5 class="mb-0">Dues Report ({{ $dues->total() }})</h5>
     <a href="{{ route('export.dues', request()->only('user_id', 'status', 'date_from', 'date_to', 'search', 'sort', 'direction')) }}" class="btn btn-success">
         <i class="bi bi-download"></i> Excel
@@ -213,6 +213,10 @@
                     <div class="mb-3">
                         <label class="form-label">Next Due Date <small class="text-muted">(if remaining balance)</small></label>
                         <input type="date" name="next_due_date" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Transaction ID <small class="text-muted">(for reference)</small></label>
+                        <input type="text" name="transaction_id" class="form-control" placeholder="e.g. TXN12345">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Note</label>

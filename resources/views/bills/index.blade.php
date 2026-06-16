@@ -21,11 +21,25 @@
     </div>
 @endif
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
     <h2 class="mb-0">Bills</h2>
     <a href="{{ route('bills.create') }}" class="btn btn-primary">
         <i class="bi bi-plus"></i> New Bill
     </a>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <div class="bg-success bg-opacity-10 p-3 rounded-circle d-inline-block mb-2">
+                    <i class="bi bi-receipt text-success fs-2"></i>
+                </div>
+                <h3 class="mb-1">{{ number_format($totalBills) }}</h3>
+                <p class="text-muted mb-0">Total Bills</p>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="card border-0 shadow-sm">
@@ -78,6 +92,7 @@
                     <th><a href="{{ route('bills.index', ['sort' => 'bill_amount', 'direction' => request('sort') == 'bill_amount' && request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="text-decoration-none">Amount @if(request('sort') == 'bill_amount'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif</a></th>
                     <th>Received</th>
                     <th><a href="{{ route('bills.index', ['sort' => 'check_amount', 'direction' => request('sort') == 'check_amount' && request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="text-decoration-none">Cheque Amt @if(request('sort') == 'check_amount'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif</a></th>
+                    <th>Ref Card</th>
                     <th>Discount</th>
                     <th>Due</th>
                     <th>User</th>
@@ -89,12 +104,14 @@
                 @forelse($bills as $bill)
                 @php
                     $checkPayments = $bill->payments->where('payment_type', 'check');
-                    $nonCheckPayments = $bill->payments->where('payment_type', '!=', 'check');
+                    $cardPayments = $bill->payments->where('payment_type', 'card');
+                    $encashedPayments = $bill->payments->whereIn('status', ['encashed']);
                     $firstPayment = $bill->payments->first();
                     $paymentType = $firstPayment?->payment_type;
-                    $receivedAmount = $nonCheckPayments->sum('amount');
+                    $receivedAmount = $encashedPayments->sum('amount');
                     $totalCheckAmount = $checkPayments->sum('check_amount');
-                    $dueAmount = $bill->bill_amount - $bill->discount - $receivedAmount - $totalCheckAmount;
+                    $cardAmount = $cardPayments->sum('card_amount') ?: $cardPayments->sum('amount');
+                    $dueAmount = $bill->bill_amount - $bill->discount - $receivedAmount - $totalCheckAmount - $cardAmount;
                 @endphp
                 <tr>
                     <td>{{ $bill->id }}</td>
@@ -129,6 +146,13 @@
                         -
                         @endif
                     </td>
+                    <td>
+                        @if($cardAmount > 0)
+                        <span class="fw-bold text-secondary">{{ number_format($cardAmount, 2) }}</span>
+                        @else
+                        -
+                        @endif
+                    </td>
                     <td>{{ number_format($bill->discount, 2) }}</td>
                     <td class="fw-bold {{ $dueAmount > 0 ? 'text-danger' : 'text-success' }}">{{ number_format($dueAmount > 0 ? $dueAmount : 0, 2) }}</td>
                     <td><span class="badge bg-secondary">{{ $bill->user->name ?? 'N/A' }}</span></td>
@@ -151,7 +175,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="14" class="text-center py-3">No bills found</td></tr>
+                <tr><td colspan="15" class="text-center py-3">No bills found</td></tr>
                 @endforelse
             </tbody>
         </table>

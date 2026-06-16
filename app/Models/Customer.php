@@ -15,9 +15,17 @@ class Customer extends Model
         'name',
         'mobile',
         'location',
+        'opening_balance',
         'created_by',
         'is_active',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'opening_balance' => 'decimal:2',
+        ];
+    }
 
     public function creator(): BelongsTo
     {
@@ -32,6 +40,11 @@ class Customer extends Model
     public function dues(): HasMany
     {
         return $this->hasMany(Due::class);
+    }
+
+    public function previousDues(): HasMany
+    {
+        return $this->hasMany(PreviousDue::class);
     }
 
     public function getLastBillDateAttribute()

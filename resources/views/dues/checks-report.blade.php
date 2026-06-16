@@ -59,6 +59,33 @@
     </div>
 </div>
 
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-1">Total Cheque Amount</h6>
+                <h3 class="text-primary mb-0">৳{{ number_format($totalCheckAmount, 2) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-1">Total Encashed</h6>
+                <h3 class="text-success mb-0">৳{{ number_format($totalEncashedAmount, 2) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-1">Total Remaining</h6>
+                <h3 class="text-danger mb-0">৳{{ number_format($totalRemainingAmount, 2) }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
 <h5 class="mb-3">Cheque Reports ({{ $allChecks->total() }})</h5>
 
 <div class="card border-0 shadow-sm">
@@ -130,8 +157,8 @@
                             <i class="bi bi-eye"></i>
                         </a>
                         @if($check->check_photo)
-                        <a href="{{ asset('storage/' . $check->check_photo) }}" target="_blank" class="btn btn-sm btn-outline-secondary py-0 px-2">
-                            <i class="bi bi-image"></i>
+                        <a href="{{ asset('storage/' . $check->check_photo) }}" target="_blank">
+                            <img src="{{ asset('storage/' . $check->check_photo) }}" alt="Cheque" class="img-thumbnail" style="width: 80px; height: 40px; object-fit: cover;">
                         </a>
                         @endif
                         @if($remainingCheck > 0)
@@ -183,6 +210,14 @@
                     <div class="mb-3">
                         <strong>Original Amount:</strong> ৳{{ number_format($check->check_amount, 2) }}
                     </div>
+                    @if($check->check_photo)
+                    <div class="mb-3 text-center">
+                        <strong>Cheque Photo:</strong><br>
+                        <a href="{{ asset('storage/' . $check->check_photo) }}" target="_blank">
+                            <img src="{{ asset('storage/' . $check->check_photo) }}" alt="Cheque" class="img-fluid border rounded" style="max-height: 150px;">
+                        </a>
+                    </div>
+                    @endif
                     @if($check->encashed_amount > 0)
                     <div class="mb-3">
                         <strong>Total Encashed:</strong> <span class="text-success">৳{{ number_format($check->encashed_amount, 2) }}</span>
@@ -203,6 +238,10 @@
                     <div class="mb-3">
                         <label class="form-label">Next Due Date <small class="text-muted">(if remaining balance)</small></label>
                         <input type="date" name="next_due_date" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Transaction ID <small class="text-muted">(for reference)</small></label>
+                        <input type="text" name="transaction_id" class="form-control" placeholder="e.g. TXN12345">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Note</label>

@@ -8,6 +8,8 @@ use App\Models\Due;
 use App\Models\DuePayment;
 use App\Models\MainBalance;
 use App\Models\Payment;
+use App\Models\PreviousDue;
+use App\Models\PreviousDuePayment;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -32,6 +34,13 @@ class ReportController extends Controller
         $totalDues = $dueQuery->where('status', 'pending')->sum('amount');
         $paidDues = $dueQuery->where('status', 'paid')->sum('amount');
 
+        $prevDueQuery = PreviousDue::query();
+        if (!Auth::user()->isAdmin()) {
+            $prevDueQuery->where('created_by', Auth::id());
+        }
+        $totalPrevDues = $prevDueQuery->clone()->where('status', 'pending')->sum('amount');
+        $totalPrevCollected = PreviousDuePayment::whereIn('previous_due_id', $prevDueQuery->clone()->select('id'))->sum('amount');
+
         $balanceQuery = MainBalance::query();
         $totalCredit = $balanceQuery->clone()->where('type', 'credit')->sum('amount');
         $totalDebit = $balanceQuery->clone()->where('type', 'debit')->sum('amount');
@@ -43,7 +52,7 @@ class ReportController extends Controller
             $mainBalance = $branchCredit - $branchDebit;
         }
 
-        return view('reports.index', compact('users', 'totalSales', 'totalDues', 'paidDues', 'mainBalance'));
+        return view('reports.index', compact('users', 'totalSales', 'totalDues', 'paidDues', 'mainBalance', 'totalPrevDues', 'totalPrevCollected'));
     }
 
     public function sales(Request $request): View
@@ -387,5 +396,61 @@ class ReportController extends Controller
             'dueCollection',
             'recoveryRate',
         ));
+    }
+
+    public function previousDue(Request $request): View
+    {
+        $query = PreviousDue::with(['customer', 'creator', 'payments']);
+
+        if (!Auth::user()->isAdmin()) {
+            $query->where('created_by', Auth::id());
+        }
+
+        if ($request->filled('user_id')) {
+            $query->where('created_by', $request->user_id);
+        }
+
+        if ($request->filled('status')) {
+            if ($request->status === 'partial') {
+                $query->where('status', 'pending')->whereHas('payments');
+            } else {
+                $query->where('status', $request->status);
+            }
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->whereHas('customer', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('mobile', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        $sortField = $request->get('sort', 'created_at');
+        $sortDirection = $request->get('direction', 'desc');
+        $allowedSorts = ['id', 'original_amount', 'amount', 'status', 'created_at'];
+
+        if (in_array($sortField, $allowedSorts)) {
+            $query->orderBy($sortField, $sortDirection);
+        } else {
+            $query->latest();
+        }
+
+        $previousDues = $query->paginate(20);
+        $previousDues->appends($request->only('user_id', 'status', 'date_from', 'date_to', 'search', 'sort', 'direction'));
+
+        $users = User::where('role', 'user')->get(['id', 'name']);
+
+        $totalAmount = $previousDues->sum('original_amount');
+        $totalPending = collect($previousDues->items())->sum(fn($pd) => $pd->remaining_amount);
+
+        return view('reports.previous-dues', compact('previousDues', 'users', 'totalAmount', 'totalPending'));
     }
 }

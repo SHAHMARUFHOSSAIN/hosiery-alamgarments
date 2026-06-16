@@ -6,7 +6,7 @@
 
 @section('content')
 <form method="GET" class="mb-4">
-    <div class="d-flex align-items-center gap-2">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
         <label class="me-2">Time Period:</label>
         <select name="days" class="form-select" style="width: auto;" onchange="this.form.submit()">
             <option value="7" {{ $days == 7 ? 'selected' : '' }}>Last 7 Days</option>

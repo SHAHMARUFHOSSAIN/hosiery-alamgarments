@@ -310,8 +310,8 @@
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 @if($check->check_photo)
-                                <a href="{{ asset('storage/' . $check->check_photo) }}" target="_blank" class="btn btn-sm btn-outline-secondary py-0 px-2">
-                                    <i class="bi bi-image"></i>
+                                <a href="{{ asset('storage/' . $check->check_photo) }}" target="_blank">
+                                    <img src="{{ asset('storage/' . $check->check_photo) }}" alt="Cheque" class="img-thumbnail" style="width: 80px; height: 40px; object-fit: cover;">
                                 </a>
                                 @endif
                             </td>

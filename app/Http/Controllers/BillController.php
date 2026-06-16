@@ -64,7 +64,34 @@ class BillController extends Controller
         $bills = $query->paginate(15);
         $bills->appends($request->only('search', 'user_id', 'date_from', 'date_to', 'bill_man', 'sort', 'direction'));
 
-        return view('bills.index', compact('bills', 'users'));
+        $totalBills = Bill::query();
+        if (Auth::user()->isAdmin()) {
+            if ($request->filled('user_id')) {
+                $totalBills->where('user_id', $request->user_id);
+            }
+            if ($request->filled('date_from')) {
+                $totalBills->whereDate('created_at', '>=', $request->date_from);
+            }
+            if ($request->filled('date_to')) {
+                $totalBills->whereDate('created_at', '<=', $request->date_to);
+            }
+        } else {
+            $totalBills->where('user_id', Auth::id());
+        }
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $totalBills->where(function ($q) use ($search) {
+                $q->where('bill_no', 'like', "%{$search}%")
+                  ->orWhere('shop_name', 'like', "%{$search}%")
+                  ->orWhere('bill_man', 'like', "%{$search}%");
+            });
+        }
+        if ($request->filled('bill_man')) {
+            $totalBills->where('bill_man', 'like', "%{$request->bill_man}%");
+        }
+        $totalBills = $totalBills->count();
+
+        return view('bills.index', compact('bills', 'users', 'totalBills'));
     }
 
     public function create(): View
@@ -124,6 +151,7 @@ class BillController extends Controller
         $dueDate = $validated['due_date'] ?? now()->addDays(7)->toDateString();
         $totalCheckAmount = 0;
         $totalReceived = 0;
+        $mainBalanceAmount = 0;
 
         if ($validated['payment_type'] === 'check' && isset($validated['checks'])) {
             foreach ($validated['checks'] as $index => $checkData) {
@@ -158,6 +186,7 @@ class BillController extends Controller
                     'status' => 'encashed',
                 ]);
                 $totalReceived += $cashAmount;
+                $mainBalanceAmount += $cashAmount;
             }
 
             $totalReceived += $totalCheckAmount;
@@ -169,6 +198,17 @@ class BillController extends Controller
             };
 
             $isPendingPayment = in_array($validated['payment_type'], ['due', 'card']);
+
+            // For card/due types, handle cash (Payment Received) separately so it goes to main balance
+            if ($cashAmount > 0 && in_array($validated['payment_type'], ['card', 'due'])) {
+                Payment::create([
+                    'bill_id' => $bill->id,
+                    'payment_type' => 'cash',
+                    'amount' => $cashAmount,
+                    'details' => $validated['payment_details'] ?? null,
+                    'status' => 'encashed',
+                ]);
+            }
 
             Payment::create([
                 'bill_id' => $bill->id,
@@ -187,42 +227,53 @@ class BillController extends Controller
                 'due_date' => $validated['payment_type'] === 'due' ? $dueDate : null,
             ]);
 
-            $totalReceived = $isPendingPayment ? 0 : $effectiveAmount;
+            if ($validated['payment_type'] === 'card') {
+                $totalReceived = $cashAmount + (float) $validated['card_amount'];
+                $mainBalanceAmount = $cashAmount;
+            } elseif ($validated['payment_type'] === 'due') {
+                $totalReceived = $cashAmount;
+                $mainBalanceAmount = $cashAmount;
+            } else {
+                $totalReceived = $effectiveAmount;
+                $mainBalanceAmount = $effectiveAmount;
+            }
         }
 
         $netAmount = $validated['bill_amount'] - ($validated['discount'] ?? 0);
 
-        if ($totalReceived > 0) {
+        if ($mainBalanceAmount > 0) {
             $lastBal = MainBalance::where('branch_id', Auth::id())->orderBy('id', 'desc')->value('balance') ?? 0;
             $customer = Customer::find($validated['customer_id']);
+            $note = 'Bill: ৳' . number_format($netAmount, 2) . ' | Received: ' . ($cashAmount > 0 ? 'Cash: ' . $cashAmount : $validated['payment_type']);
+            if ($totalCheckAmount > 0) {
+                $note .= ' (Cheques pending: ' . number_format($totalCheckAmount, 2) . ')';
+            }
             MainBalance::create([
                 'voucher_no' => VoucherHelper::generateVoucherNo(),
                 'name' => 'Sales - Bill #' . $bill->bill_no,
-                'amount' => $totalReceived,
-                'balance' => $lastBal + $totalReceived,
+                'amount' => $mainBalanceAmount,
+                'balance' => $lastBal + $mainBalanceAmount,
                 'type' => 'credit',
                 'invoice_no' => $bill->bill_no,
                 'party_name' => $customer?->name,
-                'note' => 'Bill: ৳' . number_format($netAmount, 2) . ' | Received: ' . $validated['payment_type'] . ($totalCheckAmount > 0 ? ' (Cheques: ' . $totalCheckAmount . ')' : ''),
+                'note' => $note,
                 'user_id' => Auth::id(),
                 'branch_id' => Auth::id(),
             ]);
         }
 
-        if ($validated['payment_type'] === 'due') {
-            $dueAmount = $netAmount - $totalReceived;
+        $dueAmount = $netAmount - $totalReceived;
 
-            if ($dueAmount > 0) {
-                Due::create([
-                    'customer_id' => $validated['customer_id'],
-                    'bill_id' => $bill->id,
-                    'amount' => $dueAmount,
-                    'original_amount' => $dueAmount,
-                    'due_date' => $dueDate,
-                    'status' => 'pending',
-                    'created_by' => Auth::id(),
-                ]);
-            }
+        if ($dueAmount > 0) {
+            Due::create([
+                'customer_id' => $validated['customer_id'],
+                'bill_id' => $bill->id,
+                'amount' => $dueAmount,
+                'original_amount' => $dueAmount,
+                'due_date' => $dueDate,
+                'status' => 'pending',
+                'created_by' => Auth::id(),
+            ]);
         }
 
         // Return JSON for AJAX requests, redirect for standard form submission
@@ -245,7 +296,7 @@ class BillController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $bill->load(['customer', 'user', 'payments', 'dues.duePayments.user']);
+        $bill->load(['customer', 'user', 'payments.checkEncashments', 'dues.duePayments.user']);
 
         return view('bills.show', compact('bill'));
     }
@@ -309,9 +360,65 @@ class BillController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        $branchId = $bill->user_id;
+
+        $saleEntry = MainBalance::where('invoice_no', $bill->bill_no)
+            ->where('name', 'like', 'Sales - Bill #%')
+            ->first();
+
+        if ($saleEntry) {
+            $lastBal = MainBalance::where('branch_id', $branchId)->orderBy('id', 'desc')->value('balance') ?? 0;
+            MainBalance::create([
+                'voucher_no' => VoucherHelper::generateVoucherNo(),
+                'name' => 'Reversal - Bill #' . $bill->bill_no . ' Deleted',
+                'amount' => $saleEntry->amount,
+                'balance' => $lastBal - $saleEntry->amount,
+                'type' => 'debit',
+                'invoice_no' => $bill->bill_no,
+                'note' => 'Auto-reversal: Bill #' . $bill->bill_no . ' was deleted',
+                'user_id' => Auth::id(),
+                'branch_id' => $branchId,
+            ]);
+        }
+
+        $duePayments = MainBalance::where('name', 'like', 'Due Payment -%')
+            ->where('note', 'like', '%Bill: ' . $bill->bill_no . '%')
+            ->orWhere('note', 'like', '%(Bill: ' . $bill->bill_no . ')%')
+            ->get();
+
+        foreach ($duePayments as $dp) {
+            $lastBal = MainBalance::where('branch_id', $dp->branch_id)->orderBy('id', 'desc')->value('balance') ?? 0;
+            MainBalance::create([
+                'voucher_no' => VoucherHelper::generateVoucherNo(),
+                'name' => 'Reversal - Due Payment Bill #' . $bill->bill_no . ' Deleted',
+                'amount' => $dp->amount,
+                'balance' => $lastBal - $dp->amount,
+                'type' => 'debit',
+                'note' => 'Auto-reversal: Due payment for deleted Bill #' . $bill->bill_no,
+                'user_id' => Auth::id(),
+                'branch_id' => $dp->branch_id,
+            ]);
+        }
+
+        $chequeEntries = MainBalance::where('name', 'like', 'Cheque Encashed - Bill #' . $bill->bill_no . '%')->get();
+
+        foreach ($chequeEntries as $ce) {
+            $lastBal = MainBalance::where('branch_id', $ce->branch_id)->orderBy('id', 'desc')->value('balance') ?? 0;
+            MainBalance::create([
+                'voucher_no' => VoucherHelper::generateVoucherNo(),
+                'name' => 'Reversal - Cheque Encashed Bill #' . $bill->bill_no . ' Deleted',
+                'amount' => $ce->amount,
+                'balance' => $lastBal - $ce->amount,
+                'type' => 'debit',
+                'note' => 'Auto-reversal: Cheque encashment for deleted Bill #' . $bill->bill_no,
+                'user_id' => Auth::id(),
+                'branch_id' => $ce->branch_id,
+            ]);
+        }
+
         $bill->delete();
 
         return redirect()->route('bills.index')
-            ->with('success', 'Bill deleted successfully');
+            ->with('success', 'Bill deleted successfully. Related MainBalance entries have been reversed.');
     }
 }

@@ -69,10 +69,24 @@ class MainBalanceController extends Controller
 
         $selectedBranch = $request->filled('branch_id') ? User::find($request->branch_id) : null;
 
+        $userWiseBalance = [];
+        if (Auth::user()->isAdmin()) {
+            foreach ($branches as $branch) {
+                $credit = MainBalance::where('branch_id', $branch->id)->where('type', 'credit')->sum('amount');
+                $debit = MainBalance::where('branch_id', $branch->id)->where('type', 'debit')->sum('amount');
+                $userWiseBalance[$branch->id] = [
+                    'name' => $branch->name,
+                    'credit' => $credit,
+                    'debit' => $debit,
+                    'balance' => $credit - $debit,
+                ];
+            }
+        }
+
         return view('main-balance.index', compact(
             'balances', 'mainBalance', 'totalCredit', 'totalDebit',
             'allCredit', 'allDebit', 'overallBalance',
-            'branches', 'selectedBranch'
+            'branches', 'selectedBranch', 'userWiseBalance'
         ));
     }
 
@@ -126,7 +140,7 @@ class MainBalanceController extends Controller
             $query->where('branch_id', $request->branch_id);
         }
 
-        $balances = $query->orderBy('id', 'desc')->get();
+        $balances = $query->orderBy('id', 'desc')->paginate(20);
 
         $branchWise = [];
         $branches = User::where('role', 'user')->get(['id', 'name']);
@@ -142,8 +156,14 @@ class MainBalanceController extends Controller
             ];
         }
 
-        $totalCredit = $balances->where('type', 'credit')->sum('amount');
-        $totalDebit = $balances->where('type', 'debit')->sum('amount');
+        $base = MainBalance::query();
+        if (!Auth::user()->isAdmin()) {
+            $base->where('branch_id', Auth::id());
+        } elseif ($request->filled('branch_id')) {
+            $base->where('branch_id', $request->branch_id);
+        }
+        $totalCredit = (clone $base)->where('type', 'credit')->sum('amount');
+        $totalDebit = (clone $base)->where('type', 'debit')->sum('amount');
         $totalMainBalance = $totalCredit - $totalDebit;
 
         return view('main-balance.report', compact('balances', 'branchWise', 'totalMainBalance', 'totalCredit', 'totalDebit', 'branches'));

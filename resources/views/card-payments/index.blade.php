@@ -29,7 +29,7 @@
     </div>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
     <h5 class="mb-0">Pending Reference Card Payments ({{ $cardPayments->total() }})</h5>
     <h5 class="mb-0">Total Pending: <span class="text-danger fw-bold">৳{{ number_format($totalPending, 2) }}</span></h5>
 </div>

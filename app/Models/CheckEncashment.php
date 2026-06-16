@@ -13,6 +13,7 @@ class CheckEncashment extends Model
         'encash_date',
         'next_due_date',
         'note',
+        'transaction_id',
         'user_id',
     ];
 

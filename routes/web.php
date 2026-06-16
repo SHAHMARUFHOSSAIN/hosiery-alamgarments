@@ -7,6 +7,7 @@ use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DueController;
 use App\Http\Controllers\ExportController;
+use App\Http\Controllers\PreviousDueController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\MainBalanceController;
 use App\Http\Controllers\ProfileController;
@@ -39,6 +40,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/{customer}', [CustomerController::class, 'show'])->name('customers.show');
         Route::get('/{customer}/edit', [CustomerController::class, 'edit'])->name('customers.edit');
         Route::put('/{customer}', [CustomerController::class, 'update'])->name('customers.update');
+        Route::put('/{customer}/opening-balance', [CustomerController::class, 'updateOpeningBalance'])->name('customers.opening-balance');
         Route::delete('/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
     });
 
@@ -64,6 +66,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [DueController::class, 'index'])->name('dues.index');
         Route::get('/daily-report', [DueController::class, 'dailyReport'])->name('dues.daily-report');
         Route::get('/checks-report', [DueController::class, 'checksReport'])->name('dues.checks-report');
+        Route::get('/tt-report', [DueController::class, 'ttReport'])->name('dues.tt-report');
+        Route::get('/cash-report', [DueController::class, 'cashReport'])->name('dues.cash-report');
         Route::post('/mark-paid/{id}', [DueController::class, 'markPaid'])->name('dues.mark-paid');
         Route::post('/add-payment', [DueController::class, 'addPayment'])->name('dues.add-payment');
         Route::post('/encash/{id}', [DueController::class, 'encashCheck'])->name('dues.encash');
@@ -73,6 +77,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [CardPaymentController::class, 'index'])->name('card-payments.index');
         Route::post('/encash/{id}', [CardPaymentController::class, 'encash'])->name('card-payments.encash');
     });
+
+    Route::resource('previous-dues', PreviousDueController::class);
+    Route::post('/previous-dues/add-payment', [PreviousDueController::class, 'addPayment'])->name('previous-dues.add-payment');
 
     Route::prefix('imports')->group(function () {
         Route::get('/', [ImportController::class, 'index'])->name('imports.index');
@@ -117,6 +124,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/sales', [ReportController::class, 'sales'])->name('reports.sales');
             Route::get('/dues', [ReportController::class, 'dues'])->name('reports.dues');
             Route::get('/analytics', [ReportController::class, 'analytics'])->name('reports.analytics');
+            Route::get('/previous-dues', [ReportController::class, 'previousDue'])->name('reports.previous-dues');
             Route::get('/inactive-customers', [ReportController::class, 'inactiveCustomers'])->name('reports.inactive-customers');
             Route::get('/inactive-customers/export', [ExportController::class, 'inactiveCustomers'])->name('export.inactive-customers');
         });
@@ -124,6 +132,9 @@ Route::middleware('auth')->group(function () {
         Route::prefix('export')->group(function () {
             Route::get('/bills', [ExportController::class, 'bills'])->name('export.bills');
             Route::get('/dues', [ExportController::class, 'dues'])->name('export.dues');
+            Route::get('/customers', [ExportController::class, 'customers'])->name('export.customers');
+            Route::get('/customer/{customer}', [ExportController::class, 'customer'])->name('export.customer');
+            Route::get('/previous-dues', [ExportController::class, 'previousDues'])->name('export.previous-dues');
         });
 
         Route::prefix('settings')->group(function () {

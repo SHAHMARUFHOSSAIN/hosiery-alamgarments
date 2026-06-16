@@ -30,7 +30,26 @@
     </div>
 </div>
 
-<h2 class="mb-4">All Dues ({{ $dues->count() }})</h2>
+<h2 class="mb-4">All Dues ({{ $dues->total() }})</h2>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-1">Total Dues</h6>
+                <h3 class="text-danger mb-0">৳{{ number_format($totalPendingAmount, 2) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-1">Total Records</h6>
+                <h3 class="mb-0">{{ $dues->count() }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="card border-0 shadow-sm">
     <div class="table-responsive">
@@ -102,6 +121,11 @@
             </tbody>
         </table>
     </div>
+    @if($dues->hasPages())
+    <div class="card-footer bg-white text-center">
+        {!! $dues->appends(request()->only('status', 'search', 'sort', 'direction'))->links() !!}
+    </div>
+    @endif
 </div>
 
 @foreach($dues as $due)
@@ -150,6 +174,10 @@
                     <div class="mb-3">
                         <label class="form-label">Next Due Date <small class="text-muted">(if remaining balance)</small></label>
                         <input type="date" name="next_due_date" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Transaction ID <small class="text-muted">(for reference)</small></label>
+                        <input type="text" name="transaction_id" class="form-control" placeholder="e.g. TXN12345">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Note</label>

@@ -33,6 +33,22 @@
     <div class="col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
+                <h6 class="text-muted mb-1">Prev. Due Pending</h6>
+                <h3 class="text-danger mb-0">৳{{ number_format($totalPrevDues ?? 0, 2) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-1">Prev. Due Collected</h6>
+                <h3 class="text-success mb-0">৳{{ number_format($totalPrevCollected ?? 0, 2) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
                 <h6 class="text-muted mb-1">Main Balance</h6>
                 <h3 class="text-{{ $mainBalance >= 0 ? 'success' : 'danger' }} mb-0">৳{{ number_format($mainBalance ?? 0, 2) }}</h3>
             </div>
@@ -59,6 +75,16 @@
             <h5>Dues Report</h5>
             <p class="text-muted">Track all dues with status and date filters</p>
             <a href="{{ route('reports.dues') }}" class="btn btn-danger">View Dues</a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100 text-center p-4">
+            <div class="bg-dark bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
+                <i class="bi bi-hourglass-split text-dark fs-2"></i>
+            </div>
+            <h5>Previous Due Report</h5>
+            <p class="text-muted">Track opening balance dues with payments and status</p>
+            <a href="{{ route('reports.previous-dues') }}" class="btn btn-dark">View Prev. Dues</a>
         </div>
     </div>
     <div class="col-md-4">

@@ -15,7 +15,7 @@
 @endsection
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
     <h2 class="mb-0">Edit Bill</h2>
     <a href="{{ route('bills.index') }}" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left"></i> Back
@@ -133,7 +133,11 @@
                                 <div class="col-md-4">
                                     <label class="form-label">Cheque Photo</label>
                                     @if($checkPayment->check_photo)
-                                    <div class="mb-2"><a href="{{ asset('storage/' . $checkPayment->check_photo) }}" target="_blank" class="btn btn-sm btn-outline-primary">View Photo</a></div>
+                                    <div class="mb-2">
+                                        <a href="{{ asset('storage/' . $checkPayment->check_photo) }}" target="_blank">
+                                            <img src="{{ asset('storage/' . $checkPayment->check_photo) }}" alt="Cheque" class="img-thumbnail" style="width: 150px; height: 75px; object-fit: cover;">
+                                        </a>
+                                    </div>
                                     @else
                                     <span class="text-muted">No photo uploaded</span>
                                     @endif

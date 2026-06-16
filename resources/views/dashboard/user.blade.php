@@ -324,6 +324,48 @@
     </div>
 </div>
 
+<div class="card border-0 shadow-sm mt-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 fw-bold"><i class="bi bi-clock-history me-2 text-warning"></i>My Pending Cheques</h6>
+        <a href="{{ route('dues.checks-report') }}" class="btn btn-sm btn-outline-warning">View All</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Bill No</th>
+                    <th>Customer</th>
+                    <th>Bank</th>
+                    <th>Cheque No</th>
+                    <th class="text-end">Amount</th>
+                    <th>Cheque Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($pendingCheques as $cheque)
+                @php $remaining = $cheque->check_amount - $cheque->encashed_amount; @endphp
+                <tr>
+                    <td><a href="{{ route('bills.show', $cheque->bill) }}">{{ $cheque->bill->bill_no ?? 'N/A' }}</a></td>
+                    <td>{{ $cheque->bill->customer->name ?? 'N/A' }}</td>
+                    <td>{{ $cheque->bank_name ?? 'N/A' }}</td>
+                    <td>{{ $cheque->check_no ?? 'N/A' }}</td>
+                    <td class="text-end fw-bold">৳{{ number_format($remaining, 2) }}</td>
+                    <td>{{ $cheque->check_date?->format('M d, Y') ?? 'N/A' }}</td>
+                    <td>
+                        <a href="{{ route('bills.show', $cheque->bill) }}" class="btn btn-sm btn-success py-0 px-2">
+                            <i class="bi bi-credit-card"></i> Encash
+                        </a>
+                    </td>
+                </tr>
+                @empty
+                <tr><td colspan="7" class="text-center py-3 text-muted">No pending cheques</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+
 @foreach($recentDues as $due)
 <div class="modal fade" id="userDashPayModal{{ $due->id }}" tabindex="-1">
     <div class="modal-dialog">
@@ -358,6 +400,10 @@
                     <div class="mb-3">
                         <label class="form-label">Next Due Date <small class="text-muted">(if remaining balance)</small></label>
                         <input type="date" name="next_due_date" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Transaction ID <small class="text-muted">(for reference)</small></label>
+                        <input type="text" name="transaction_id" class="form-control" placeholder="e.g. TXN12345">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Note</label>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helpers\VoucherHelper;
 use App\Models\Bill;
+use App\Models\Due;
 use App\Models\MainBalance;
 use App\Models\Payment;
 use Illuminate\Http\RedirectResponse;
@@ -80,6 +81,18 @@ class CardPaymentController extends Controller
         }
 
         $payment->update(['status' => 'encashed']);
+
+        $due = Due::where('bill_id', $payment->bill_id)->first();
+        if ($due) {
+            $netAmount = ($payment->bill->bill_amount ?? 0) - ($payment->bill->discount ?? 0);
+            if ((float) $due->original_amount === (float) $netAmount) {
+                $newAmount = max(0, $due->amount - $payment->amount);
+                $due->update([
+                    'amount' => $newAmount,
+                    'status' => $newAmount <= 0 ? 'paid' : $due->status,
+                ]);
+            }
+        }
 
         $lastBal = MainBalance::where('branch_id', Auth::id())->orderBy('id', 'desc')->value('balance') ?? 0;
         MainBalance::create([

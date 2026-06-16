@@ -51,7 +51,7 @@
     </div>
 </div>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
     <h5 class="mb-0">Sales Report ({{ $bills->total() }})</h5>
     <a href="{{ route('export.bills', request()->only('user_id', 'date_from', 'date_to', 'search')) }}" class="btn btn-success">
         <i class="bi bi-download"></i> Excel

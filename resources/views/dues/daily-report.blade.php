@@ -15,8 +15,8 @@
 @endsection
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0">Due Today: {{ $todayDues->count() }}</h2>
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <h2 class="mb-0">Due Today: {{ $todayDues->total() }}</h2>
     <div>
         <a href="{{ route('dues.index') }}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left"></i> Back
@@ -29,7 +29,7 @@
         <div class="d-flex justify-content-between align-items-center">
             <h5 class="mb-0">
                 <i class="bi bi-calendar-event"></i> 
-                Total: {{ number_format($todayDues->sum('remaining_amount'), 2) }}
+                Total: {{ number_format($totalAmount, 2) }}
             </h5>
             <a href="{{ route('export.dues', ['date_from' => now()->toDateString(), 'date_to' => now()->toDateString()]) }}" class="btn btn-sm btn-success">
                 <i class="bi bi-download"></i> Export
@@ -79,17 +79,22 @@
                 </tr>
                 @endforelse
             </tbody>
-            @if($todayDues->count() > 0)
+            @if($todayDues->total() > 0)
             <tfoot class="table-dark">
                 <tr>
                     <td colspan="5" class="text-end"><strong>Total Remaining:</strong></td>
-                    <td class="text-danger fw-bold fs-5">{{ number_format($todayDues->sum(fn($d) => $d->remaining_amount), 2) }}</td>
+                    <td class="text-danger fw-bold fs-5">{{ number_format($totalAmount, 2) }}</td>
                     <td colspan="3"></td>
                 </tr>
             </tfoot>
             @endif
         </table>
     </div>
+    @if($todayDues->hasPages())
+    <div class="card-footer bg-white text-center">
+        {!! $todayDues->links() !!}
+    </div>
+    @endif
 </div>
 
 @foreach($todayDues as $due)
@@ -137,6 +142,10 @@
                     <div class="mb-3">
                         <label class="form-label">Next Due Date <small class="text-muted">(if remaining balance)</small></label>
                         <input type="date" name="next_due_date" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Transaction ID <small class="text-muted">(for reference)</small></label>
+                        <input type="text" name="transaction_id" class="form-control" placeholder="e.g. TXN12345">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Note</label>

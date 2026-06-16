@@ -15,7 +15,7 @@
 @endsection
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
     <h2 class="mb-0">Bill: {{ $bill->bill_no }}</h2>
     <div>
         <a href="{{ route('bills.edit', $bill) }}" class="btn btn-secondary">
@@ -34,6 +34,7 @@
                 <h5 class="mb-0">Bill Details</h5>
             </div>
             <div class="card-body">
+                <div class="table-responsive">
                 <table class="table table-borderless">
                     <tr><th>Bill No:</th><td>{{ $bill->bill_no }}</td></tr>
                     <tr><th>Customer:</th><td><a href="{{ route('customers.show', $bill->customer) }}">{{ $bill->customer->name ?? 'N/A' }}</a></td></tr>
@@ -45,6 +46,7 @@
                     <tr><th>User:</th><td><span class="badge bg-secondary">{{ $bill->user->name ?? 'N/A' }}</span></td></tr>
                     <tr><th>Date:</th><td>{{ $bill->created_at->format('M d, Y h:i A') }}</td></tr>
                 </table>
+                </div>
             </div>
         </div>
     </div>
@@ -86,8 +88,15 @@
                                         <span class="badge bg-warning text-dark">Pending</span>
                                         @endif
                                     </div>
+                                    @if($payment->status === 'encashed' && $payment->checkEncashments->isNotEmpty())
+                                    <div class="col-md-2"><strong>TXN ID:</strong> {{ $payment->checkEncashments->first()->transaction_id ?? 'N/A' }}</div>
+                                    @endif
                                     @if($payment->check_photo)
-                                    <div class="col-12"><a href="{{ asset('storage/' . $payment->check_photo) }}" target="_blank" class="btn btn-sm btn-outline-primary"><i class="bi bi-image"></i> View Cheque Photo</a></div>
+                                    <div class="col-12">
+                                        <a href="{{ asset('storage/' . $payment->check_photo) }}" target="_blank">
+                                            <img src="{{ asset('storage/' . $payment->check_photo) }}" alt="Cheque" class="img-fluid border rounded" style="max-height: 120px;">
+                                        </a>
+                                    </div>
                                     @endif
                                     @if($payment->status === 'pending' && $payment->check_amount > 0)
                                     <div class="col-12">
@@ -232,6 +241,10 @@
                     <div class="mb-3">
                         <label class="form-label">Next Due Date <small class="text-muted">(if remaining balance)</small></label>
                         <input type="date" name="next_due_date" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Transaction ID <small class="text-muted">(for reference)</small></label>
+                        <input type="text" name="transaction_id" class="form-control" placeholder="e.g. TXN12345">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Note</label>

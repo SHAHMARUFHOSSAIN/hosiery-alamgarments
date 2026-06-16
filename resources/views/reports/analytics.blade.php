@@ -14,7 +14,7 @@
 @endsection
 
 @section('content')
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
     <h4>Business Intelligence</h4>
     <div class="d-flex gap-2">
         <a href="{{ route('reports.analytics', ['period' => 7]) }}" class="btn btn-sm btn-outline-secondary {{ $period == 7 ? 'active' : '' }}">7 Days</a>
