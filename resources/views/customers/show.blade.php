@@ -166,7 +166,7 @@
                             <td>{{ $bill->shop_name ?? 'N/A' }}</td>
                             <td class="fw-bold">{{ number_format($bill->bill_amount, 2) }}</td>
                             <td><span class="badge bg-secondary">{{ $bill->user->name ?? 'N/A' }}</span></td>
-                            <td>{{ $bill->report_date->format('M d, Y') }}</td>
+                            <td>{{ $bill->report_date?->format('M d, Y') ?? $bill->created_at->format('M d, Y') }}</td>
                             <td>
                                 <a href="{{ route('bills.show', $bill) }}" class="btn btn-sm btn-outline-primary py-0 px-2">
                                     <i class="bi bi-eye"></i>

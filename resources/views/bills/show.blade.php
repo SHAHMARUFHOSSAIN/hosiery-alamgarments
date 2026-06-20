@@ -50,7 +50,7 @@
                     <tr><th>Discount:</th><td>{{ number_format($bill->discount, 2) }}</td></tr>
                     <tr><th>Net:</th><td class="fw-bold text-success">{{ number_format($bill->bill_amount - $bill->discount, 2) }}</td></tr>
                     <tr><th>User:</th><td><span class="badge bg-secondary">{{ $bill->user->name ?? 'N/A' }}</span></td></tr>
-                    <tr><th>Date:</th><td>{{ $bill->report_date->format('M d, Y') }}</td></tr>
+                    <tr><th>Date:</th><td>{{ $bill->report_date?->format('M d, Y') ?? $bill->created_at->format('M d, Y') }}</td></tr>
                     @if($bill->edited_at)
                     <tr><th>Edited:</th><td><span class="badge bg-warning text-dark">Yes</span> <small class="text-muted">by {{ $bill->editor?->name ?? 'Unknown' }} on {{ $bill->edited_at->format('M d, Y h:i A') }}</small></td></tr>
                     @endif

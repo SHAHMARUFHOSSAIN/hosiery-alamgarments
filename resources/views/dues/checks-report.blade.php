@@ -200,11 +200,11 @@
                     <button type="submit" class="btn btn-success">
                         <i class="bi bi-check-circle"></i> Record Payment
                     </button>
+                    </div>
                 </div>
             </form>
         </div>
     </div>
 </div>
-@endif
-@endforeach
+@endforelse
 @endsection

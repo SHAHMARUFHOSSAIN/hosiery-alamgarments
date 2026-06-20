@@ -244,7 +244,7 @@
                             </td>
                             <td>{{ $bill->customer->name ?? 'N/A' }}</td>
                             <td class="text-end fw-bold">৳{{ number_format($bill->bill_amount, 2) }}</td>
-                            <td>{{ $bill->report_date->format('M d') }}</td>
+                            <td>{{ $bill->report_date?->format('M d') ?? $bill->created_at->format('M d') }}</td>
                         </tr>
                         @empty
                         <tr><td colspan="4" class="text-center py-3">No bills found</td></tr>

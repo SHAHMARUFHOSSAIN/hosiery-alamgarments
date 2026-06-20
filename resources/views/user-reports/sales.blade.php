@@ -85,7 +85,8 @@
                     $dailyDiscount = 0;
                 @endphp
                 @forelse($bills as $bill)
-                    @if($currentDate !== $bill->report_date->format('Y-m-d') && $currentDate !== null)
+                    @php $billReportDate = $bill->report_date ?? $bill->created_at; @endphp
+                    @if($currentDate !== $billReportDate->format('Y-m-d') && $currentDate !== null)
                         <tr class="table-secondary">
                             <td colspan="3"><strong>Daily Total</strong></td>
                             <td class="text-end"><strong>৳{{ number_format($dailyTotal, 2) }}</strong></td>
@@ -95,7 +96,7 @@
                         </tr>
                         @php $dailyTotal = 0; $dailyDiscount = 0; @endphp
                     @endif
-                    @php $currentDate = $bill->report_date->format('Y-m-d'); @endphp
+                    @php $currentDate = $billReportDate->format('Y-m-d'); @endphp
                     @php $dailyTotal += $bill->bill_amount; @endphp
                     @php $dailyDiscount += $bill->discount; @endphp
                     <tr>
@@ -109,7 +110,7 @@
                         <td class="text-end">৳{{ number_format($bill->bill_amount, 2) }}</td>
                         <td class="text-end">৳{{ number_format($bill->discount, 2) }}</td>
                         <td class="text-end fw-bold">৳{{ number_format($bill->bill_amount - $bill->discount, 2) }}</td>
-                        <td>{{ $bill->report_date->format('M d, Y') }}</td>
+                        <td>{{ $billReportDate->format('M d, Y') }}</td>
                     </tr>
                 @empty
                 <tr><td colspan="7" class="text-center py-3">No bills found</td></tr>

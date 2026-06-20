@@ -247,7 +247,7 @@ class ImportController extends Controller
 
         foreach ($validRows as $row) {
             try {
-                $result = $importer->upsert($row, $userId);
+                $result = $importer->upsert($row, $userId, $importDate);
                 if ($result['action'] === 'inserted') {
                     $inserted++;
                 } elseif ($result['action'] === 'updated') {

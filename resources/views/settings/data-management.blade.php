@@ -77,7 +77,7 @@
                             <td>৳{{ number_format($bill->bill_amount, 2) }}</td>
                             <td>৳{{ number_format($bill->discount, 2) }}</td>
                             <td>{{ $bill->user->name ?? 'N/A' }}</td>
-                            <td>{{ $bill->report_date->format('M d, Y') }}</td>
+                            <td>{{ $bill->report_date?->format('M d, Y') ?? $bill->created_at->format('M d, Y') }}</td>
                             <td class="text-end">
                                 @if($bill->isEditable())
                                 <button class="btn btn-sm btn-outline-primary py-0 px-2" data-bs-toggle="modal" data-bs-target="#editBill{{ $bill->id }}">

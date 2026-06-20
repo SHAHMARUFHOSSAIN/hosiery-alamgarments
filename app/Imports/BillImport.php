@@ -16,7 +16,8 @@ class BillImport
         return [
             'bill_no', 'customer_name', 'customer_mobile', 'shop_name', 'bill_man',
             'bill_amount', 'discount', 'payment_type', 'payment_amount',
-            'due_date', 'card_reference', 'card_location', 'card_amount', 'card_date',
+            'due_date', 'report_date',
+            'card_reference', 'card_location', 'card_amount', 'card_date',
             'tt_bank_name', 'tt_account_no', 'tt_amount', 'tt_date',
             'bank_name', 'check_no', 'check_amount', 'check_date',
         ];
@@ -27,7 +28,8 @@ class BillImport
         return [
             'Bill No', 'Customer Name', 'Customer Mobile', 'Shop Name', 'Bill Man',
             'Bill Amount', 'Discount', 'Payment Type', 'Payment Amount',
-            'Due Date', 'Card Reference', 'Card Location', 'Card Amount', 'Card Date',
+            'Due Date', 'Report Date',
+            'Card Reference', 'Card Location', 'Card Amount', 'Card Date',
             'TT Bank Name', 'TT Account No', 'TT Amount', 'TT Date',
             'Bank Name', 'Check No', 'Check Amount', 'Check Date',
         ];
@@ -58,7 +60,7 @@ class BillImport
         return $errors;
     }
 
-    public function upsert(array $row, int $userId): array
+    public function upsert(array $row, int $userId, ?string $importDate = null): array
     {
         $mobile = $row['customer_mobile'] ?? null;
         $name = $row['customer_name'] ?? 'Unknown';
@@ -82,6 +84,7 @@ class BillImport
             'bill_man' => $row['bill_man'] ?? null,
             'bill_amount' => $row['bill_amount'],
             'discount' => $row['discount'] ?? 0,
+            'report_date' => $row['report_date'] ?? $importDate ?? now()->toDateString(),
             'user_id' => $userId,
         ]);
 

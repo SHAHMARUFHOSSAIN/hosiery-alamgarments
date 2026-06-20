@@ -124,7 +124,7 @@
                     <td>{{ number_format($bill->discount, 2) }}</td>
                     <td class="fw-bold">{{ number_format($bill->bill_amount - $bill->discount, 2) }}</td>
                     <td><span class="badge bg-secondary">{{ $bill->user->name ?? 'N/A' }}</span></td>
-                    <td>{{ $bill->report_date->format('M d, Y') }}</td>
+                    <td>{{ $bill->report_date?->format('M d, Y') ?? $bill->created_at->format('M d, Y') }}</td>
                 </tr>
                 @empty
                 <tr><td colspan="8" class="text-center py-3">No bills found</td></tr>

@@ -160,7 +160,7 @@
                     <td>{{ number_format($bill->discount, 2) }}</td>
                     <td class="fw-bold {{ $dueAmount > 0 ? 'text-danger' : 'text-success' }}">{{ number_format($dueAmount > 0 ? $dueAmount : 0, 2) }}</td>
                     <td><span class="badge bg-secondary">{{ $bill->user->name ?? 'N/A' }}</span></td>
-                    <td>{{ $bill->report_date->format('M d, Y') }}</td>
+                    <td>{{ $bill->report_date?->format('M d, Y') ?? $bill->created_at->format('M d, Y') }}</td>
                     <td>
                         <a href="{{ route('bills.show', $bill) }}" class="btn btn-sm btn-outline-primary py-0 px-2">
                             <i class="bi bi-eye"></i>
