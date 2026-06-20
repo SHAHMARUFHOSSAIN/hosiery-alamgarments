@@ -77,7 +77,8 @@ class DueController extends Controller
             $query->where('created_by', Auth::id());
         }
         
-        $totalAmount = (clone $query)->sum('remaining_amount');
+        $allDues = (clone $query)->with('duePayments')->get();
+        $totalAmount = $allDues->sum(fn($due) => $due->remaining_amount);
         $todayDues = $query->orderBy('due_date', 'asc')->paginate(20);
         return view('dues.daily-report', compact('todayDues', 'totalAmount'));
     }
