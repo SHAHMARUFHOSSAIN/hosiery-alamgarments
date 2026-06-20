@@ -119,19 +119,22 @@ class ImportController extends Controller
             'import_date' => 'nullable|date',
         ]);
 
-        $importDir = storage_path('app/private/imports');
-        if (!is_dir($importDir)) {
-            mkdir($importDir, 0755, true);
-        }
-
         $path = $request->file('file')->store('imports');
 
-        if (!$path || !file_exists(Storage::path($path))) {
-            return response()->json(['error' => 'File upload failed. The server storage directory may not be writable.'], 500);
+        if (!$path) {
+            return response()->json(['error' => 'File upload failed.'], 500);
         }
 
+        $tempPath = null;
+
         try {
-            $rows = $this->parseExcel(\Illuminate\Support\Facades\Storage::path($path));
+            $ext = $request->file('file')->getClientOriginalExtension();
+            $tempPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'import_' . uniqid() . '.' . $ext;
+
+            $content = Storage::get($path);
+            file_put_contents($tempPath, $content);
+
+            $rows = $this->parseExcel($tempPath);
             $importType = $request->import_type;
 
             if (empty($rows)) {
@@ -191,6 +194,10 @@ class ImportController extends Controller
         } catch (\Exception $e) {
             Storage::delete($path);
             return response()->json(['error' => 'Failed to parse file: ' . $e->getMessage()], 422);
+        } finally {
+            if ($tempPath && file_exists($tempPath)) {
+                unlink($tempPath);
+            }
         }
     }
 
