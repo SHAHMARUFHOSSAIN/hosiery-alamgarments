@@ -119,7 +119,16 @@ class ImportController extends Controller
             'import_date' => 'nullable|date',
         ]);
 
+        $importDir = storage_path('app/private/imports');
+        if (!is_dir($importDir)) {
+            mkdir($importDir, 0755, true);
+        }
+
         $path = $request->file('file')->store('imports');
+
+        if (!$path || !file_exists(Storage::path($path))) {
+            return response()->json(['error' => 'File upload failed. The server storage directory may not be writable.'], 500);
+        }
 
         try {
             $rows = $this->parseExcel(\Illuminate\Support\Facades\Storage::path($path));

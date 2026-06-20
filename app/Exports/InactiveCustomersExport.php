@@ -18,13 +18,13 @@ class InactiveCustomersExport implements FromCollection, WithHeadings
     public function collection()
     {
         return $this->customers->map(function ($customer) {
-            $lastBill = $customer->bills()->latest('created_at')->first();
+            $lastBill = $customer->bills()->latest('report_date')->first();
             return [
                 $customer->id,
                 $customer->name,
                 $customer->mobile ?? 'N/A',
                 $customer->location ?? 'N/A',
-                $lastBill ? $lastBill->created_at->format('Y-m-d') : 'N/A',
+                $lastBill ? $lastBill->report_date->format('Y-m-d') : 'N/A',
                 $customer->created_at->format('Y-m-d'),
             ];
         });

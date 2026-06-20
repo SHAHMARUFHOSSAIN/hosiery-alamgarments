@@ -34,7 +34,16 @@
                            class="form-control @error('bill_no') is-invalid @enderror" 
                            value="{{ old('bill_no', $bill->bill_no) }}" required>
                     @error('bill_no')
-                    <div class="invalid-feedback">{{ $message }}</div>
+                    <div class="text-danger small">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-md-6">
+                    <label for="report_date" class="form-label">Report Date <span class="text-danger">*</span></label>
+                    <input type="date" name="report_date" id="report_date" 
+                           class="form-control @error('report_date') is-invalid @enderror" 
+                           value="{{ old('report_date', $bill->report_date?->format('Y-m-d')) }}" required>
+                    @error('report_date')
+                    <div class="text-danger small">{{ $message }}</div>
                     @enderror
                 </div>
                 <div class="col-md-6">
@@ -43,7 +52,7 @@
                            class="form-control @error('shop_name') is-invalid @enderror" 
                            value="{{ old('shop_name', $bill->shop_name) }}">
                     @error('shop_name')
-                    <div class="invalid-feedback">{{ $message }}</div>
+                    <div class="text-danger small">{{ $message }}</div>
                     @enderror
                 </div>
                 <div class="col-md-6">
@@ -52,7 +61,7 @@
                            class="form-control @error('bill_man') is-invalid @enderror" 
                            value="{{ old('bill_man', $bill->bill_man) }}">
                     @error('bill_man')
-                    <div class="invalid-feedback">{{ $message }}</div>
+                    <div class="text-danger small">{{ $message }}</div>
                     @enderror
                 </div>
                 <div class="col-md-6">
@@ -75,6 +84,37 @@
                                class="form-control @error('discount') is-invalid @enderror" 
                                value="{{ old('discount', $bill->discount) }}">
                     </div>
+                </div>
+
+                @php
+                    $firstPayment = $bill->payments()->first();
+                @endphp
+                <div class="col-md-6">
+                    <label for="payment_type" class="form-label">Payment Type <span class="text-danger">*</span></label>
+                    <select name="payment_type" id="payment_type" class="form-select @error('payment_type') is-invalid @enderror" required>
+                        <option value="cash" {{ old('payment_type', $firstPayment?->payment_type) == 'cash' ? 'selected' : '' }}>Cash</option>
+                        <option value="check" {{ old('payment_type', $firstPayment?->payment_type) == 'check' ? 'selected' : '' }}>Cheque</option>
+                        <option value="tt" {{ old('payment_type', $firstPayment?->payment_type) == 'tt' ? 'selected' : '' }}>TT</option>
+                        <option value="card" {{ old('payment_type', $firstPayment?->payment_type) == 'card' ? 'selected' : '' }}>Reference Card</option>
+                        <option value="due" {{ old('payment_type', $firstPayment?->payment_type) == 'due' ? 'selected' : '' }}>Due</option>
+                    </select>
+                    @error('payment_type')
+                    <div class="text-danger small">{{ $message }}</div>
+                    @enderror
+                </div>
+                <div class="col-md-6">
+                    <label for="payment_amount" class="form-label">Payment Received</label>
+                    <div class="input-group">
+                        <span class="input-group-text">৳</span>
+                        <input type="number" step="0.01" name="payment_amount" id="payment_amount" 
+                               class="form-control" value="{{ old('payment_amount', $firstPayment?->amount ?? 0) }}">
+                    </div>
+                    <small class="text-muted">Amount received now (if any)</small>
+                </div>
+                <div class="col-md-6">
+                    <label for="payment_details" class="form-label">Payment Details</label>
+                    <input type="text" name="payment_details" id="payment_details" 
+                           class="form-control" value="{{ old('payment_details', $firstPayment?->details) }}">
                 </div>
 
                 @php
@@ -134,8 +174,8 @@
                                     <label class="form-label">Cheque Photo</label>
                                     @if($checkPayment->check_photo)
                                     <div class="mb-2">
-                                        <a href="{{ asset('storage/' . $checkPayment->check_photo) }}" target="_blank">
-                                            <img src="{{ asset('storage/' . $checkPayment->check_photo) }}" alt="Cheque" class="img-thumbnail" style="width: 150px; height: 75px; object-fit: cover;">
+                                        <a href="{{ route('storage.file', $checkPayment->check_photo) }}" target="_blank">
+                                            <img src="{{ route('storage.file', $checkPayment->check_photo) }}" alt="Cheque" class="img-thumbnail" style="width: 150px; height: 75px; object-fit: cover;">
                                         </a>
                                     </div>
                                     @else

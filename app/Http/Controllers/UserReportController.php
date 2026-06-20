@@ -28,17 +28,10 @@ class UserReportController extends Controller
 
     public function sales(Request $request): View
     {
-        $query = Bill::with('customer')->where('user_id', Auth::id());
+        $query = Bill::with(['customer', 'editor'])->where('user_id', Auth::id());
 
-        if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
-        }
-        if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
-        }
-        
-        $todayQuery = Bill::with('customer')->where('user_id', Auth::id())
-            ->whereDate('created_at', now()->toDateString());
+        $todayQuery = Bill::with(['customer', 'editor'])->where('user_id', Auth::id())
+            ->whereDate('report_date', now()->toDateString());
 
         $bills = $query->orderBy('id', 'desc')->paginate(15);
         $totalAmount = $query->sum('bill_amount');

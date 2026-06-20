@@ -30,7 +30,7 @@ class SettingsController extends Controller
             'totalRevenue' => MainBalance::where('type', 'credit')->sum('amount'),
             'recentUsers' => User::where('created_at', '>=', $startDate)->count(),
             'recentCustomers' => Customer::where('created_at', '>=', $startDate)->count(),
-            'recentBills' => Bill::where('created_at', '>=', $startDate)->count(),
+            'recentBills' => Bill::where('report_date', '>=', $startDate)->count(),
             'recentRevenue' => MainBalance::where('type', 'credit')->where('created_at', '>=', $startDate)->sum('amount'),
         ];
 
@@ -161,7 +161,7 @@ class SettingsController extends Controller
             'totalDebit' => MainBalance::where('type', 'debit')->sum('amount'),
             'recentUsers' => User::where('created_at', '>=', $startDate)->count(),
             'recentCustomers' => Customer::where('created_at', '>=', $startDate)->count(),
-            'recentBills' => Bill::where('created_at', '>=', $startDate)->count(),
+            'recentBills' => Bill::where('report_date', '>=', $startDate)->count(),
             'recentDues' => Due::where('created_at', '>=', $startDate)->count(),
         ];
 
@@ -173,7 +173,7 @@ class SettingsController extends Controller
         $days = $request->get('days', 30);
         $startDate = now()->subDays($days)->startOfDay();
         
-        $recentBills = Bill::with(['customer', 'user'])
+        $recentBills = Bill::with(['customer', 'user', 'editor'])
             ->where('created_at', '>=', $startDate)
             ->orderBy('id', 'desc')
             ->paginate(15);
@@ -204,6 +204,10 @@ class SettingsController extends Controller
 
     public function deleteBill(Bill $bill)
     {
+        if (!$bill->isDeletable()) {
+            return redirect()->route('settings.data')->with('error', 'Bills can only be deleted within 24 hours of creation.');
+        }
+
         $billNumber = $bill->bill_no;
         $bill->delete();
         
@@ -227,7 +231,19 @@ class SettingsController extends Controller
 
     public function editBill(Request $request, Bill $bill)
     {
-        $bill->update($request->only(['bill_no', 'shop_name', 'bill_man', 'bill_amount', 'discount']));
+        if (!$bill->isEditable()) {
+            return redirect()->route('settings.data')->with('error', 'Bills can only be edited within 24 hours of creation.');
+        }
+
+        $bill->update([
+            'bill_no' => $request->bill_no,
+            'shop_name' => $request->shop_name,
+            'bill_man' => $request->bill_man,
+            'bill_amount' => $request->bill_amount,
+            'discount' => $request->discount,
+            'edited_at' => now(),
+            'edited_by' => Auth::id(),
+        ]);
         return redirect()->route('settings.data')->with('success', 'Bill updated successfully');
     }
 

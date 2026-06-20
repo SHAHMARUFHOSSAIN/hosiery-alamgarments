@@ -33,7 +33,7 @@ class BillsExport implements FromCollection, WithHeadings
                 $checkPayment ? $checkPayment->check_no : 'N/A',
                 $checkPayment ? $checkPayment->check_amount : 'N/A',
                 $checkPayment ? $checkPayment->check_date?->format('Y-m-d') : 'N/A',
-                $bill->created_at->format('Y-m-d H:i'),
+                $bill->report_date->format('Y-m-d'),
             ];
         });
     }

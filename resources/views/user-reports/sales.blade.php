@@ -85,7 +85,7 @@
                     $dailyDiscount = 0;
                 @endphp
                 @forelse($bills as $bill)
-                    @if($currentDate !== $bill->created_at->format('Y-m-d') && $currentDate !== null)
+                    @if($currentDate !== $bill->report_date->format('Y-m-d') && $currentDate !== null)
                         <tr class="table-secondary">
                             <td colspan="3"><strong>Daily Total</strong></td>
                             <td class="text-end"><strong>৳{{ number_format($dailyTotal, 2) }}</strong></td>
@@ -95,17 +95,21 @@
                         </tr>
                         @php $dailyTotal = 0; $dailyDiscount = 0; @endphp
                     @endif
-                    @php $currentDate = $bill->created_at->format('Y-m-d'); @endphp
+                    @php $currentDate = $bill->report_date->format('Y-m-d'); @endphp
                     @php $dailyTotal += $bill->bill_amount; @endphp
                     @php $dailyDiscount += $bill->discount; @endphp
                     <tr>
-                        <td><a href="{{ route('bills.show', $bill) }}" class="fw-semibold">{{ $bill->bill_no }}</a></td>
+                        <td><a href="{{ route('bills.show', $bill) }}" class="fw-semibold">{{ $bill->bill_no }}</a>
+                            @if($bill->edited_at)
+                                <span class="badge bg-warning text-dark ms-1" title="Edited by {{ $bill->editor?->name ?? 'Unknown' }}">Edited</span>
+                            @endif
+                        </td>
                         <td>{{ $bill->customer->name ?? 'N/A' }}</td>
                         <td>{{ $bill->shop_name ?? 'N/A' }}</td>
                         <td class="text-end">৳{{ number_format($bill->bill_amount, 2) }}</td>
                         <td class="text-end">৳{{ number_format($bill->discount, 2) }}</td>
                         <td class="text-end fw-bold">৳{{ number_format($bill->bill_amount - $bill->discount, 2) }}</td>
-                        <td>{{ $bill->created_at->format('M d, Y') }}</td>
+                        <td>{{ $bill->report_date->format('M d, Y') }}</td>
                     </tr>
                 @empty
                 <tr><td colspan="7" class="text-center py-3">No bills found</td></tr>

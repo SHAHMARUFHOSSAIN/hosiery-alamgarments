@@ -183,7 +183,11 @@
                         @foreach($bills->take(5) as $bill)
                         <tr class="table-light" style="font-size: 0.9em;">
                             <td></td>
-                            <td colspan="1"><small class="text-muted">{{ $bill->bill_no }}</small></td>
+                            <td colspan="1"><small class="text-muted">{{ $bill->bill_no }}</small>
+                                @if($bill->edited_at)
+                                    <small class="badge bg-warning text-dark ms-1">Edited</small>
+                                @endif
+                            </td>
                             <td><small class="text-muted">{{ $bill->customer->name ?? 'N/A' }}</small></td>
                             <td class="text-end"><small>৳{{ number_format($bill->bill_amount, 2) }}</small></td>
                             <td class="text-end"><small class="text-danger">৳{{ number_format($bill->discount, 2) }}</small></td>
@@ -233,10 +237,14 @@
                     <tbody>
                         @forelse($recentBills as $bill)
                         <tr>
-                            <td><a href="{{ route('bills.show', $bill) }}">{{ $bill->bill_no }}</a></td>
+                            <td><a href="{{ route('bills.show', $bill) }}">{{ $bill->bill_no }}</a>
+                                @if($bill->edited_at)
+                                    <span class="badge bg-warning text-dark ms-1" title="Edited by {{ $bill->editor?->name ?? 'Unknown' }}">Edited</span>
+                                @endif
+                            </td>
                             <td>{{ $bill->customer->name ?? 'N/A' }}</td>
                             <td class="text-end fw-bold">৳{{ number_format($bill->bill_amount, 2) }}</td>
-                            <td>{{ $bill->created_at->format('M d') }}</td>
+                            <td>{{ $bill->report_date->format('M d') }}</td>
                         </tr>
                         @empty
                         <tr><td colspan="4" class="text-center py-3">No bills found</td></tr>

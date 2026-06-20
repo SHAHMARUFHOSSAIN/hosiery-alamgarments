@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Auth;
 
 class Bill extends Model
 {
@@ -18,6 +19,9 @@ class Bill extends Model
         'bill_man',
         'bill_amount',
         'discount',
+        'report_date',
+        'edited_at',
+        'edited_by',
         'user_id',
     ];
 
@@ -26,6 +30,8 @@ class Bill extends Model
         return [
             'bill_amount' => 'decimal:2',
             'discount' => 'decimal:2',
+            'report_date' => 'date',
+            'edited_at' => 'datetime',
         ];
     }
 
@@ -37,6 +43,11 @@ class Bill extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function editor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'edited_by');
     }
 
     public function payments(): HasMany
@@ -52,5 +63,18 @@ class Bill extends Model
     public function dues(): HasMany
     {
         return $this->hasMany(Due::class);
+    }
+
+    public function isEditable(): bool
+    {
+        if (Auth::user()?->isAdmin()) {
+            return true;
+        }
+        return $this->created_at && $this->created_at->diffInHours(now()) < 24;
+    }
+
+    public function isDeletable(): bool
+    {
+        return $this->isEditable();
     }
 }

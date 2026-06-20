@@ -19,7 +19,7 @@ class BillController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = Bill::with(['customer', 'user', 'payments']);
+        $query = Bill::with(['customer', 'user', 'editor', 'payments']);
         
 
         if (Auth::user()->isAdmin()) {
@@ -28,10 +28,10 @@ class BillController extends Controller
                 $query->where('user_id', $request->user_id);
             }
             if ($request->filled('date_from')) {
-                $query->whereDate('created_at', '>=', $request->date_from);
+                $query->whereDate('report_date', '>=', $request->date_from);
             }
             if ($request->filled('date_to')) {
-                $query->whereDate('created_at', '<=', $request->date_to);
+                $query->whereDate('report_date', '<=', $request->date_to);
             }
         } else {
             $query->where('user_id', Auth::id());
@@ -53,7 +53,7 @@ class BillController extends Controller
 
         $sortField = $request->get('sort', 'id');
         $sortDirection = $request->get('direction', 'desc');
-        $allowedSorts = ['id', 'bill_no', 'shop_name', 'bill_man', 'bill_amount', 'created_at'];
+        $allowedSorts = ['id', 'bill_no', 'shop_name', 'bill_man', 'bill_amount', 'report_date'];
         
         if (in_array($sortField, $allowedSorts)) {
             $query->orderBy($sortField, $sortDirection);
@@ -70,10 +70,10 @@ class BillController extends Controller
                 $totalBills->where('user_id', $request->user_id);
             }
             if ($request->filled('date_from')) {
-                $totalBills->whereDate('created_at', '>=', $request->date_from);
+                $totalBills->whereDate('report_date', '>=', $request->date_from);
             }
             if ($request->filled('date_to')) {
-                $totalBills->whereDate('created_at', '<=', $request->date_to);
+                $totalBills->whereDate('report_date', '<=', $request->date_to);
             }
         } else {
             $totalBills->where('user_id', Auth::id());
@@ -111,6 +111,7 @@ class BillController extends Controller
             'payment_type' => 'required|in:cash,check,tt,card,due',
             'payment_amount' => 'nullable|required_if:payment_type,cash|numeric|min:0',
             'payment_details' => 'nullable|string',
+            'report_date' => 'required|date',
             'due_date' => 'nullable|date|after_or_equal:today',
             'checks' => 'nullable|array',
             'checks.*.bank_name' => 'nullable|required_if:payment_type,check|string|max:255',
@@ -144,6 +145,7 @@ class BillController extends Controller
             'bill_man' => $validated['bill_man'] ?? null,
             'bill_amount' => $validated['bill_amount'],
             'discount' => $validated['discount'] ?? 0,
+            'report_date' => $validated['report_date'],
             'user_id' => Auth::id(),
         ]);
 
@@ -296,7 +298,7 @@ class BillController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $bill->load(['customer', 'user', 'payments.checkEncashments', 'dues.duePayments.user']);
+        $bill->load(['customer', 'user', 'editor', 'payments.checkEncashments', 'dues.duePayments.user']);
 
         return view('bills.show', compact('bill'));
     }
@@ -305,6 +307,10 @@ class BillController extends Controller
     {
         if (!Auth::user()->isAdmin() && $bill->user_id !== Auth::id()) {
             abort(403, 'Unauthorized action.');
+        }
+
+        if (!$bill->isEditable()) {
+            abort(403, 'Bills can only be edited within 24 hours of creation. Contact an admin.');
         }
 
         return view('bills.edit', compact('bill'));
@@ -316,12 +322,21 @@ class BillController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
+        if (!$bill->isEditable()) {
+            return redirect()->route('bills.index')
+                ->with('error', 'Bills can only be edited within 24 hours of creation. Contact an admin.');
+        }
+
         $validated = $request->validate([
             'bill_no' => 'required',
             'shop_name' => 'nullable|string|max:255',
             'bill_man' => 'nullable|string|max:255',
+            'report_date' => 'required|date',
             'bill_amount' => 'required|numeric|min:0',
             'discount' => 'nullable|numeric|min:0',
+            'payment_type' => 'required|in:cash,check,tt,card,due',
+            'payment_amount' => 'nullable|numeric|min:0',
+            'payment_details' => 'nullable|string',
             'check_bank_name' => 'nullable|string|max:255',
             'check_no' => 'nullable|string|max:100',
             'check_amount' => 'nullable|numeric|min:0',
@@ -330,7 +345,25 @@ class BillController extends Controller
             'check_photo' => 'nullable|image|max:2048',
         ]);
 
-        $bill->update($validated);
+        $bill->update([
+            'bill_no' => $validated['bill_no'],
+            'shop_name' => $validated['shop_name'] ?? null,
+            'bill_man' => $validated['bill_man'] ?? null,
+            'report_date' => $validated['report_date'],
+            'bill_amount' => $validated['bill_amount'],
+            'discount' => $validated['discount'] ?? 0,
+            'edited_at' => now(),
+            'edited_by' => Auth::id(),
+        ]);
+
+        $firstPayment = $bill->payments()->first();
+        if ($firstPayment) {
+            $firstPayment->update([
+                'payment_type' => $validated['payment_type'],
+                'amount' => $validated['payment_amount'] ?? 0,
+                'details' => $validated['payment_details'] ?? null,
+            ]);
+        }
 
         $checkPayment = $bill->payments()->where('payment_type', 'check')->first();
         if ($checkPayment) {
@@ -358,6 +391,11 @@ class BillController extends Controller
     {
         if (!Auth::user()->isAdmin() && $bill->user_id !== Auth::id()) {
             abort(403, 'Unauthorized action.');
+        }
+
+        if (!$bill->isDeletable()) {
+            return redirect()->route('bills.index')
+                ->with('error', 'Bills can only be deleted within 24 hours of creation. Contact an admin.');
         }
 
         $branchId = $bill->user_id;

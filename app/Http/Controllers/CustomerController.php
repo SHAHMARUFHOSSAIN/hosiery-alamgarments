@@ -121,13 +121,13 @@ class CustomerController extends Controller
 
         $customer->load(['creator']);
 
-        $billQuery = $customer->bills()->with('user');
+        $billQuery = $customer->bills()->with(['user', 'editor']);
 
         if ($request->filled('date_from')) {
-            $billQuery->whereDate('created_at', '>=', $request->date_from);
+            $billQuery->whereDate('report_date', '>=', $request->date_from);
         }
         if ($request->filled('date_to')) {
-            $billQuery->whereDate('created_at', '<=', $request->date_to);
+            $billQuery->whereDate('report_date', '<=', $request->date_to);
         }
         if (Auth::user()->isAdmin() && $request->filled('user_id')) {
             $billQuery->where('user_id', $request->user_id);

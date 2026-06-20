@@ -104,8 +104,8 @@
                     </th>
                     <th>User</th>
                     <th>
-                        <a href="{{ route('reports.sales', ['sort' => 'created_at', 'direction' => request('sort') == 'created_at' && request('direction') == 'asc' ? 'desc' : 'asc'] + request()->only('user_id', 'date_from', 'date_to', 'search')) }}" class="text-decoration-none">
-                            Date @if(request('sort') == 'created_at'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif
+                        <a href="{{ route('reports.sales', ['sort' => 'report_date', 'direction' => request('sort') == 'report_date' && request('direction') == 'asc' ? 'desc' : 'asc'] + request()->only('user_id', 'date_from', 'date_to', 'search')) }}" class="text-decoration-none">
+                            Date @if(request('sort') == 'report_date'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif
                         </a>
                     </th>
                 </tr>
@@ -113,14 +113,18 @@
             <tbody>
                 @forelse($bills as $bill)
                 <tr>
-                    <td><a href="{{ route('bills.show', $bill) }}">{{ $bill->bill_no }}</a></td>
+                    <td><a href="{{ route('bills.show', $bill) }}">{{ $bill->bill_no }}</a>
+                        @if($bill->edited_at)
+                            <span class="badge bg-warning text-dark ms-1" title="Edited by {{ $bill->editor?->name ?? 'Unknown' }}">Edited</span>
+                        @endif
+                    </td>
                     <td>{{ $bill->customer->name ?? 'N/A' }}</td>
                     <td>{{ $bill->shop_name ?? 'N/A' }}</td>
                     <td>{{ number_format($bill->bill_amount, 2) }}</td>
                     <td>{{ number_format($bill->discount, 2) }}</td>
                     <td class="fw-bold">{{ number_format($bill->bill_amount - $bill->discount, 2) }}</td>
                     <td><span class="badge bg-secondary">{{ $bill->user->name ?? 'N/A' }}</span></td>
-                    <td>{{ $bill->created_at->format('M d, Y') }}</td>
+                    <td>{{ $bill->report_date->format('M d, Y') }}</td>
                 </tr>
                 @empty
                 <tr><td colspan="8" class="text-center py-3">No bills found</td></tr>

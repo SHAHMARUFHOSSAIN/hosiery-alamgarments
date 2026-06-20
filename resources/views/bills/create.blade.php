@@ -104,6 +104,13 @@
                             </div>
                         </div>
                         <div class="col-md-4">
+                            <label for="report_date" class="form-label">Report Date <span class="text-danger">*</span></label>
+                            <input type="date" name="report_date" id="report_date" class="form-control @error('report_date') is-invalid @enderror" value="{{ old('report_date', now()->subDay()->toDateString()) }}" required>
+                            @error('report_date')
+                            <div class="text-danger small">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-md-4">
                             <label for="payment_type" class="form-label">Payment Type <span class="text-danger">*</span></label>
                             <select name="payment_type" id="payment_type" class="form-select @error('payment_type') is-invalid @enderror" required>
                                 <option value="">-- Select --</option>

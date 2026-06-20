@@ -16,7 +16,7 @@ class MarkInactiveCustomers extends Command
     {
         $date = now()->subDays(30);
         
-        $customerIds = Bill::where('created_at', '>=', $date)
+        $customerIds = Bill::where('report_date', '>=', $date)
             ->distinct()
             ->pluck('customer_id');
 

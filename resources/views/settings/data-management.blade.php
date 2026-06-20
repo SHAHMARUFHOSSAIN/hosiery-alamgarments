@@ -67,17 +67,24 @@
                     </thead>
                     <tbody>
                         @forelse($recentBills as $bill)
-                        <tr>
-                            <td>{{ $bill->bill_no }}</td>
+                         <tr>
+                            <td>{{ $bill->bill_no }}
+                                @if($bill->edited_at)
+                                    <span class="badge bg-warning text-dark ms-1" title="Edited by {{ $bill->editor?->name ?? 'Unknown' }}">Edited</span>
+                                @endif
+                            </td>
                             <td>{{ $bill->customer->name ?? 'N/A' }}</td>
                             <td>৳{{ number_format($bill->bill_amount, 2) }}</td>
                             <td>৳{{ number_format($bill->discount, 2) }}</td>
                             <td>{{ $bill->user->name ?? 'N/A' }}</td>
-                            <td>{{ $bill->created_at->format('M d, Y') }}</td>
+                            <td>{{ $bill->report_date->format('M d, Y') }}</td>
                             <td class="text-end">
+                                @if($bill->isEditable())
                                 <button class="btn btn-sm btn-outline-primary py-0 px-2" data-bs-toggle="modal" data-bs-target="#editBill{{ $bill->id }}">
                                     <i class="bi bi-pencil"></i>
                                 </button>
+                                @endif
+                                @if($bill->isDeletable())
                                 <form method="POST" action="{{ route('settings.bills.delete', $bill) }}" class="d-inline" onsubmit="return confirm('Delete this bill?')">
                                     @csrf
                                     @method('DELETE')
@@ -85,6 +92,7 @@
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
+                                @endif
                             </td>
                         </tr>
                         @empty
@@ -310,8 +318,8 @@
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 @if($check->check_photo)
-                                <a href="{{ asset('storage/' . $check->check_photo) }}" target="_blank">
-                                    <img src="{{ asset('storage/' . $check->check_photo) }}" alt="Cheque" class="img-thumbnail" style="width: 80px; height: 40px; object-fit: cover;">
+                                <a href="{{ route('storage.file', $check->check_photo) }}" target="_blank">
+                                    <img src="{{ route('storage.file', $check->check_photo) }}" alt="Cheque" class="img-thumbnail" style="width: 80px; height: 40px; object-fit: cover;">
                                 </a>
                                 @endif
                             </td>

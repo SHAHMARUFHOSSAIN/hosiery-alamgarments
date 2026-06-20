@@ -158,11 +158,15 @@
                     <tbody>
                         @forelse($bills as $bill)
                         <tr>
-                            <td><a href="{{ route('bills.show', $bill) }}" class="fw-semibold">{{ $bill->bill_no }}</a></td>
+                            <td><a href="{{ route('bills.show', $bill) }}" class="fw-semibold">{{ $bill->bill_no }}</a>
+                                @if($bill->edited_at)
+                                    <span class="badge bg-warning text-dark ms-1" title="Edited by {{ $bill->editor?->name ?? 'Unknown' }}">Edited</span>
+                                @endif
+                            </td>
                             <td>{{ $bill->shop_name ?? 'N/A' }}</td>
                             <td class="fw-bold">{{ number_format($bill->bill_amount, 2) }}</td>
                             <td><span class="badge bg-secondary">{{ $bill->user->name ?? 'N/A' }}</span></td>
-                            <td>{{ $bill->created_at->format('M d, Y') }}</td>
+                            <td>{{ $bill->report_date->format('M d, Y') }}</td>
                             <td>
                                 <a href="{{ route('bills.show', $bill) }}" class="btn btn-sm btn-outline-primary py-0 px-2">
                                     <i class="bi bi-eye"></i>

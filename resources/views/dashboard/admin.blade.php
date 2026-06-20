@@ -234,7 +234,11 @@
                     <tbody>
                         @forelse($recentBills as $bill)
                         <tr>
-                            <td><a href="{{ route('bills.show', $bill) }}">{{ $bill->bill_no }}</a></td>
+                            <td><a href="{{ route('bills.show', $bill) }}">{{ $bill->bill_no }}</a>
+                                @if($bill->edited_at)
+                                    <span class="badge bg-warning text-dark ms-1" title="Edited by {{ $bill->editor?->name ?? 'Unknown' }}">Edited</span>
+                                @endif
+                            </td>
                             <td>{{ $bill->customer->name ?? 'N/A' }}</td>
                             <td>{{ number_format($bill->bill_amount, 2) }}</td>
                             <td><span class="badge bg-secondary">{{ $bill->user->name ?? 'N/A' }}</span></td>

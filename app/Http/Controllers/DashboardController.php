@@ -30,18 +30,18 @@ class DashboardController extends Controller
 
         $stats = [
             'totalCustomers' => Customer::whereBetween('created_at', [$dateFrom, $dateTo . ' 23:59:59'])->count(),
-            'totalBills' => Bill::whereBetween('created_at', [$dateFrom, $dateTo . ' 23:59:59'])->count(),
+            'totalBills' => Bill::whereBetween('report_date', [$dateFrom, $dateTo . ' 23:59:59'])->count(),
             'totalDues' => Due::where('status', 'pending')
                 ->whereBetween('created_at', [$dateFrom, $dateTo . ' 23:59:59'])
                 ->sum('amount'),
             'todayDues' => Due::whereDate('due_date', now()->toDateString())
                 ->where('status', 'pending')
                 ->count(),
-            'totalSales' => Bill::whereBetween('created_at', [$dateFrom, $dateTo . ' 23:59:59'])
+            'totalSales' => Bill::whereBetween('report_date', [$dateFrom, $dateTo . ' 23:59:59'])
                 ->sum('bill_amount'),
         ];
 
-        $recentBills = Bill::with(['customer', 'user'])
+        $recentBills = Bill::with(['customer', 'user', 'editor'])
             ->orderBy('id', 'desc')
             ->limit(10)
             ->get();
@@ -64,7 +64,7 @@ class DashboardController extends Controller
         $userList = User::where('role', 'user')->get();
         foreach ($userList as $user) {
             $billQuery = Bill::where('user_id', $user->id)
-                ->whereBetween('created_at', [$dateFrom, $dateTo . ' 23:59:59']);
+                ->whereBetween('report_date', [$dateFrom, $dateTo . ' 23:59:59']);
             $uBills = (clone $billQuery)->count();
             $uSales = (clone $billQuery)->sum('bill_amount');
             $uDiscount = (clone $billQuery)->sum('discount');
@@ -154,14 +154,14 @@ class DashboardController extends Controller
         $mainBalance = $totalCredit - $totalDebit;
 
         $startOfMonth = now()->startOfMonth()->toDateString();
-        $thisMonthSales = Bill::where('user_id', $userId)->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->sum('bill_amount');
-        $thisMonthDiscount = Bill::where('user_id', $userId)->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year)->sum('discount');
-        $todaySales = Bill::where('user_id', $userId)->whereDate('created_at', $today)->sum('bill_amount');
+        $thisMonthSales = Bill::where('user_id', $userId)->whereMonth('report_date', now()->month)->whereYear('report_date', now()->year)->sum('bill_amount');
+        $thisMonthDiscount = Bill::where('user_id', $userId)->whereMonth('report_date', now()->month)->whereYear('report_date', now()->year)->sum('discount');
+        $todaySales = Bill::where('user_id', $userId)->whereDate('report_date', $today)->sum('bill_amount');
         $totalSales = Bill::where('user_id', $userId)->sum('bill_amount');
 
         $paymentBreakdown = Bill::where('user_id', $userId)
-            ->whereMonth('created_at', now()->month)
-            ->whereYear('created_at', now()->year)
+            ->whereMonth('report_date', now()->month)
+            ->whereYear('report_date', now()->year)
             ->with('payments')
             ->get()
             ->pluck('payments')
@@ -190,7 +190,7 @@ class DashboardController extends Controller
                 ->sum('original_amount'),
         ];
 
-        $recentBills = Bill::with(['customer'])
+        $recentBills = Bill::with(['customer', 'editor'])
             ->where('user_id', $userId)
             ->orderBy('id', 'desc')
             ->limit(10)
@@ -209,8 +209,8 @@ class DashboardController extends Controller
             ->get();
 
         $dailySales = Bill::where('user_id', $userId)
-            ->whereBetween('created_at', [now()->subDays(7), now()])
-            ->selectRaw('DATE(created_at) as date, SUM(bill_amount) as total, COUNT(*) as count')
+            ->whereBetween('report_date', [now()->subDays(7), now()])
+            ->selectRaw('DATE(report_date) as date, SUM(bill_amount) as total, COUNT(*) as count')
             ->groupBy('date')
             ->orderBy('date')
             ->get();
@@ -228,17 +228,17 @@ class DashboardController extends Controller
 
         $todayBills = Bill::with(['customer'])
             ->where('user_id', $userId)
-            ->whereDate('created_at', $today)
+            ->whereDate('report_date', $today)
             ->orderBy('id', 'desc')
             ->get();
 
-        $weekBills = Bill::with(['customer'])
+        $weekBills = Bill::with(['customer', 'editor'])
             ->where('user_id', $userId)
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->orderBy('created_at', 'desc')
+            ->whereBetween('report_date', [$startDate, $endDate])
+            ->orderBy('report_date', 'desc')
             ->get()
             ->groupBy(function ($bill) {
-                return $bill->created_at->format('Y-m-d');
+                return $bill->report_date->format('Y-m-d');
             });
 
         $pendingCheques = Payment::with(['bill.customer'])

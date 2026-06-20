@@ -52,7 +52,7 @@
                                 <td>{{ $customer->name }}</td>
                                 <td>{{ $customer->mobile ?? 'N/A' }}</td>
                                 <td>{{ $customer->location ?? 'N/A' }}</td>
-                                <td>{{ $customer->bills->first()?->created_at?->format('Y-m-d') ?? 'N/A' }}</td>
+                                <td>{{ $customer->bills->first()?->report_date?->format('Y-m-d') ?? 'N/A' }}</td>
                                 <td>{{ $customer->created_at->format('Y-m-d') }}</td>
                             </tr>
                             @empty

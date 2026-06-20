@@ -57,7 +57,7 @@ class ReportController extends Controller
 
     public function sales(Request $request): View
     {
-        $query = Bill::with(['customer', 'user']);
+        $query = Bill::with(['customer', 'user', 'editor']);
 
         if (Auth::user()->isAdmin()) {
             if ($request->filled('user_id')) {
@@ -68,10 +68,10 @@ class ReportController extends Controller
         }
 
         if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
+            $query->whereDate('report_date', '>=', $request->date_from);
         }
         if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
+            $query->whereDate('report_date', '<=', $request->date_to);
         }
 
         if ($request->filled('search')) {
@@ -87,16 +87,16 @@ class ReportController extends Controller
             });
         }
 
-        $sortField = $request->get('sort', 'created_at');
+        $sortField = $request->get('sort', 'report_date');
         $sortDirection = $request->get('direction', 'desc');
-        $allowedSorts = ['bill_no', 'bill_amount', 'discount', 'created_at'];
+        $allowedSorts = ['bill_no', 'bill_amount', 'discount', 'report_date'];
 
         if ($sortField === 'net') {
             $query->orderByRaw('(bill_amount - discount) ' . $sortDirection);
         } elseif (in_array($sortField, $allowedSorts)) {
             $query->orderBy($sortField, $sortDirection);
         } else {
-            $query->orderBy('created_at', 'desc');
+            $query->orderBy('report_date', 'desc');
         }
 
         $bills = $query->paginate(20);
@@ -104,10 +104,10 @@ class ReportController extends Controller
                 if ($request->filled('user_id')) $q->where('user_id', $request->user_id);
             })
             ->when($request->filled('date_from'), function ($q) use ($request) {
-                $q->whereDate('created_at', '>=', $request->date_from);
+                $q->whereDate('report_date', '>=', $request->date_from);
             })
             ->when($request->filled('date_to'), function ($q) use ($request) {
-                $q->whereDate('created_at', '<=', $request->date_to);
+                $q->whereDate('report_date', '<=', $request->date_to);
             })
             ->when($request->filled('search'), function ($q) use ($request) {
                 $search = $request->search;
@@ -127,10 +127,10 @@ class ReportController extends Controller
                 if ($request->filled('user_id')) $q->where('user_id', $request->user_id);
             })
             ->when($request->filled('date_from'), function ($q) use ($request) {
-                $q->whereDate('created_at', '>=', $request->date_from);
+                $q->whereDate('report_date', '>=', $request->date_from);
             })
             ->when($request->filled('date_to'), function ($q) use ($request) {
-                $q->whereDate('created_at', '<=', $request->date_to);
+                $q->whereDate('report_date', '<=', $request->date_to);
             })
             ->when($request->filled('search'), function ($q) use ($request) {
                 $search = $request->search;
@@ -249,7 +249,7 @@ class ReportController extends Controller
             });
         }
 
-        $periodBills = (clone $baseBillQuery)->whereBetween('created_at', [$startDate, $endDate])->get();
+        $periodBills = (clone $baseBillQuery)->whereBetween('report_date', [$startDate, $endDate])->get();
         $totalSales = $periodBills->sum('bill_amount');
         $totalDiscount = $periodBills->sum('discount');
         $netSales = $totalSales - $totalDiscount;
@@ -257,7 +257,7 @@ class ReportController extends Controller
         $avgBillValue = $billCount > 0 ? $netSales / $billCount : 0;
 
         $prevBills = (clone $baseBillQuery)
-            ->whereBetween('created_at', [$startDate->copy()->subDays($days), $startDate])
+            ->whereBetween('report_date', [$startDate->copy()->subDays($days), $startDate])
             ->get();
         $prevSales = $prevBills->sum('bill_amount');
         $prevNetSales = $prevSales - $prevBills->sum('discount');
@@ -271,7 +271,7 @@ class ReportController extends Controller
 
         $paymentBreakdown = (clone $basePaymentQuery)
             ->whereHas('bill', function ($q) use ($startDate, $endDate) {
-                $q->whereBetween('created_at', [$startDate, $endDate]);
+                $q->whereBetween('report_date', [$startDate, $endDate]);
             })
             ->selectRaw('payment_type, SUM(amount) as total, COUNT(*) as count')
             ->groupBy('payment_type')
@@ -295,8 +295,8 @@ class ReportController extends Controller
         }
 
         $dailySales = (clone $baseBillQuery)
-            ->whereBetween('created_at', [$startDate, $endDate])
-            ->selectRaw('DATE(created_at) as date, SUM(bill_amount) as total, COUNT(*) as count')
+            ->whereBetween('report_date', [$startDate, $endDate])
+            ->selectRaw('DATE(report_date) as date, SUM(bill_amount) as total, COUNT(*) as count')
             ->groupBy('date')
             ->orderBy('date')
             ->get();
@@ -315,7 +315,7 @@ class ReportController extends Controller
         }
 
         $topCustomers = (clone $baseBillQuery)
-            ->whereBetween('created_at', [$startDate, $endDate])
+            ->whereBetween('report_date', [$startDate, $endDate])
             ->with('customer')
             ->selectRaw('customer_id, SUM(bill_amount) as total, COUNT(*) as count')
             ->groupBy('customer_id')
@@ -328,7 +328,7 @@ class ReportController extends Controller
             $users = User::where('role', 'user')->get();
             foreach ($users as $user) {
                 $userBills = Bill::where('user_id', $user->id)
-                    ->whereBetween('created_at', [$startDate, $endDate])
+                    ->whereBetween('report_date', [$startDate, $endDate])
                     ->get();
                 $userPerformance[] = [
                     'name' => $user->name,

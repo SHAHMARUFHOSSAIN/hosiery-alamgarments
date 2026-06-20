@@ -16,11 +16,17 @@
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-    <h2 class="mb-0">Bill: {{ $bill->bill_no }}</h2>
+    <h2 class="mb-0">Bill: {{ $bill->bill_no }}
+        @if($bill->edited_at)
+            <span class="badge bg-warning text-dark fs-6 align-middle" title="Edited by {{ $bill->editor?->name ?? 'Unknown' }} on {{ $bill->edited_at->format('M d, Y h:i A') }}">Edited</span>
+        @endif
+    </h2>
     <div>
+        @if($bill->isEditable())
         <a href="{{ route('bills.edit', $bill) }}" class="btn btn-secondary">
             <i class="bi bi-pencil"></i> Edit
         </a>
+        @endif
         <a href="{{ route('bills.index') }}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left"></i> Back
         </a>
@@ -44,7 +50,10 @@
                     <tr><th>Discount:</th><td>{{ number_format($bill->discount, 2) }}</td></tr>
                     <tr><th>Net:</th><td class="fw-bold text-success">{{ number_format($bill->bill_amount - $bill->discount, 2) }}</td></tr>
                     <tr><th>User:</th><td><span class="badge bg-secondary">{{ $bill->user->name ?? 'N/A' }}</span></td></tr>
-                    <tr><th>Date:</th><td>{{ $bill->created_at->format('M d, Y h:i A') }}</td></tr>
+                    <tr><th>Date:</th><td>{{ $bill->report_date->format('M d, Y') }}</td></tr>
+                    @if($bill->edited_at)
+                    <tr><th>Edited:</th><td><span class="badge bg-warning text-dark">Yes</span> <small class="text-muted">by {{ $bill->editor?->name ?? 'Unknown' }} on {{ $bill->edited_at->format('M d, Y h:i A') }}</small></td></tr>
+                    @endif
                 </table>
                 </div>
             </div>
@@ -93,8 +102,8 @@
                                     @endif
                                     @if($payment->check_photo)
                                     <div class="col-12">
-                                        <a href="{{ asset('storage/' . $payment->check_photo) }}" target="_blank">
-                                            <img src="{{ asset('storage/' . $payment->check_photo) }}" alt="Cheque" class="img-fluid border rounded" style="max-height: 120px;">
+                                        <a href="{{ route('storage.file', $payment->check_photo) }}" target="_blank">
+                                            <img src="{{ route('storage.file', $payment->check_photo) }}" alt="Cheque" class="img-fluid border rounded" style="max-height: 120px;">
                                         </a>
                                     </div>
                                     @endif

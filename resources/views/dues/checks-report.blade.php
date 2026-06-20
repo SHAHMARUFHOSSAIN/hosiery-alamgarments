@@ -157,64 +157,11 @@
                             <i class="bi bi-eye"></i>
                         </a>
                         @if($check->check_photo)
-                        <a href="{{ asset('storage/' . $check->check_photo) }}" target="_blank">
-                            <img src="{{ asset('storage/' . $check->check_photo) }}" alt="Cheque" class="img-thumbnail" style="width: 80px; height: 40px; object-fit: cover;">
-                        </a>
-                        @endif
-                        @if($remainingCheck > 0)
-                        <button type="button" class="btn btn-sm btn-success py-0 px-2" 
-                                data-bs-toggle="modal" 
-                                data-bs-target="#encashModal{{ $check->id }}">
-                            <i class="bi bi-credit-card"></i> Pay
-                        </button>
-                        @endif
-                    </td>
-                </tr>
-                @empty
-                <tr><td colspan="11" class="text-center py-3">No cheques found</td></tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-    @if($allChecks->hasPages())
-    <div class="card-footer bg-white text-center">
-        {!! $allChecks->appends(request()->only('status', 'bank', 'date_from', 'date_to', 'search', 'sort', 'direction'))->links() !!}
-    </div>
-    @endif
-</div>
+                        <a href="{{ route('storage.file', $check->check_photo) }}" target="_blank">
+                            <img src="{{ route('storage.file', $check->check_photo) }}" alt="Cheque" class="img-thumbnail" style="width: 80px; height: 40px; object-fit: cover;">
 
-@foreach($allChecks as $check)
-@if(($check->check_amount - $check->encashed_amount) > 0)
-<div class="modal fade" id="encashModal{{ $check->id }}" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Make Payment</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <form method="POST" action="{{ route('dues.encash', $check) }}">
-                @csrf
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <strong>Customer:</strong> {{ $check->bill->customer->name ?? 'N/A' }}
-                    </div>
-                    <div class="mb-3">
-                        <strong>Bill No:</strong> {{ $check->bill->bill_no ?? 'N/A' }}
-                    </div>
-                    <div class="mb-3">
-                        <strong>Bank:</strong> {{ $check->bank_name ?? 'N/A' }}
-                    </div>
-                    <div class="mb-3">
-                        <strong>Cheque No:</strong> {{ $check->check_no ?? 'N/A' }}
-                    </div>
-                    <div class="mb-3">
-                        <strong>Original Amount:</strong> ৳{{ number_format($check->check_amount, 2) }}
-                    </div>
-                    @if($check->check_photo)
-                    <div class="mb-3 text-center">
-                        <strong>Cheque Photo:</strong><br>
-                        <a href="{{ asset('storage/' . $check->check_photo) }}" target="_blank">
-                            <img src="{{ asset('storage/' . $check->check_photo) }}" alt="Cheque" class="img-fluid border rounded" style="max-height: 150px;">
+                        <a href="{{ route('storage.file', $check->check_photo) }}" target="_blank">
+                            <img src="{{ route('storage.file', $check->check_photo) }}" alt="Cheque" class="img-fluid border rounded" style="max-height: 150px;">
                         </a>
                     </div>
                     @endif

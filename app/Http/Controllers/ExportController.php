@@ -26,10 +26,10 @@ class ExportController extends Controller
                 $query->where('user_id', $request->user_id);
             }
             if ($request->filled('date_from')) {
-                $query->whereDate('created_at', '>=', $request->date_from);
+                $query->whereDate('report_date', '>=', $request->date_from);
             }
             if ($request->filled('date_to')) {
-                $query->whereDate('created_at', '<=', $request->date_to);
+                $query->whereDate('report_date', '<=', $request->date_to);
             }
             if ($request->filled('search')) {
                 $search = $request->search;
@@ -125,10 +125,10 @@ class ExportController extends Controller
         $billQuery = $customer->bills()->with('payments');
 
         if ($request->filled('date_from')) {
-            $billQuery->whereDate('created_at', '>=', $request->date_from);
+            $billQuery->whereDate('report_date', '>=', $request->date_from);
         }
         if ($request->filled('date_to')) {
-            $billQuery->whereDate('created_at', '<=', $request->date_to);
+            $billQuery->whereDate('report_date', '<=', $request->date_to);
         }
         if (Auth::user()->isAdmin() && $request->filled('user_id')) {
             $billQuery->where('user_id', $request->user_id);
@@ -172,7 +172,7 @@ class ExportController extends Controller
                 'Card Ref' => $payment && $payment->payment_type === 'card' ? ($payment->card_reference ?? 'N/A') : 'N/A',
                 'Card Amount' => $payment && $payment->payment_type === 'card' ? number_format($payment->card_amount ?? 0, 2) : 'N/A',
                 'Due Date' => $payment && $payment->due_date ? $payment->due_date->format('Y-m-d') : 'N/A',
-                'Date' => $bill->created_at->format('Y-m-d'),
+                'Date' => $bill->report_date->format('Y-m-d'),
             ]);
         }
 

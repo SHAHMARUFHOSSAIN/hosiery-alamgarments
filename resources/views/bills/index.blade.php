@@ -96,7 +96,7 @@
                     <th>Discount</th>
                     <th>Due</th>
                     <th>User</th>
-                    <th><a href="{{ route('bills.index', ['sort' => 'created_at', 'direction' => request('sort') == 'created_at' && request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="text-decoration-none">Date @if(request('sort') == 'created_at'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif</a></th>
+                    <th><a href="{{ route('bills.index', ['sort' => 'report_date', 'direction' => request('sort') == 'report_date' && request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="text-decoration-none">Date @if(request('sort') == 'report_date'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif</a></th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -115,7 +115,11 @@
                 @endphp
                 <tr>
                     <td>{{ $bill->id }}</td>
-                    <td><a href="{{ route('bills.show', $bill) }}" class="fw-semibold">{{ $bill->bill_no }}</a></td>
+                    <td><a href="{{ route('bills.show', $bill) }}" class="fw-semibold">{{ $bill->bill_no }}</a>
+                        @if($bill->edited_at)
+                            <span class="badge bg-warning text-dark ms-1" title="Edited by {{ $bill->editor?->name ?? 'Unknown' }} on {{ $bill->edited_at->format('M d, Y h:i A') }}">Edited</span>
+                        @endif
+                    </td>
                     <td>{{ $bill->customer->name ?? 'N/A' }}</td>
                     <td>{{ $bill->shop_name ?? 'N/A' }}</td>
                     <td>{{ $bill->bill_man ?? 'N/A' }}</td>
@@ -156,14 +160,17 @@
                     <td>{{ number_format($bill->discount, 2) }}</td>
                     <td class="fw-bold {{ $dueAmount > 0 ? 'text-danger' : 'text-success' }}">{{ number_format($dueAmount > 0 ? $dueAmount : 0, 2) }}</td>
                     <td><span class="badge bg-secondary">{{ $bill->user->name ?? 'N/A' }}</span></td>
-                    <td>{{ $bill->created_at->format('M d, Y') }}</td>
+                    <td>{{ $bill->report_date->format('M d, Y') }}</td>
                     <td>
                         <a href="{{ route('bills.show', $bill) }}" class="btn btn-sm btn-outline-primary py-0 px-2">
                             <i class="bi bi-eye"></i>
                         </a>
+                        @if($bill->isEditable())
                         <a href="{{ route('bills.edit', $bill) }}" class="btn btn-sm btn-outline-secondary py-0 px-2">
                             <i class="bi bi-pencil"></i>
                         </a>
+                        @endif
+                        @if($bill->isDeletable())
                         <form method="POST" action="{{ route('bills.destroy', $bill) }}" 
                               class="d-inline" onsubmit="return confirm('Delete this bill?')">
                             @csrf
@@ -172,6 +179,7 @@
                                 <i class="bi bi-trash"></i>
                             </button>
                         </form>
+                        @endif
                     </td>
                 </tr>
                 @empty
