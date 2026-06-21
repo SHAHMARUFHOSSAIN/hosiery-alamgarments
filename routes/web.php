@@ -15,6 +15,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\UserBalanceController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserReportController;
+use App\Http\Controllers\TodaySalesReportController;
 use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Route;
 
@@ -104,6 +105,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [UserReportController::class, 'index'])->name('user-reports.index');
         Route::get('/sales', [UserReportController::class, 'sales'])->name('user-reports.sales');
         Route::get('/dues', [UserReportController::class, 'dues'])->name('user-reports.dues');
+        Route::get('/today-sales', [TodaySalesReportController::class, 'index'])->name('user-reports.today-sales');
+        Route::post('/today-sales/close', [TodaySalesReportController::class, 'close'])->name('user-reports.today-sales.close');
     });
 
     Route::get('/cheque/{path}', \App\Http\Controllers\StorageController::class)

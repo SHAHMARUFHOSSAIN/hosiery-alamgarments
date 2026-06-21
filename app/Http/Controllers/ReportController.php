@@ -10,6 +10,7 @@ use App\Models\MainBalance;
 use App\Models\Payment;
 use App\Models\PreviousDue;
 use App\Models\PreviousDuePayment;
+use App\Models\TodaySalesReport;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -252,7 +253,15 @@ class ReportController extends Controller
         $periodBills = (clone $baseBillQuery)->whereBetween('report_date', [$startDate, $endDate])->get();
         $totalSales = $periodBills->sum('bill_amount');
         $totalDiscount = $periodBills->sum('discount');
-        $netSales = $totalSales - $totalDiscount;
+        $totalReportDiscount = Auth::user()->isAdmin()
+            ? TodaySalesReport::where('status', 'closed')
+                ->whereBetween('report_date', [$startDate, $endDate])
+                ->sum('discount_amt')
+            : TodaySalesReport::where('user_id', Auth::id())
+                ->where('status', 'closed')
+                ->whereBetween('report_date', [$startDate, $endDate])
+                ->sum('discount_amt');
+        $netSales = $totalSales - $totalDiscount - $totalReportDiscount;
         $billCount = $periodBills->count();
         $avgBillValue = $billCount > 0 ? $netSales / $billCount : 0;
 
@@ -330,11 +339,16 @@ class ReportController extends Controller
                 $userBills = Bill::where('user_id', $user->id)
                     ->whereBetween('report_date', [$startDate, $endDate])
                     ->get();
+                $uReportDiscount = TodaySalesReport::where('user_id', $user->id)
+                    ->where('status', 'closed')
+                    ->whereBetween('report_date', [$startDate, $endDate])
+                    ->sum('discount_amt');
                 $userPerformance[] = [
                     'name' => $user->name,
                     'sales' => $userBills->sum('bill_amount'),
                     'bills' => $userBills->count(),
                     'discount' => $userBills->sum('discount'),
+                    'report_discount' => $uReportDiscount,
                 ];
             }
             usort($userPerformance, function ($a, $b) {
@@ -377,6 +391,7 @@ class ReportController extends Controller
             'period',
             'totalSales',
             'totalDiscount',
+            'totalReportDiscount',
             'netSales',
             'billCount',
             'avgBillValue',

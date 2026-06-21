@@ -235,6 +235,8 @@
                                 <th class="text-end">Total Sales</th>
                                 <th class="text-end">Bills</th>
                                 <th class="text-end">Discount</th>
+                                <th class="text-end">Rep Disc</th>
+                                <th class="text-end">Total Disc</th>
                                 <th class="text-end">Avg Bill</th>
                                 <th>Performance</th>
                             </tr>
@@ -247,6 +249,8 @@
                                 <td class="text-end fw-bold">৳{{ number_format($user['sales'], 2) }}</td>
                                 <td class="text-end">{{ $user['bills'] }}</td>
                                 <td class="text-end text-danger">৳{{ number_format($user['discount'], 2) }}</td>
+                                <td class="text-end text-danger">৳{{ number_format($user['report_discount'] ?? 0, 2) }}</td>
+                                <td class="text-end fw-bold text-danger">৳{{ number_format($user['discount'] + ($user['report_discount'] ?? 0), 2) }}</td>
                                 <td class="text-end">৳{{ number_format($user['bills'] > 0 ? $user['sales'] / $user['bills'] : 0, 2) }}</td>
                                 <td style="width: 200px;">
                                     @php
@@ -294,9 +298,18 @@
                         <span><i class="bi bi-trophy-fill text-warning me-2"></i>Top Payment Method</span>
                         <span class="fw-bold badge bg-primary">{{ strtoupper($topPaymentType) }} (৳{{ number_format($paymentTypes[$topPaymentType]['total'], 2) }})</span>
                     </li>
+                    @php $combinedDiscount = $totalDiscount + ($totalReportDiscount ?? 0); @endphp
                     <li class="list-group-item d-flex justify-content-between align-items-center px-0">
-                        <span><i class="bi bi-graph-down-arrow text-danger me-2"></i>Discount Given</span>
+                        <span><i class="bi bi-graph-down-arrow text-danger me-2"></i>Bill Discount</span>
                         <span class="fw-bold text-danger">৳{{ number_format($totalDiscount, 2) }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="bi bi-graph-down-arrow text-danger me-2"></i>Report Discount</span>
+                        <span class="fw-bold text-danger">৳{{ number_format($totalReportDiscount ?? 0, 2) }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span><i class="bi bi-graph-down-arrow text-danger me-2"></i>Total Discount</span>
+                        <span class="fw-bold text-danger">৳{{ number_format($combinedDiscount, 2) }}</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                         <span><i class="bi bi-clock-history text-info me-2"></i>Avg Bills/Day</span>
@@ -304,7 +317,7 @@
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                         <span><i class="bi bi-percent text-success me-2"></i>Discount Rate</span>
-                        <span class="fw-bold">{{ $totalSales > 0 ? number_format(($totalDiscount / $totalSales) * 100, 1) : 0 }}%</span>
+                        <span class="fw-bold">{{ $totalSales > 0 ? number_format(($combinedDiscount / $totalSales) * 100, 1) : 0 }}%</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between align-items-center px-0">
                         <span><i class="bi bi-piggy-bank text-primary me-2"></i>Due Collected</span>

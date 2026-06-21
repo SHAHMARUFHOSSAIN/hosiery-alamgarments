@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\Due;
 use App\Models\MainBalance;
 use App\Models\Payment;
+use App\Models\TodaySalesReport;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -95,7 +96,17 @@ class BillController extends Controller
 
     public function create(): View
     {
-        return view('bills.create');
+        $closedDates = [];
+        if (!Auth::user()->isAdmin()) {
+            $closedDates = TodaySalesReport::where('user_id', Auth::id())
+                ->where('status', 'closed')
+                ->pluck('report_date')
+                ->map(fn($d) => $d instanceof \Carbon\Carbon ? $d->toDateString() : $d)
+                ->values()
+                ->toArray();
+        }
+
+        return view('bills.create', compact('closedDates'));
     }
 
     public function store(Request $request): RedirectResponse|JsonResponse
@@ -134,6 +145,16 @@ class BillController extends Controller
             $checks = $request->input('checks', []);
             if (empty($checks) || !is_array($checks) || count($checks) === 0) {
                 return back()->withInput()->withErrors(['checks' => 'At least one cheque payment is required when payment type is cheque.']);
+            }
+        }
+
+        if (!Auth::user()->isAdmin()) {
+            $closedReport = TodaySalesReport::where('user_id', Auth::id())
+                ->where('report_date', $validated['report_date'])
+                ->where('status', 'closed')
+                ->exists();
+            if ($closedReport) {
+                return back()->withInput()->withErrors(['report_date' => 'Cannot create bill for this date. The sales report for ' . $validated['report_date'] . ' has already been closed. Contact admin for assistance.']);
             }
         }
 

@@ -109,6 +109,7 @@
                             @error('report_date')
                             <div class="text-danger small">{{ $message }}</div>
                             @enderror
+                            <div id="reportDateWarning" class="text-warning small d-none"><i class="bi bi-exclamation-triangle"></i> This date has a closed sales report. Only admins can create bills for this date.</div>
                         </div>
                         <div class="col-md-4">
                             <label for="payment_type" class="form-label">Payment Type <span class="text-danger">*</span></label>
@@ -910,6 +911,27 @@
             .catch(function(err) { console.error('Error creating bank:', err); });
         });
     })();
+
+    // ---- Closed date warning ----
+    var closedDates = @json($closedDates ?? []);
+    var reportDateInput = document.getElementById('report_date');
+    var reportDateWarning = document.getElementById('reportDateWarning');
+
+    function checkReportDate() {
+        if (closedDates.length > 0 && reportDateInput && reportDateWarning) {
+            if (closedDates.includes(reportDateInput.value)) {
+                reportDateWarning.classList.remove('d-none');
+            } else {
+                reportDateWarning.classList.add('d-none');
+            }
+        }
+    }
+
+    if (reportDateInput) {
+        reportDateInput.addEventListener('change', checkReportDate);
+        reportDateInput.addEventListener('blur', checkReportDate);
+        checkReportDate();
+    }
 })();
 </script>
 @endsection

@@ -123,6 +123,11 @@
                 </li>
                 @else
                 <li class="nav-item">
+                    <a href="{{ route('user-reports.today-sales') }}" class="nav-link text-white {{ request()->routeIs('user-reports.today-sales') ? 'active bg-primary rounded' : '' }}">
+                        <i class="bi bi-calendar-check"></i> Today Sales Report
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="{{ route('user-balance.index') }}" class="nav-link text-white {{ request()->routeIs('user-balance.*') ? 'active bg-primary rounded' : '' }}">
                         <i class="bi bi-wallet2"></i> My Balance
                     </a>
@@ -223,6 +228,7 @@
                     @if(auth()->user()->isAdmin())
                     <li class="nav-item"><a href="{{ route('main-balance.index') }}" class="nav-link text-white">Balance</a></li>
                     @else
+                    <li class="nav-item"><a href="{{ route('user-reports.today-sales') }}" class="nav-link text-white">Today Sales Report</a></li>
                     <li class="nav-item"><a href="{{ route('user-balance.index') }}" class="nav-link text-white">My Balance</a></li>
                     @endif
                     <li class="nav-item"><a href="{{ route('imports.index') }}" class="nav-link text-white">Import Data</a></li>

@@ -7,6 +7,7 @@ use App\Models\Customer;
 use App\Models\Due;
 use App\Models\MainBalance;
 use App\Models\Payment;
+use App\Models\TodaySalesReport;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -93,11 +94,17 @@ class DashboardController extends Controller
                 'todayDues' => $uTodayDues,
             ];
 
+            $uReportDiscount = TodaySalesReport::where('user_id', $user->id)
+                ->where('status', 'closed')
+                ->whereBetween('report_date', [$dateFrom, $dateTo . ' 23:59:59'])
+                ->sum('discount_amt');
+
             $userPerformance[] = [
                 'name' => $user->name,
                 'sales' => $uSales,
                 'bills' => $uBills,
                 'discount' => $uDiscount,
+                'report_discount' => $uReportDiscount,
             ];
 
             $chartLabels[] = $user->name;

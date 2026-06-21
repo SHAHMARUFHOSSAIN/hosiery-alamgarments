@@ -181,6 +181,8 @@
                                 <th class="text-end">Total Sales</th>
                                 <th class="text-end">Bills</th>
                                 <th class="text-end">Discount</th>
+                                <th class="text-end">Rep Discount</th>
+                                <th class="text-end">Total Disc</th>
                                 <th class="text-end">Avg Bill</th>
                                 <th>Performance</th>
                             </tr>
@@ -193,6 +195,8 @@
                                 <td class="text-end fw-bold">৳{{ number_format($user['sales'], 2) }}</td>
                                 <td class="text-end">{{ $user['bills'] }}</td>
                                 <td class="text-end text-danger">৳{{ number_format($user['discount'], 2) }}</td>
+                                <td class="text-end text-danger">৳{{ number_format($user['report_discount'] ?? 0, 2) }}</td>
+                                <td class="text-end fw-bold text-danger">৳{{ number_format($user['discount'] + ($user['report_discount'] ?? 0), 2) }}</td>
                                 <td class="text-end">৳{{ number_format($user['bills'] > 0 ? $user['sales'] / $user['bills'] : 0, 2) }}</td>
                                 <td style="width: 200px;">
                                     @php
