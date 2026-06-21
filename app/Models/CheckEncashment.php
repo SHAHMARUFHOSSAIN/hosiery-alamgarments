@@ -10,6 +10,7 @@ class CheckEncashment extends Model
     protected $fillable = [
         'payment_id',
         'encash_amount',
+        'payment_type',
         'encash_date',
         'next_due_date',
         'note',

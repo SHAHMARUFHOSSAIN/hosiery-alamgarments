@@ -3,9 +3,6 @@
 namespace App\Imports;
 
 use App\Models\Customer;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 
 class CustomerImport
 {

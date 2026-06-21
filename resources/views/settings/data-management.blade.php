@@ -318,8 +318,8 @@
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 @if($check->check_photo)
-                                <a href="{{ route('storage.file', $check->check_photo) }}" target="_blank">
-                                    <img src="{{ route('storage.file', $check->check_photo) }}" alt="Cheque" class="img-thumbnail" style="width: 80px; height: 40px; object-fit: cover;">
+                                <a href="{{ route('cheque.show', $check->check_photo) }}" target="_blank" title="View cheque">
+                                    <img src="{{ route('cheque.show', $check->check_photo) }}" alt="Cheque photo" class="rounded border" style="width: 60px; height: 32px; object-fit: cover;">
                                 </a>
                                 @endif
                             </td>

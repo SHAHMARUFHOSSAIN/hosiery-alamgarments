@@ -13,7 +13,7 @@ class NumberHelper
         $words = self::convertNumber($whole);
 
         if ($decimal > 0) {
-            $decimalStr = (string) ($decimal * 100);
+            $decimalStr = (string) round($decimal * 100);
             $words .= ' point ' . self::convertNumber((int) $decimalStr);
         }
 

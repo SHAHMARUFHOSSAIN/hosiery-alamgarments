@@ -345,6 +345,7 @@ class DueController extends Controller
     {
         $validated = $request->validate([
             'encash_amount' => 'required|numeric|min:0.01',
+            'payment_type' => 'required|in:cash,check,mobile_banking',
             'next_due_date' => 'nullable|date|after_or_equal:today',
             'note' => 'nullable|string|max:500',
             'transaction_id' => 'nullable|string|max:100',
@@ -365,6 +366,7 @@ class DueController extends Controller
         CheckEncashment::create([
             'payment_id' => $payment->id,
             'encash_amount' => $validated['encash_amount'],
+            'payment_type' => $validated['payment_type'],
             'encash_date' => now(),
             'next_due_date' => $validated['next_due_date'] ?? null,
             'note' => $validated['note'] ?? null,
@@ -381,18 +383,18 @@ class DueController extends Controller
             'status' => $newRemaining <= 0 ? 'encashed' : 'pending',
         ]);
 
-        if ($validated['next_due_date']) {
+        if ($validated['next_due_date'] ?? null) {
             $payment->update(['check_reminder_date' => $validated['next_due_date']]);
         }
 
         $lastBal = MainBalance::where('branch_id', Auth::id())->orderBy('id', 'desc')->value('balance') ?? 0;
-        $mainBalanceNote = 'Cheque encashed: ' . ($payment->bank_name ?? 'N/A') . ' - ' . ($payment->check_no ?? 'N/A');
+        $mainBalanceNote = 'Cheque encashed via ' . $validated['payment_type'] . ': ' . ($payment->bank_name ?? 'N/A') . ' - ' . ($payment->check_no ?? 'N/A');
         if ($validated['transaction_id'] ?? null) {
             $mainBalanceNote .= ' | TxnID: ' . $validated['transaction_id'];
         }
         MainBalance::create([
             'voucher_no' => VoucherHelper::generateVoucherNo(),
-            'name' => 'Cheque Encashed - Bill #' . ($payment->bill->bill_no ?? 'N/A'),
+            'name' => 'Cheque Encashed - Bill #' . ($payment->bill?->bill_no ?? 'N/A'),
             'amount' => $validated['encash_amount'],
             'balance' => $lastBal + $validated['encash_amount'],
             'type' => 'credit',
@@ -445,13 +447,13 @@ class DueController extends Controller
         }
 
         $lastBal = MainBalance::where('branch_id', Auth::id())->orderBy('id', 'desc')->value('balance') ?? 0;
-        $mainBalanceNote = 'Payment via ' . $validated['payment_type'] . ' (Bill: ' . ($due->bill->bill_no ?? 'N/A') . ')';
+        $mainBalanceNote = 'Payment via ' . $validated['payment_type'] . ' (Bill: ' . ($due->bill?->bill_no ?? 'N/A') . ')';
         if ($validated['transaction_id'] ?? null) {
             $mainBalanceNote .= ' | TxnID: ' . $validated['transaction_id'];
         }
         MainBalance::create([
             'voucher_no' => VoucherHelper::generateVoucherNo(),
-            'name' => 'Due Payment - ' . ($due->customer->name ?? 'Customer'),
+            'name' => 'Due Payment - ' . ($due->customer?->name ?? 'Customer'),
             'amount' => $validated['payment_amount'],
             'balance' => $lastBal + $validated['payment_amount'],
             'type' => 'credit',

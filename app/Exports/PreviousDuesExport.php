@@ -24,14 +24,14 @@ class PreviousDuesExport implements FromCollection, WithHeadings
             };
             return [
                 $pd->id,
-                $pd->customer->name ?? 'N/A',
-                $pd->customer->mobile ?? 'N/A',
+                $pd->customer?->name ?? 'N/A',
+                $pd->customer?->mobile ?? 'N/A',
                 number_format($pd->original_amount, 2),
                 number_format($pd->total_paid, 2),
                 number_format($pd->remaining_amount, 2),
                 $status,
-                $pd->creator->name ?? 'N/A',
-                $pd->created_at->format('Y-m-d'),
+                $pd->creator?->name ?? 'N/A',
+                $pd->created_at?->format('Y-m-d') ?? 'N/A',
             ];
         });
     }

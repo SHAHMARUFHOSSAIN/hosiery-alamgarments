@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -47,10 +48,10 @@ class Customer extends Model
         return $this->hasMany(PreviousDue::class);
     }
 
-    public function getLastBillDateAttribute()
+    public function getLastBillDateAttribute(): ?Carbon
     {
-        return $this->bills()->latest('created_at')->value('created_at')
-            ?: $this->created_at;
+        $lastBill = $this->bills()->latest('created_at')->first();
+        return $lastBill?->created_at ?? $this->created_at;
     }
 
     public function isInactive(): bool

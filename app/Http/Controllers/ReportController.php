@@ -31,8 +31,8 @@ class ReportController extends Controller
         if (!Auth::user()->isAdmin()) {
             $dueQuery->where('created_by', Auth::id());
         }
-        $totalDues = $dueQuery->where('status', 'pending')->sum('amount');
-        $paidDues = $dueQuery->where('status', 'paid')->sum('amount');
+        $totalDues = (clone $dueQuery)->where('status', 'pending')->sum('amount');
+        $paidDues = (clone $dueQuery)->where('status', 'paid')->sum('amount');
 
         $prevDueQuery = PreviousDue::query();
         if (!Auth::user()->isAdmin()) {

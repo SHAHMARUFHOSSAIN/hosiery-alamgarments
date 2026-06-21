@@ -102,19 +102,27 @@
                                     @endif
                                     @if($payment->check_photo)
                                     <div class="col-12">
-                                        <a href="{{ route('storage.file', $payment->check_photo) }}" target="_blank">
-                                            <img src="{{ route('storage.file', $payment->check_photo) }}" alt="Cheque" class="img-fluid border rounded" style="max-height: 120px;">
+                                        <a href="{{ route('cheque.show', $payment->check_photo) }}" target="_blank">
+                                            <img src="{{ route('cheque.show', $payment->check_photo) }}" alt="Cheque" class="img-fluid border rounded" style="max-height: 120px;">
                                         </a>
                                     </div>
                                     @endif
                                     @if($payment->status === 'pending' && $payment->check_amount > 0)
                                     <div class="col-12">
-                                        <form method="POST" action="{{ route('dues.encash', $payment) }}" class="d-inline" 
-                                              onsubmit="return confirm('Mark this cheque as encashed?')">
+                                        <form method="POST" action="{{ route('dues.encash', $payment) }}" class="d-inline"
+                                              onsubmit="return confirm('Encash ৳{{ number_format($payment->remainingCheckAmount(), 2) }}?')">
                                             @csrf
-                                            <button type="submit" class="btn btn-sm btn-success">
-                                                <i class="bi bi-check-circle"></i> Encash Cheque
-                                            </button>
+                                            <input type="hidden" name="encash_amount" value="{{ $payment->remainingCheckAmount() }}">
+                                            <div class="d-flex gap-2 align-items-center flex-wrap">
+                                                <select name="payment_type" class="form-select form-select-sm" style="width: auto;">
+                                                    <option value="cash">Cash</option>
+                                                    <option value="check">Cheque</option>
+                                                    <option value="mobile_banking">Mobile Banking</option>
+                                                </select>
+                                                <button type="submit" class="btn btn-sm btn-success">
+                                                    <i class="bi bi-check-circle"></i> Encash Cheque
+                                                </button>
+                                            </div>
                                         </form>
                                     </div>
                                     @endif

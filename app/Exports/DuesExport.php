@@ -19,15 +19,15 @@ class DuesExport implements FromCollection, WithHeadings
         return $this->dues->map(function ($due) {
             return [
                 $due->id,
-                $due->customer->name ?? 'N/A',
-                $due->customer->mobile ?? 'N/A',
-                $due->bill->bill_no ?? 'N/A',
+                $due->customer?->name ?? 'N/A',
+                $due->customer?->mobile ?? 'N/A',
+                $due->bill?->bill_no ?? 'N/A',
                 number_format($due->original_amount, 2),
                 number_format($due->total_paid, 2),
                 number_format($due->remaining_amount, 2),
-                $due->due_date->format('Y-m-d'),
+                $due->due_date?->format('Y-m-d') ?? 'N/A',
                 ucfirst($due->status),
-                $due->creator->name ?? 'N/A',
+                $due->creator?->name ?? 'N/A',
             ];
         });
     }

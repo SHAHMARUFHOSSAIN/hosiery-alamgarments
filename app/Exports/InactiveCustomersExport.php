@@ -24,8 +24,8 @@ class InactiveCustomersExport implements FromCollection, WithHeadings
                 $customer->name,
                 $customer->mobile ?? 'N/A',
                 $customer->location ?? 'N/A',
-                $lastBill ? $lastBill->report_date->format('Y-m-d') : 'N/A',
-                $customer->created_at->format('Y-m-d'),
+                $lastBill ? ($lastBill->report_date?->format('Y-m-d') ?? 'N/A') : 'N/A',
+                $customer->created_at?->format('Y-m-d') ?? 'N/A',
             ];
         });
     }

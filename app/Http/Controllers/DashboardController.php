@@ -238,7 +238,7 @@ class DashboardController extends Controller
             ->orderBy('report_date', 'desc')
             ->get()
             ->groupBy(function ($bill) {
-                return $bill->report_date->format('Y-m-d');
+                return $bill->report_date?->format('Y-m-d') ?? 'Unknown';
             });
 
         $pendingCheques = Payment::with(['bill.customer'])

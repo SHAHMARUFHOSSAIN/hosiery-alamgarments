@@ -32,12 +32,14 @@ class DueReminderNotification extends Notification
             ->line('---');
 
         foreach ($this->dues as $due) {
-            $mail->line("
-- Customer: {$due->customer->name} ({$due->customer->mobile})
+            $customerName = $due->customer?->name ?? 'N/A';
+            $customerMobile = $due->customer?->mobile ?? 'N/A';
+            $dueDate = $due->due_date?->format('M d, Y') ?? 'N/A';
+            $creatorName = $due->creator?->name ?? 'N/A';
+            $mail->line("- Customer: {$customerName} ({$customerMobile})
   Amount: $" . number_format($due->amount, 2) . "
-  Due Date: {$due->due_date->format('M d, Y')}
-  Created By: {$due->creator->name}
-            ");
+  Due Date: {$dueDate}
+  Created By: {$creatorName}");
         }
 
         return $mail->line('---')

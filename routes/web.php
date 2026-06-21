@@ -18,9 +18,7 @@ use App\Http\Controllers\UserReportController;
 use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return redirect()->route('login');
-});
+Route::redirect('/', '/login');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
@@ -108,6 +106,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/dues', [UserReportController::class, 'dues'])->name('user-reports.dues');
     });
 
+    Route::get('/cheque/{path}', \App\Http\Controllers\StorageController::class)
+        ->where('path', '.*')
+        ->name('cheque.show');
+
     Route::middleware(['admin'])->group(function () {
         Route::delete('/imports/{importLog}', [ImportController::class, 'destroy'])->name('imports.destroy');
         Route::prefix('users')->group(function () {
@@ -159,11 +161,3 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
-
-Route::get('/storage/{path}', function (string $path) {
-    $fullPath = storage_path('app/public/' . $path);
-    if (!file_exists($fullPath)) {
-        abort(404);
-    }
-    return response()->file($fullPath);
-})->where('path', '.*')->name('storage.file');

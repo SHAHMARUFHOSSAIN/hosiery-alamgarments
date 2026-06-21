@@ -153,46 +153,94 @@
                         @endif
                     </td>
                     <td>
-                        <a href="{{ route('bills.show', $check->bill) }}" class="btn btn-sm btn-outline-primary py-0 px-2">
-                            <i class="bi bi-eye"></i>
-                        </a>
-                        @if($check->check_photo)
-                        <a href="{{ route('storage.file', $check->check_photo) }}" target="_blank">
-                            <img src="{{ route('storage.file', $check->check_photo) }}" alt="Cheque" class="img-thumbnail" style="width: 80px; height: 40px; object-fit: cover;">
-
-                        <a href="{{ route('storage.file', $check->check_photo) }}" target="_blank">
-                            <img src="{{ route('storage.file', $check->check_photo) }}" alt="Cheque" class="img-fluid border rounded" style="max-height: 150px;">
-                        </a>
-                    </div>
-                    @endif
-                    @if($check->encashed_amount > 0)
-                    <div class="mb-3">
-                        <strong>Total Encashed:</strong> <span class="text-success">৳{{ number_format($check->encashed_amount, 2) }}</span>
-                    </div>
-                    @endif
-                    <div class="mb-3 alert alert-warning">
-                        <strong>Remaining:</strong> <span class="text-danger fw-bold">৳{{ number_format($check->check_amount - $check->encashed_amount, 2) }}</span>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Payment Amount <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <span class="input-group-text">৳</span>
-                            <input type="number" step="0.01" name="encash_amount" class="form-control" 
-                                   max="{{ $check->check_amount - $check->encashed_amount }}" 
-                                   value="{{ $check->check_amount - $check->encashed_amount }}" required>
+                        <div class="d-flex flex-wrap gap-1 align-items-center">
+                            <a href="{{ route('bills.show', $check->bill) }}" class="btn btn-sm btn-outline-primary py-0 px-2">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            @if($check->status !== 'encashed' && $check->check_amount > 0)
+                            <button type="button" class="btn btn-sm btn-success py-0 px-2"
+                                    data-bs-toggle="modal" data-bs-target="#encashModal"
+                                    data-id="{{ $check->id }}"
+                                    data-customer="{{ $check->bill->customer->name ?? 'N/A' }}"
+                                    data-amount="{{ number_format($check->check_amount, 2) }}"
+                                    data-remaining="{{ $check->check_amount - $check->encashed_amount }}">
+                                <i class="bi bi-cash"></i> Encash
+                            </button>
+                            @endif
+                            @if($check->check_photo)
+                            <a href="{{ route('cheque.show', $check->check_photo) }}" target="_blank" title="View cheque">
+                                <img src="{{ route('cheque.show', $check->check_photo) }}" alt="Cheque photo" class="rounded border" style="width: 60px; height: 32px; object-fit: cover;">
+                            </a>
+                            @endif
                         </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Next Due Date <small class="text-muted">(if remaining balance)</small></label>
-                        <input type="date" name="next_due_date" class="form-control">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Transaction ID <small class="text-muted">(for reference)</small></label>
-                        <input type="text" name="transaction_id" class="form-control" placeholder="e.g. TXN12345">
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Note</label>
-                        <textarea name="note" class="form-control" rows="2" placeholder="Optional note..."></textarea>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="11" class="text-center py-3">No cheque payments found</td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+    @if($allChecks->hasPages())
+    <div class="card-footer bg-white text-center">
+        {!! $allChecks->links() !!}
+    </div>
+    @endif
+</div>
+
+<div class="modal fade" id="encashModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="POST" id="encashForm">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title">Make Payment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Customer</label>
+                            <p class="fw-bold mb-0" id="modalCustomer">-</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Original Amount</label>
+                            <p class="fw-bold mb-0" id="modalOriginal">-</p>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label text-muted small">Remaining</label>
+                            <p class="fw-bold text-danger mb-0" id="modalRemaining">-</p>
+                        </div>
+                        <hr class="my-2">
+                        <div class="col-12">
+                            <label class="form-label">Payment Amount <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text">৳</span>
+                                <input type="number" step="0.01" name="encash_amount" id="encashAmount" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Payment Type <span class="text-danger">*</span></label>
+                            <select name="payment_type" class="form-select" required>
+                                <option value="cash">Cash</option>
+                                <option value="check">Cheque</option>
+                                <option value="mobile_banking">Mobile Banking</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Next Due Date <small class="text-muted">(if remaining balance)</small></label>
+                            <input type="date" name="next_due_date" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Transaction ID <small class="text-muted">(for reference)</small></label>
+                            <input type="text" name="transaction_id" class="form-control" placeholder="e.g. TXN12345">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Note</label>
+                            <textarea name="note" class="form-control" rows="2" placeholder="Optional note..."></textarea>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -200,11 +248,31 @@
                     <button type="submit" class="btn btn-success">
                         <i class="bi bi-check-circle"></i> Record Payment
                     </button>
-                    </div>
                 </div>
             </form>
         </div>
     </div>
 </div>
-@endforelse
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('encashModal');
+    if (!modal) return;
+    modal.addEventListener('show.bs.modal', function(event) {
+        const btn = event.relatedTarget;
+        const id = btn.dataset.id;
+        const customer = btn.dataset.customer;
+        const amount = btn.dataset.amount;
+        const remaining = parseFloat(btn.dataset.remaining);
+        document.getElementById('encashForm').action = '{{ route("dues.encash", "_ID_") }}'.replace('_ID_', id);
+        document.getElementById('modalCustomer').textContent = customer;
+        document.getElementById('modalOriginal').textContent = '\u09f3' + amount;
+        document.getElementById('modalRemaining').textContent = '\u09f3' + remaining.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        document.getElementById('encashAmount').value = remaining;
+        document.getElementById('encashAmount').max = remaining;
+    });
+});
+</script>
+@endpush
 @endsection

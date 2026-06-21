@@ -172,7 +172,7 @@ class ExportController extends Controller
                 'Card Ref' => $payment && $payment->payment_type === 'card' ? ($payment->card_reference ?? 'N/A') : 'N/A',
                 'Card Amount' => $payment && $payment->payment_type === 'card' ? number_format($payment->card_amount ?? 0, 2) : 'N/A',
                 'Due Date' => $payment && $payment->due_date ? $payment->due_date->format('Y-m-d') : 'N/A',
-                'Date' => $bill->report_date->format('Y-m-d'),
+                'Date' => $bill->report_date?->format('Y-m-d') ?? 'N/A',
             ]);
         }
 
@@ -199,7 +199,7 @@ class ExportController extends Controller
                 'Card Ref' => 'N/A',
                 'Card Amount' => 'N/A',
                 'Due Date' => 'N/A',
-                'Date' => $pd->created_at->format('Y-m-d'),
+                'Date' => $pd->created_at?->format('Y-m-d') ?? 'N/A',
             ]);
         }
 

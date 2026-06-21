@@ -174,8 +174,8 @@
                                     <label class="form-label">Cheque Photo</label>
                                     @if($checkPayment->check_photo)
                                     <div class="mb-2">
-                                        <a href="{{ route('storage.file', $checkPayment->check_photo) }}" target="_blank">
-                                            <img src="{{ route('storage.file', $checkPayment->check_photo) }}" alt="Cheque" class="img-thumbnail" style="width: 150px; height: 75px; object-fit: cover;">
+                                        <a href="{{ route('cheque.show', $checkPayment->check_photo) }}" target="_blank">
+                                            <img src="{{ route('cheque.show', $checkPayment->check_photo) }}" alt="Cheque" class="img-thumbnail" style="width: 150px; height: 75px; object-fit: cover;">
                                         </a>
                                     </div>
                                     @else
