@@ -6,7 +6,6 @@ use App\Models\Bill;
 use App\Models\Customer;
 use App\Models\Due;
 use App\Models\DuePayment;
-use App\Models\MainBalance;
 use App\Models\Payment;
 use App\Models\PreviousDue;
 use App\Models\PreviousDuePayment;
@@ -42,18 +41,59 @@ class ReportController extends Controller
         $totalPrevDues = $prevDueQuery->clone()->where('status', 'pending')->sum('amount');
         $totalPrevCollected = PreviousDuePayment::whereIn('previous_due_id', $prevDueQuery->clone()->select('id'))->sum('amount');
 
-        $balanceQuery = MainBalance::query();
-        $totalCredit = $balanceQuery->clone()->where('type', 'credit')->sum('amount');
-        $totalDebit = $balanceQuery->clone()->where('type', 'debit')->sum('amount');
-        $mainBalance = $totalCredit - $totalDebit;
+        $duePaymentCollection = DuePayment::whereHas('due.bill', function ($q) {
+            if (!Auth::user()->isAdmin()) {
+                $q->where('user_id', Auth::id());
+            }
+        })->sum('amount');
 
+        $paymentQuery = Payment::query();
         if (!Auth::user()->isAdmin()) {
-            $branchCredit = MainBalance::where('branch_id', Auth::id())->where('type', 'credit')->sum('amount');
-            $branchDebit = MainBalance::where('branch_id', Auth::id())->where('type', 'debit')->sum('amount');
-            $mainBalance = $branchCredit - $branchDebit;
+            $paymentQuery->whereHas('bill', fn($q) => $q->where('user_id', Auth::id()));
         }
 
-        return view('reports.index', compact('users', 'totalSales', 'totalDues', 'paidDues', 'mainBalance', 'totalPrevDues', 'totalPrevCollected'));
+        $paymentTotals = (clone $paymentQuery)
+            ->selectRaw("COALESCE(SUM(CASE WHEN payment_type = 'cash' THEN amount ELSE 0 END), 0) as cash_total")
+            ->selectRaw("COALESCE(SUM(CASE WHEN payment_type = 'check' THEN amount ELSE 0 END), 0) as check_total")
+            ->selectRaw("COALESCE(SUM(CASE WHEN payment_type = 'tt' THEN amount ELSE 0 END), 0) as tt_total")
+            ->selectRaw("COALESCE(SUM(CASE WHEN payment_type = 'card' THEN amount ELSE 0 END), 0) as card_total")
+            ->selectRaw("COALESCE(SUM(CASE WHEN payment_type = 'due' THEN amount ELSE 0 END), 0) as due_total")
+            ->first();
+
+        $totalDiscount = Bill::query()
+            ->when(!Auth::user()->isAdmin(), fn($q) => $q->where('user_id', Auth::id()))
+            ->sum('discount');
+
+        $totalReportDiscount = TodaySalesReport::where('status', 'closed')
+            ->when(!Auth::user()->isAdmin(), fn($q) => $q->where('user_id', Auth::id()))
+            ->sum('discount_amt');
+
+        $encashQuery = Payment::query();
+        if (!Auth::user()->isAdmin()) {
+            $encashQuery->whereHas('bill', fn($q) => $q->where('user_id', Auth::id()));
+        }
+
+        $chequeEncashed = (clone $encashQuery)
+            ->where('payment_type', 'check')
+            ->sum('encashed_amount');
+
+        $cardEncashed = (clone $encashQuery)
+            ->where('payment_type', 'card')
+            ->where('status', 'encashed')
+            ->sum('amount');
+
+        $mainBalance = ($paymentTotals->cash_total ?? 0)
+            + ($paymentTotals->tt_total ?? 0)
+            + ($chequeEncashed ?? 0)
+            + ($cardEncashed ?? 0)
+            + ($totalPrevCollected ?? 0)
+            + ($duePaymentCollection ?? 0)
+            - ($totalReportDiscount ?? 0);
+
+        return view('reports.index', compact(
+            'users', 'totalSales', 'totalDues', 'paidDues', 'totalPrevDues', 'totalPrevCollected',
+            'paymentTotals', 'totalDiscount', 'totalReportDiscount', 'mainBalance', 'duePaymentCollection'
+        ));
     }
 
     public function sales(Request $request): View
@@ -410,6 +450,65 @@ class ReportController extends Controller
             'collectionRate',
             'dueCollection',
             'recoveryRate',
+        ));
+    }
+
+    public function resources(Request $request): View
+    {
+        $users = User::where('role', 'user')->orderBy('name')->get(['id', 'name']);
+
+        $query = Bill::with(['customer', 'user', 'payments']);
+
+        if (Auth::user()->isAdmin()) {
+            if ($request->filled('user_id')) {
+                $query->where('user_id', $request->user_id);
+            }
+        } else {
+            $query->where('user_id', Auth::id());
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('report_date', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('report_date', '<=', $request->date_to);
+        }
+
+        $query->orderBy('report_date', 'desc')->orderBy('id', 'desc');
+        $bills = $query->paginate(25);
+
+        // Summary stats for the filtered result
+        $summaryQuery = Bill::query()
+            ->when(Auth::user()->isAdmin() && $request->filled('user_id'), fn($q) => $q->where('user_id', $request->user_id))
+            ->when(!Auth::user()->isAdmin(), fn($q) => $q->where('user_id', Auth::id()))
+            ->when($request->filled('date_from'), fn($q) => $q->whereDate('report_date', '>=', $request->date_from))
+            ->when($request->filled('date_to'), fn($q) => $q->whereDate('report_date', '<=', $request->date_to));
+
+        $totalBills = (clone $summaryQuery)->count();
+        $grossAmount = (clone $summaryQuery)->sum('bill_amount');
+        $totalDiscount = (clone $summaryQuery)->sum('discount');
+
+        $billIds = (clone $summaryQuery)->pluck('id');
+
+        $paymentTotals = Payment::whereIn('bill_id', $billIds)
+            ->selectRaw("COALESCE(SUM(CASE WHEN payment_type = 'cash' AND status = 'encashed' THEN amount ELSE 0 END), 0) as cash_total")
+            ->selectRaw("COALESCE(SUM(CASE WHEN payment_type = 'check' THEN amount ELSE 0 END), 0) as check_total")
+            ->selectRaw("COALESCE(SUM(CASE WHEN payment_type = 'tt' THEN amount ELSE 0 END), 0) as tt_total")
+            ->selectRaw("COALESCE(SUM(CASE WHEN payment_type = 'card' THEN amount ELSE 0 END), 0) as card_total")
+            ->selectRaw("COALESCE(SUM(CASE WHEN payment_type = 'due' THEN amount ELSE 0 END), 0) as due_total")
+            ->first();
+
+        $chequeEncashed = Payment::whereIn('bill_id', $billIds)
+            ->where('payment_type', 'check')
+            ->sum('encashed_amount');
+
+        $dueCollection = DuePayment::whereHas('due.bill', function ($q) use ($billIds) {
+            $q->whereIn('id', $billIds);
+        })->sum('amount');
+
+        return view('reports.resources', compact(
+            'users', 'bills', 'totalBills', 'grossAmount', 'totalDiscount',
+            'paymentTotals', 'chequeEncashed', 'dueCollection'
         ));
     }
 

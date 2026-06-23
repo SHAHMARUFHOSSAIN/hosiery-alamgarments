@@ -26,6 +26,7 @@ class TodaySalesReportController extends Controller
 
         $totalBills = $todayBills->count();
         $grossAmount = $todayBills->sum('bill_amount');
+        $billDiscount = $todayBills->sum('discount');
 
         $allPayments = Payment::whereIn('bill_id', $todayBills->pluck('id'))->get();
         $chequeAmt = $allPayments->where('payment_type', 'check')->sum('amount');
@@ -47,6 +48,7 @@ class TodaySalesReportController extends Controller
             'todayBills',
             'totalBills',
             'grossAmount',
+            'billDiscount',
             'chequeAmt',
             'refCardAmt',
             'cashAmt',
@@ -92,8 +94,9 @@ class TodaySalesReportController extends Controller
             ->where('status', 'pending')
             ->sum('amount');
 
+        $billDiscountAmt = $todayBills->sum('discount');
         $discountAmt = $validated['discount_amt'];
-        $finalAmount = $grossAmount - $discountAmt;
+        $finalAmount = $grossAmount - $billDiscountAmt - $discountAmt;
 
         TodaySalesReport::updateOrCreate(
             ['report_date' => $reportDate, 'user_id' => $userId],

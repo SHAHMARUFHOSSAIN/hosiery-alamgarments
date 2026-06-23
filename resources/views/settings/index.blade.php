@@ -75,16 +75,6 @@
     </div>
     <div class="col-md-3">
         <div class="card border-0 shadow-sm h-100 text-center p-4">
-            <div class="bg-success bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
-                <i class="bi bi-credit-card text-success fs-2"></i>
-            </div>
-            <h5>All Transactions</h5>
-            <p class="text-muted">View all branch transactions and balance history</p>
-            <a href="{{ route('settings.transactions') }}" class="btn btn-success">View Transactions</a>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100 text-center p-4">
             <div class="bg-info bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
                 <i class="bi bi-database text-info fs-2"></i>
             </div>
@@ -118,9 +108,6 @@
                     </a>
                     <a href="{{ route('settings.data') }}" class="btn btn-outline-success">
                         <i class="bi bi-database"></i> Manage All Data
-                    </a>
-                    <a href="{{ route('settings.transactions') }}" class="btn btn-outline-warning">
-                        <i class="bi bi-wallet2"></i> All Transactions
                     </a>
                 </div>
             </div>

@@ -15,7 +15,7 @@
 @endif
 
 <div class="row g-3 mb-4">
-    <div class="col-md-3">
+    <div class="col-md-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start">
@@ -33,25 +33,8 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="text-muted mb-1 small text-uppercase fw-semibold">My Balance</p>
-                        <h3 class="mb-0 fw-bold text-{{ $stats['mainBalance'] >= 0 ? 'success' : 'danger' }}">৳{{ number_format($stats['mainBalance'], 2) }}</h3>
-                    </div>
-                    <div class="bg-{{ $stats['mainBalance'] >= 0 ? 'success' : 'danger' }} bg-opacity-10 p-2 rounded">
-                        <i class="bi bi-wallet2 text-{{ $stats['mainBalance'] >= 0 ? 'success' : 'danger' }}"></i>
-                    </div>
-                </div>
-                <div class="mt-2 small text-muted">
-                    Total Sales: <strong>৳{{ number_format($stats['totalSales'], 2) }}</strong>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
+
+    <div class="col-md-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start">
@@ -69,7 +52,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start">
@@ -82,7 +65,10 @@
                     </div>
                 </div>
                 <div class="mt-2 small text-muted">
-                    Discount (Month): <strong class="text-danger">৳{{ number_format($stats['thisMonthDiscount'], 2) }}</strong>
+                    Discount: <strong class="text-danger">৳{{ number_format($stats['thisMonthDiscount'], 2) }}</strong>
+                    @if(($thisMonthRepDiscount ?? 0) > 0)
+                    | Rep Discount: <strong class="text-danger">৳{{ number_format($thisMonthRepDiscount, 2) }}</strong>
+                    @endif
                 </div>
             </div>
         </div>
@@ -156,6 +142,7 @@
                             <th>Customers</th>
                             <th class="text-end">Subtotal</th>
                             <th class="text-end">Discount</th>
+                            <th class="text-end">Rep Disc</th>
                             <th class="text-end">Net</th>
                         </tr>
                     </thead>
@@ -178,7 +165,8 @@
                             </td>
                             <td class="text-end fw-bold">৳{{ number_format($bills->sum('bill_amount'), 2) }}</td>
                             <td class="text-end text-danger">৳{{ number_format($bills->sum('discount'), 2) }}</td>
-                            <td class="text-end fw-bold text-success">৳{{ number_format($bills->sum('bill_amount') - $bills->sum('discount'), 2) }}</td>
+                            <td class="text-end text-danger">৳{{ number_format($dailyRepDiscounts[$date]->total ?? 0, 2) }}</td>
+                            <td class="text-end fw-bold text-success">৳{{ number_format($bills->sum('bill_amount') - $bills->sum('discount') - ($dailyRepDiscounts[$date]->total ?? 0), 2) }}</td>
                         </tr>
                         @foreach($bills->take(5) as $bill)
                         <tr class="table-light" style="font-size: 0.9em;">
@@ -191,23 +179,28 @@
                             <td><small class="text-muted">{{ $bill->customer->name ?? 'N/A' }}</small></td>
                             <td class="text-end"><small>৳{{ number_format($bill->bill_amount, 2) }}</small></td>
                             <td class="text-end"><small class="text-danger">৳{{ number_format($bill->discount, 2) }}</small></td>
+                            <td class="text-end"><small class="text-muted">—</small></td>
                             <td class="text-end"><small class="text-success">৳{{ number_format($bill->bill_amount - $bill->discount, 2) }}</small></td>
                         </tr>
                         @endforeach
                         @if($bills->count() > 5)
                         <tr>
-                            <td colspan="6" class="text-center text-muted"><small>+{{ $bills->count() - 5 }} more bill(s)</small></td>
+                            <td colspan="7" class="text-center text-muted"><small>+{{ $bills->count() - 5 }} more bill(s)</small></td>
                         </tr>
                         @endif
                         @empty
-                        <tr><td colspan="6" class="text-center py-4 text-muted">No sales for this period</td></tr>
+                        <tr><td colspan="7" class="text-center py-4 text-muted">No sales for this period</td></tr>
                         @endforelse
                         @if($weekBills->isNotEmpty())
+                        @php
+                            $totalRepDisc = $dailyRepDiscounts->sum('total');
+                        @endphp
                         <tr class="table-dark">
                             <td colspan="3" class="text-end fw-bold">TOTAL</td>
                             <td class="text-end fw-bold">৳{{ number_format($weekBills->flatten()->sum('bill_amount'), 2) }}</td>
                             <td class="text-end fw-bold text-danger">৳{{ number_format($weekBills->flatten()->sum('discount'), 2) }}</td>
-                            <td class="text-end fw-bold text-success">৳{{ number_format($weekBills->flatten()->sum('bill_amount') - $weekBills->flatten()->sum('discount'), 2) }}</td>
+                            <td class="text-end fw-bold text-danger">৳{{ number_format($totalRepDisc, 2) }}</td>
+                            <td class="text-end fw-bold text-success">৳{{ number_format($weekBills->flatten()->sum('bill_amount') - $weekBills->flatten()->sum('discount') - $totalRepDisc, 2) }}</td>
                         </tr>
                         @endif
                     </tbody>
@@ -255,38 +248,7 @@
         </div>
     </div>
 
-    <div class="col-lg-6">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <h6 class="mb-0 fw-bold">Recent Transactions</h6>
-                <a href="{{ route('main-balance.index') }}" class="btn btn-sm btn-outline-secondary">View All</a>
-            </div>
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Description</th>
-                            <th class="text-end">Amount</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($recentTransactions as $tx)
-                        <tr>
-                            <td>{{ Str::limit($tx->name, 35) }}</td>
-                            <td class="text-end fw-bold text-{{ $tx->type === 'credit' ? 'success' : 'danger' }}">
-                                {{ $tx->type === 'credit' ? '+' : '-' }}৳{{ number_format($tx->amount, 2) }}
-                            </td>
-                            <td><small>{{ $tx->created_at->format('M d H:i') }}</small></td>
-                        </tr>
-                        @empty
-                        <tr><td colspan="3" class="text-center py-3">No transactions</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+
 </div>
 
 <div class="card border-0 shadow-sm">

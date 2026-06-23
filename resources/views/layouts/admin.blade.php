@@ -115,21 +115,10 @@
                         </ul>
                     </div>
                 </li>
-                @if(auth()->user()->isAdmin())
-                <li class="nav-item">
-                    <a href="{{ route('main-balance.index') }}" class="nav-link text-white {{ request()->routeIs('main-balance.*') || request()->routeIs('user-balance.*') ? 'active bg-primary rounded' : '' }}">
-                        <i class="bi bi-wallet2"></i> Balance
-                    </a>
-                </li>
-                @else
+                @if(!auth()->user()->isAdmin())
                 <li class="nav-item">
                     <a href="{{ route('user-reports.today-sales') }}" class="nav-link text-white {{ request()->routeIs('user-reports.today-sales') ? 'active bg-primary rounded' : '' }}">
                         <i class="bi bi-calendar-check"></i> Today Sales Report
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('user-balance.index') }}" class="nav-link text-white {{ request()->routeIs('user-balance.*') ? 'active bg-primary rounded' : '' }}">
-                        <i class="bi bi-wallet2"></i> My Balance
                     </a>
                 </li>
                 @endif
@@ -140,8 +129,23 @@
                 </li>
                 @if(auth()->user()->isAdmin())
                 <li class="nav-item">
-                    <a href="{{ route('reports.index') }}" class="nav-link text-white {{ request()->routeIs('reports.*') && !request()->routeIs('reports.analytics') ? 'active bg-primary rounded' : '' }}">
+                    <a href="{{ route('reports.index') }}" class="nav-link text-white {{ request()->routeIs('reports.index') ? 'active bg-primary rounded' : '' }}">
                         <i class="bi bi-graph-up"></i> Reports
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('reports.resources') }}" class="nav-link text-white {{ request()->routeIs('reports.resources') ? 'active bg-primary rounded' : '' }}">
+                        <i class="bi bi-diagram-3"></i> Resources
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('reports.sales') }}" class="nav-link text-white {{ request()->routeIs('reports.sales') ? 'active bg-primary rounded' : '' }}">
+                        <i class="bi bi-receipt"></i> Sales Report
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('reports.dues') }}" class="nav-link text-white {{ request()->routeIs('reports.dues') ? 'active bg-primary rounded' : '' }}">
+                        <i class="bi bi-clock-history"></i> Dues Report
                     </a>
                 </li>
                 <li class="nav-item">
@@ -225,15 +229,15 @@
                             </ul>
                         </div>
                     </li>
-                    @if(auth()->user()->isAdmin())
-                    <li class="nav-item"><a href="{{ route('main-balance.index') }}" class="nav-link text-white">Balance</a></li>
-                    @else
+                    @if(!auth()->user()->isAdmin())
                     <li class="nav-item"><a href="{{ route('user-reports.today-sales') }}" class="nav-link text-white">Today Sales Report</a></li>
-                    <li class="nav-item"><a href="{{ route('user-balance.index') }}" class="nav-link text-white">My Balance</a></li>
                     @endif
                     <li class="nav-item"><a href="{{ route('imports.index') }}" class="nav-link text-white">Import Data</a></li>
                     @if(auth()->user()->isAdmin())
                     <li class="nav-item"><a href="{{ route('reports.index') }}" class="nav-link text-white">Reports</a></li>
+                    <li class="nav-item"><a href="{{ route('reports.resources') }}" class="nav-link text-white">Resources</a></li>
+                    <li class="nav-item"><a href="{{ route('reports.sales') }}" class="nav-link text-white">Sales Report</a></li>
+                    <li class="nav-item"><a href="{{ route('reports.dues') }}" class="nav-link text-white">Dues Report</a></li>
                     <li class="nav-item"><a href="{{ route('reports.analytics') }}" class="nav-link text-white">Analytics</a></li>
                     <li class="nav-item"><a href="{{ route('settings.index') }}" class="nav-link text-white">Settings</a></li>
                     @endif

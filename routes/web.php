@@ -9,10 +9,8 @@ use App\Http\Controllers\DueController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\PreviousDueController;
 use App\Http\Controllers\ImportController;
-use App\Http\Controllers\MainBalanceController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
-use App\Http\Controllers\UserBalanceController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserReportController;
 use App\Http\Controllers\TodaySalesReportController;
@@ -88,19 +86,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/sample/{type}', [ImportController::class, 'downloadSample'])->name('imports.sample');
     });
 
-    Route::prefix('main-balance')->group(function () {
-        Route::get('/', [MainBalanceController::class, 'index'])->name('main-balance.index');
-        Route::post('/', [MainBalanceController::class, 'store'])->name('main-balance.store');
-        Route::get('/report', [MainBalanceController::class, 'balanceReport'])->name('main-balance.report');
-        Route::get('/{mainBalance}/voucher', [MainBalanceController::class, 'voucher'])->name('main-balance.voucher');
-    });
-
-    Route::prefix('user-balance')->group(function () {
-        Route::get('/', [UserBalanceController::class, 'index'])->name('user-balance.index');
-        Route::post('/', [UserBalanceController::class, 'store'])->name('user-balance.store');
-        Route::get('/{mainBalance}/voucher', [UserBalanceController::class, 'voucher'])->name('user-balance.voucher');
-    });
-
     Route::prefix('user-reports')->group(function () {
         Route::get('/', [UserReportController::class, 'index'])->name('user-reports.index');
         Route::get('/sales', [UserReportController::class, 'sales'])->name('user-reports.sales');
@@ -132,6 +117,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/previous-dues', [ReportController::class, 'previousDue'])->name('reports.previous-dues');
             Route::get('/inactive-customers', [ReportController::class, 'inactiveCustomers'])->name('reports.inactive-customers');
             Route::get('/inactive-customers/export', [ExportController::class, 'inactiveCustomers'])->name('export.inactive-customers');
+            Route::get('/resources', [ReportController::class, 'resources'])->name('reports.resources');
         });
 
         Route::prefix('export')->group(function () {
@@ -148,7 +134,6 @@ Route::middleware('auth')->group(function () {
             Route::post('/users', [SettingsController::class, 'storeUser'])->name('settings.users.store');
             Route::put('/users/{user}', [SettingsController::class, 'updateUser'])->name('settings.users.update');
             Route::delete('/users/{user}', [SettingsController::class, 'deleteUser'])->name('settings.users.delete');
-            Route::get('/transactions', [SettingsController::class, 'allTransactions'])->name('settings.transactions');
             Route::get('/system-info', [SettingsController::class, 'systemInfo'])->name('settings.system-info');
             Route::get('/data', [SettingsController::class, 'dataManagement'])->name('settings.data');
             Route::get('/company', [SettingsController::class, 'company'])->name('settings.company');

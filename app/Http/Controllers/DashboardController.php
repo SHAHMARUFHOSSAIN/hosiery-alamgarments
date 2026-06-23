@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Bill;
 use App\Models\Customer;
 use App\Models\Due;
-use App\Models\MainBalance;
 use App\Models\Payment;
 use App\Models\TodaySalesReport;
 use App\Models\User;
@@ -156,10 +155,6 @@ class DashboardController extends Controller
             $label = 'Last 7 Days';
         }
 
-        $totalCredit = MainBalance::where('branch_id', $userId)->where('type', 'credit')->sum('amount');
-        $totalDebit = MainBalance::where('branch_id', $userId)->where('type', 'debit')->sum('amount');
-        $mainBalance = $totalCredit - $totalDebit;
-
         $startOfMonth = now()->startOfMonth()->toDateString();
         $thisMonthSales = Bill::where('user_id', $userId)->whereMonth('report_date', now()->month)->whereYear('report_date', now()->year)->sum('bill_amount');
         $thisMonthDiscount = Bill::where('user_id', $userId)->whereMonth('report_date', now()->month)->whereYear('report_date', now()->year)->sum('discount');
@@ -181,7 +176,6 @@ class DashboardController extends Controller
             'totalBills' => Bill::where('user_id', $userId)->count(),
             'totalDues' => Due::where('created_by', $userId)->where('status', 'pending')->sum('amount'),
             'todayDues' => Due::where('created_by', $userId)->whereDate('due_date', $today)->where('status', 'pending')->count(),
-            'mainBalance' => $mainBalance,
             'todaySales' => $todaySales,
             'thisMonthSales' => $thisMonthSales,
             'thisMonthDiscount' => $thisMonthDiscount,
@@ -207,11 +201,6 @@ class DashboardController extends Controller
             ->where('created_by', $userId)
             ->where('status', 'pending')
             ->orderBy('due_date', 'asc')
-            ->limit(10)
-            ->get();
-
-        $recentTransactions = MainBalance::where('branch_id', $userId)
-            ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
 
@@ -264,6 +253,20 @@ class DashboardController extends Controller
 
         $totalFiltered = $weekBills->flatten()->sum('bill_amount');
 
-        return view('dashboard.user', compact('stats', 'recentBills', 'recentDues', 'recentTransactions', 'dailyLabels', 'dailyValues', 'todayBills', 'weekBills', 'filter', 'label', 'totalFiltered', 'pendingCheques'));
+        $thisMonthRepDiscount = TodaySalesReport::where('user_id', $userId)
+            ->where('status', 'closed')
+            ->whereMonth('report_date', now()->month)
+            ->whereYear('report_date', now()->year)
+            ->sum('discount_amt');
+
+        $dailyRepDiscounts = TodaySalesReport::where('user_id', $userId)
+            ->where('status', 'closed')
+            ->whereBetween('report_date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+            ->selectRaw('DATE(report_date) as date, SUM(discount_amt) as total')
+            ->groupBy('date')
+            ->get()
+            ->keyBy('date');
+
+        return view('dashboard.user', compact('stats', 'recentBills', 'recentDues', 'dailyLabels', 'dailyValues', 'todayBills', 'weekBills', 'filter', 'label', 'totalFiltered', 'pendingCheques', 'thisMonthRepDiscount', 'dailyRepDiscounts'));
     }
 }

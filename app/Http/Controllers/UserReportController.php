@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Bill;
 use App\Models\Due;
-use App\Models\MainBalance;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,12 +17,8 @@ class UserReportController extends Controller
         
         $totalDue = Due::where('created_by', Auth::id())->where('status', 'pending')->sum('amount');
         $paidDue = Due::where('created_by', Auth::id())->where('status', 'paid')->sum('amount');
-        
-        $totalCredit = MainBalance::where('branch_id', Auth::id())->where('type', 'credit')->sum('amount');
-        $totalDebit = MainBalance::where('branch_id', Auth::id())->where('type', 'debit')->sum('amount');
-        $mainBalance = $totalCredit - $totalDebit;
 
-        return view('user-reports.index', compact('totalSales', 'totalDue', 'paidDue', 'mainBalance'));
+        return view('user-reports.index', compact('totalSales', 'totalDue', 'paidDue'));
     }
 
     public function sales(Request $request): View
@@ -62,11 +57,7 @@ class UserReportController extends Controller
                     ->paginate(15);
         $totalPending = $query->clone()->where('status', 'pending')->sum('amount');
         $totalPaid = $query->clone()->where('status', 'paid')->sum('amount');
-        
-        $totalCredit = MainBalance::where('branch_id', Auth::id())->where('type', 'credit')->sum('amount');
-        $totalDebit = MainBalance::where('branch_id', Auth::id())->where('type', 'debit')->sum('amount');
-        $mainBalance = $totalCredit - $totalDebit;
 
-        return view('user-reports.dues', compact('dues', 'totalPending', 'totalPaid', 'mainBalance'));
+        return view('user-reports.dues', compact('dues', 'totalPending', 'totalPaid'));
     }
 }

@@ -34,6 +34,10 @@
 </style>
 @endpush
 
+@php
+    $customerList = \App\Models\Customer::select('id', 'name', 'mobile', 'location')->get();
+@endphp
+
 @section('content')
 <div class="row justify-content-center">
     <div class="col-lg-8">
@@ -196,7 +200,7 @@
                                             <div class="col-md-4">
                                                 <label class="form-label">Cheque Photo</label>
                                                 <input type="file" name="checks[0][check_photo]" class="form-control" accept="image/*">
-                                                <small class="text-muted">Upload cheque image (max 2MB)</small>
+                                                <small class="text-muted">Upload cheque image (max 5MB)</small>
                                             </div>
                                         </div>
                                     </div>
@@ -393,7 +397,7 @@
     var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
     var banksSearchUrl = '{{ route("banks.search") }}';
     var customersSearchUrl = '{{ route("customers.search") }}';
-    var customers = @json(\App\Models\Customer::select('id', 'name', 'mobile')->get());
+    var customers = @json($customerList);
 
     // ---- Helper: set customer and sync dropdown/search ----
     function setCustomer(id, displayText) {
@@ -409,12 +413,13 @@
     (function populateCustomerSelect() {
         var sel = document.getElementById('customerSelect');
         if (!sel) return;
-        var html = '<option value="">-- Select Customer --</option>';
-        var oldVal = '{{ old("customer_id") }}';
-        customers.forEach(function(c) {
-            var selected = String(c.id) === oldVal ? ' selected' : '';
-            html += '<option value="' + c.id + '"' + selected + '>' + c.name + (c.mobile ? ' - ' + c.mobile : '') + '</option>';
-        });
+            var html = '<option value="">-- Select Customer --</option>';
+            var oldVal = '{{ old("customer_id") }}';
+            customers.forEach(function(c) {
+                var selected = String(c.id) === oldVal ? ' selected' : '';
+                var info = c.name + (c.mobile ? ' - ' + c.mobile : '') + (c.location ? ', ' + c.location : '');
+                html += '<option value="' + c.id + '"' + selected + '>' + info + '</option>';
+            });
         sel.innerHTML = html;
         if (oldVal) {
             var selectedOpt = sel.options[sel.selectedIndex];
@@ -468,7 +473,7 @@
                         el.href = '#';
                         el.className = 'list-group-item list-group-item-action';
                         el.setAttribute('data-json', JSON.stringify(item));
-                        el.textContent = item.name + (item.mobile ? ' - ' + item.mobile : '');
+                        el.textContent = item.name + (item.mobile ? ' - ' + item.mobile : '') + (item.location ? ', ' + item.location : '');
                         results.appendChild(el);
                     });
                 })
@@ -484,7 +489,7 @@
                 e.preventDefault();
                 if (lastData.length === 1) {
                     var item = lastData[0];
-                    var display = item.name + (item.mobile ? ' - ' + item.mobile : '');
+                    var display = item.name + (item.mobile ? ' - ' + item.mobile : '') + (item.location ? ', ' + item.location : '');
                     setCustomer(item.id, display);
                     results.style.display = 'none';
                 }
@@ -495,7 +500,7 @@
             setTimeout(function() {
                 if (lastData.length === 1) {
                     var item = lastData[0];
-                    var display = item.name + (item.mobile ? ' - ' + item.mobile : '');
+                    var display = item.name + (item.mobile ? ' - ' + item.mobile : '') + (item.location ? ', ' + item.location : '');
                     setCustomer(item.id, display);
                 }
                 results.style.display = 'none';
@@ -509,7 +514,7 @@
             if (!item || !item.hasAttribute('data-json')) return;
             var data = JSON.parse(item.getAttribute('data-json'));
             if (data) {
-                var display = data.name + (data.mobile ? ' - ' + data.mobile : '');
+                var display = data.name + (data.mobile ? ' - ' + data.mobile : '') + (data.location ? ', ' + data.location : '');
                 setCustomer(data.id, display);
             }
             results.style.display = 'none';
@@ -866,7 +871,7 @@
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 if (data.id) {
-                    setCustomer(data.id, data.name + (data.mobile ? ' - ' + data.mobile : ''));
+                    setCustomer(data.id, data.name + (data.mobile ? ' - ' + data.mobile : '') + (data.location ? ', ' + data.location : ''));
                     modal.hide();
                     form.reset();
                 }

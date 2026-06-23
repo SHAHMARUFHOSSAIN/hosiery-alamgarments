@@ -26,7 +26,7 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
                 <h6 class="text-muted mb-1">Due Collected</h6>
-                <h3 class="text-success mb-0">৳{{ number_format($paidDues ?? 0, 2) }}</h3>
+                <h3 class="text-success mb-0">৳{{ number_format($duePaymentCollection ?? 0, 2) }}</h3>
             </div>
         </div>
     </div>
@@ -49,14 +49,79 @@
     <div class="col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
-                <h6 class="text-muted mb-1">Main Balance</h6>
-                <h3 class="text-{{ $mainBalance >= 0 ? 'success' : 'danger' }} mb-0">৳{{ number_format($mainBalance ?? 0, 2) }}</h3>
+                <h6 class="text-muted mb-1">Cash Received</h6>
+                <h3 class="text-success mb-0">৳{{ number_format($paymentTotals->cash_total ?? 0, 2) }}</h3>
             </div>
         </div>
     </div>
-</div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-1">Cheque Reports</h6>
+                <h3 class="text-primary mb-0">৳{{ number_format($paymentTotals->check_total ?? 0, 2) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-1">TT Reports</h6>
+                <h3 class="text-info mb-0">৳{{ number_format($paymentTotals->tt_total ?? 0, 2) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-1">Reference Card</h6>
+                <h3 class="text-secondary mb-0">৳{{ number_format($paymentTotals->card_total ?? 0, 2) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-1">Discount</h6>
+                <h3 class="text-danger mb-0">৳{{ number_format($totalDiscount ?? 0, 2) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-1">Rep Discount</h6>
+                <h3 class="text-danger mb-0">৳{{ number_format($totalReportDiscount ?? 0, 2) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-dark">
+            <div class="card-body text-center">
+                <h6 class="text-white mb-1">Total Discount</h6>
+                <h3 class="text-warning mb-0">৳{{ number_format(($totalDiscount ?? 0) + ($totalReportDiscount ?? 0), 2) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-primary">
+            <div class="card-body text-center">
+                <h6 class="text-white mb-1">Main Balance</h6>
+                <h3 class="text-white mb-0">৳{{ number_format($mainBalance ?? 0, 2) }}</h3>
+            </div>
+        </div>
+    </div>
 
 <div class="row g-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm h-100 text-center p-4">
+            <div class="bg-warning bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
+                <i class="bi bi-diagram-3 text-warning fs-2"></i>
+            </div>
+            <h5>Resources</h5>
+            <p class="text-muted">User-wise data with date filters — bills, payments, dues, collections</p>
+            <a href="{{ route('reports.resources') }}" class="btn btn-warning">View Resources</a>
+        </div>
+    </div>
     <div class="col-md-4">
         <div class="card border-0 shadow-sm h-100 text-center p-4">
             <div class="bg-primary bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
@@ -109,16 +174,6 @@
         </div>
     </div>
     @endif
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm h-100 text-center p-4">
-            <div class="bg-warning bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
-                <i class="bi bi-wallet2 text-warning fs-2"></i>
-            </div>
-            <h5>Main Balance</h5>
-            <p class="text-muted">Manage main balance and transactions</p>
-            <a href="{{ route('main-balance.index') }}" class="btn btn-warning">View Balance</a>
-        </div>
-    </div>
     @if(auth()->user()->isAdmin())
     <div class="col-md-4">
         <div class="card border-0 shadow-sm h-100 text-center p-4">

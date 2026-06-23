@@ -109,40 +109,6 @@ class SettingsController extends Controller
         return redirect()->route('settings.users')->with('success', 'User deleted successfully');
     }
 
-    public function allTransactions(Request $request): View
-    {
-        $days = $request->get('days', 30);
-        $startDate = now()->subDays($days)->startOfDay();
-        
-        $query = MainBalance::with(['user', 'branch']);
-
-        if ($request->filled('branch_id')) {
-            $query->where('branch_id', $request->branch_id);
-        }
-        if ($request->filled('date_from')) {
-            $query->whereDate('created_at', '>=', $request->date_from);
-        }
-        if ($request->filled('date_to')) {
-            $query->whereDate('created_at', '<=', $request->date_to);
-        }
-        if ($request->filled('type')) {
-            $query->where('type', $request->type);
-        }
-        if ($days > 0) {
-            $query->where('created_at', '>=', $startDate);
-        }
-
-        $transactions = $query->orderBy('id', 'desc')->paginate(20);
-        
-        $totalCredit = MainBalance::where('type', 'credit')->sum('amount');
-        $totalDebit = MainBalance::where('type', 'debit')->sum('amount');
-        $totalBalance = $totalCredit - $totalDebit;
-
-        $branches = User::where('role', 'user')->get(['id', 'name']);
-
-        return view('settings.transactions', compact('transactions', 'totalCredit', 'totalDebit', 'totalBalance', 'branches', 'days'));
-    }
-
     public function systemInfo(Request $request): View
     {
         $days = $request->get('days', 30);

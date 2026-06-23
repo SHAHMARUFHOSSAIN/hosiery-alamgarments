@@ -16,12 +16,23 @@
 
 @section('content')
 <div class="row g-4 mb-4">
-    <div class="col-md-4">
+    <div class="col-md-6">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
                 <h6 class="text-muted mb-1">Pending Dues</h6>
                 <h4 class="text-danger mb-0">৳{{ number_format($totalPending ?? 0, 2) }}</h4>
             </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-1">Collected Dues</h6>
+                <h4 class="text-success mb-0">৳{{ number_format($totalPaid ?? 0, 2) }}</h4>
+            </div>
+        </div>
+    </div>
+</div>
         </div>
     </div>
     <div class="col-md-4">
@@ -32,15 +43,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center">
-                <h6 class="text-muted mb-1">My Balance</h6>
-                <h4 class="text-{{ $mainBalance >= 0 ? 'success' : 'danger' }} mb-0">৳{{ number_format($mainBalance ?? 0, 2) }}</h4>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
     <h2 class="mb-0">My Dues</h2>

@@ -16,7 +16,6 @@
 @section('content')
 @php
     $isClosed = $existingReport && $existingReport->status === 'closed';
-    $netSales = $grossAmount - $totalReceived;
 @endphp
 
 <div class="card border-0 shadow-sm mb-4">
@@ -65,15 +64,7 @@
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body text-center">
-                <h6 class="text-muted mb-1">Net Sales</h6>
-                <h3 class="text-{{ $netSales < 0 ? 'danger' : 'dark' }} mb-0">৳{{ number_format($netSales, 2) }}</h3>
-            </div>
-        </div>
     </div>
-</div>
 
 <div class="row g-3 mb-4">
     <div class="col-md-3">
@@ -111,16 +102,27 @@
 </div>
 
 @if($isClosed)
+@php
+    $finalCalc = max(0, $grossAmount - $billDiscount - $existingReport->discount_amt);
+@endphp
 <div class="row g-3 mb-4">
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card border-0 shadow-sm bg-light">
             <div class="card-body">
-                <h6 class="text-muted mb-1">Discount Amt</h6>
+                <h6 class="text-muted mb-1">Bill Discount</h6>
+                <h4 class="text-danger mb-0">- ৳{{ number_format($billDiscount, 2) }}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm bg-light">
+            <div class="card-body">
+                <h6 class="text-muted mb-1">Rep Discount</h6>
                 <h4 class="text-danger mb-0">- ৳{{ number_format($existingReport->discount_amt, 2) }}</h4>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card border-0 shadow-sm bg-light">
             <div class="card-body">
                 <h6 class="text-muted mb-1">Due Amount</h6>
@@ -128,11 +130,11 @@
             </div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-3">
         <div class="card border-0 shadow-sm border border-success">
             <div class="card-body">
                 <h6 class="text-muted mb-1">Final Amount</h6>
-                <h4 class="text-success mb-0">৳{{ number_format($existingReport->final_amount, 2) }}</h4>
+                <h4 class="text-success mb-0">৳{{ number_format($finalCalc, 2) }}</h4>
             </div>
         </div>
     </div>

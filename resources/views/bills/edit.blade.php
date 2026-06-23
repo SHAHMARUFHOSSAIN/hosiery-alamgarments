@@ -133,102 +133,138 @@
 
                 {{-- Check Fields --}}
                 <div class="col-12" id="checkFields" style="{{ $currentType == 'check' ? '' : 'display: none;' }}">
-                    @php $checkIndex = 0; @endphp
-                    @forelse($checkPayments as $cp)
-                    <div class="card border border-warning mb-3">
-                        <div class="card-header bg-warning text-dark py-2">
-                            <h6 class="mb-0"><i class="bi bi-bank"></i> Cheque Payment #{{ $loop->iteration }}</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Bank Name <span class="text-danger">*</span></label>
-                                    <input type="text" name="check_bank_name" class="form-control" value="{{ old('check_bank_name', $cp->bank_name) }}">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Cheque No <span class="text-danger">*</span></label>
-                                    <input type="text" name="check_no" class="form-control" value="{{ old('check_no', $cp->check_no) }}">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Cheque Amount <span class="text-danger">*</span></label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">৳</span>
-                                        <input type="number" step="0.01" name="check_amount" class="form-control" value="{{ old('check_amount', $cp->check_amount) }}">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0 text-warning"><i class="bi bi-bank"></i> Cheque Payment Details</h6>
+                        <button type="button" class="btn btn-sm btn-warning" id="addCheckBtn">
+                            <i class="bi bi-plus"></i> Add Another Cheque
+                        </button>
+                    </div>
+                    <div id="checkPaymentsContainer">
+                        @error('checks')
+                        <div class="text-danger small mb-2">{{ $message }}</div>
+                        @enderror
+                        @php $checkIndex = 0; @endphp
+                        @forelse($checkPayments as $cp)
+                        <div class="card border border-warning mb-3 check-payment-item" data-index="{{ $checkIndex }}">
+                            <div class="card-header bg-warning text-dark py-2 d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-bank"></i> Cheque Payment #{{ $loop->iteration }}</span>
+                                <button type="button" class="btn btn-sm btn-danger remove-check-btn" style="{{ $checkPayments->count() > 1 ? '' : 'display: none;' }}">
+                                    <i class="bi bi-trash"></i> Remove
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6" style="position: relative;">
+                                        <label class="form-label">Bank Name <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="text" name="checks[{{ $checkIndex }}][bank_name]" class="form-control bank-search-input" placeholder="Search bank name..." autocomplete="off" value="{{ old('checks.' . $checkIndex . '.bank_name', $cp->bank_name) }}" required>
+                                            <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#newBankModal">
+                                                <i class="bi bi-plus"></i>
+                                            </button>
+                                        </div>
+                                        <div class="bank-results list-group position-absolute w-100 shadow search-dropdown" style="z-index: 1050; display: none; max-height: 250px; overflow-y: auto; top: 100%; left: 0; background: #fff;"></div>
                                     </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Cheque Date <span class="text-danger">*</span></label>
-                                    <input type="date" name="check_date" class="form-control" value="{{ old('check_date', $cp->check_date?->format('Y-m-d')) }}">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Reminder Date</label>
-                                    <input type="date" name="check_reminder_date" class="form-control" value="{{ old('check_reminder_date', $cp->check_reminder_date?->format('Y-m-d')) }}">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Status</label>
-                                    <div>
-                                        @if($cp->status === 'encashed')
-                                        <span class="badge bg-success">Encashed</span>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Cheque No <span class="text-danger">*</span></label>
+                                        <input type="text" name="checks[{{ $checkIndex }}][check_no]" class="form-control" value="{{ old('checks.' . $checkIndex . '.check_no', $cp->check_no) }}" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Cheque Amount <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">৳</span>
+                                            <input type="number" step="0.01" name="checks[{{ $checkIndex }}][check_amount]" class="form-control check-amount-input" value="{{ old('checks.' . $checkIndex . '.check_amount', $cp->check_amount) }}" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Cheque Date <span class="text-danger">*</span></label>
+                                        <input type="date" name="checks[{{ $checkIndex }}][check_date]" class="form-control" value="{{ old('checks.' . $checkIndex . '.check_date', $cp->check_date?->format('Y-m-d')) }}" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Reminder Date</label>
+                                        <input type="date" name="checks[{{ $checkIndex }}][check_reminder_date]" class="form-control" value="{{ old('checks.' . $checkIndex . '.check_reminder_date', $cp->check_reminder_date?->format('Y-m-d')) }}">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Status</label>
+                                        <div>
+                                            @if($cp->status === 'encashed')
+                                            <span class="badge bg-success">Encashed</span>
+                                            @else
+                                            <span class="badge bg-warning text-dark">Pending</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Cheque Photo</label>
+                                        @if($cp->check_photo)
+                                        <div class="mb-2">
+                                            <a href="{{ route('cheque.show', $cp->check_photo) }}" target="_blank">
+                                                <img src="{{ route('cheque.show', $cp->check_photo) }}" alt="Cheque" class="img-thumbnail" style="width: 150px; height: 75px; object-fit: cover;">
+                                            </a>
+                                        </div>
                                         @else
-                                        <span class="badge bg-warning text-dark">Pending</span>
+                                        <span class="text-muted">No photo uploaded</span>
                                         @endif
+                                        <input type="file" name="checks[{{ $checkIndex }}][check_photo]" class="form-control form-control-sm" accept="image/*">
+                                        <small class="text-muted">Upload cheque image (max 5MB)</small>
                                     </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Cheque Photo</label>
-                                    @if($cp->check_photo)
-                                    <div class="mb-2">
-                                        <a href="{{ route('cheque.show', $cp->check_photo) }}" target="_blank">
-                                            <img src="{{ route('cheque.show', $cp->check_photo) }}" alt="Cheque" class="img-thumbnail" style="width: 150px; height: 75px; object-fit: cover;">
-                                        </a>
-                                    </div>
-                                    @else
-                                    <span class="text-muted">No photo uploaded</span>
-                                    @endif
-                                    <input type="file" name="check_photo" class="form-control form-control-sm" accept="image/*">
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    @php $checkIndex++; @endphp
-                    @empty
-                    <div class="card border border-warning mb-3">
-                        <div class="card-header bg-warning text-dark py-2">
-                            <h6 class="mb-0"><i class="bi bi-bank"></i> Cheque Payment</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Bank Name <span class="text-danger">*</span></label>
-                                    <input type="text" name="check_bank_name" class="form-control" value="{{ old('check_bank_name') }}">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Cheque No <span class="text-danger">*</span></label>
-                                    <input type="text" name="check_no" class="form-control" value="{{ old('check_no') }}">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Cheque Amount <span class="text-danger">*</span></label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">৳</span>
-                                        <input type="number" step="0.01" name="check_amount" class="form-control" value="{{ old('check_amount') }}">
+                        @php $checkIndex++; @endphp
+                        @empty
+                        <div class="card border border-warning mb-3 check-payment-item" data-index="0">
+                            <div class="card-header bg-warning text-dark py-2 d-flex justify-content-between align-items-center">
+                                <span><i class="bi bi-bank"></i> Cheque Payment #1</span>
+                                <button type="button" class="btn btn-sm btn-danger remove-check-btn" style="display: none;">
+                                    <i class="bi bi-trash"></i> Remove
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-md-6" style="position: relative;">
+                                        <label class="form-label">Bank Name <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="text" name="checks[0][bank_name]" class="form-control bank-search-input" placeholder="Search bank name..." autocomplete="off" required>
+                                            <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#newBankModal">
+                                                <i class="bi bi-plus"></i>
+                                            </button>
+                                        </div>
+                                        <div class="bank-results list-group position-absolute w-100 shadow search-dropdown" style="z-index: 1050; display: none; max-height: 250px; overflow-y: auto; top: 100%; left: 0; background: #fff;"></div>
                                     </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Cheque Date <span class="text-danger">*</span></label>
-                                    <input type="date" name="check_date" class="form-control" value="{{ old('check_date') }}">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Reminder Date</label>
-                                    <input type="date" name="check_reminder_date" class="form-control" value="{{ old('check_reminder_date') }}">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">Cheque Photo</label>
-                                    <input type="file" name="check_photo" class="form-control form-control-sm" accept="image/*">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Cheque No <span class="text-danger">*</span></label>
+                                        <input type="text" name="checks[0][check_no]" class="form-control" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Cheque Amount <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <span class="input-group-text">৳</span>
+                                            <input type="number" step="0.01" name="checks[0][check_amount]" class="form-control check-amount-input" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Cheque Date <span class="text-danger">*</span></label>
+                                        <input type="date" name="checks[0][check_date]" class="form-control" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Reminder Date</label>
+                                        <input type="date" name="checks[0][check_reminder_date]" class="form-control">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Cheque Photo</label>
+                                        <input type="file" name="checks[0][check_photo]" class="form-control form-control-sm" accept="image/*">
+                                        <small class="text-muted">Upload cheque image (max 5MB)</small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                        @endforelse
                     </div>
-                    @endforelse
+                    <div class="alert alert-info">
+                        <strong>Total Cheque Amount: </strong><span id="totalCheckAmount">0.00</span>
+                        <br>
+                        <strong>Remaining Due: </strong><span id="checkRemainingDue" class="fw-bold text-danger">0.00</span>
+                    </div>
                 </div>
 
                 {{-- TT Fields --}}
@@ -328,8 +364,42 @@
         </form>
     </div>
 </div>
+
+{{-- New Bank Modal --}}
+<div class="modal fade" id="newBankModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">New Bank</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="newBankForm" method="POST" action="{{ route('banks.store') }}">
+                @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="bank_modal_name" class="form-label">Bank Name <span class="text-danger">*</span></label>
+                        <input type="text" name="name" id="bank_modal_name" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create & Select</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 <script>
+(function() {
+    'use strict';
+
+    var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+    var banksSearchUrl = '{{ route("banks.search") }}';
+
+    // ---- Payment type toggle ----
     document.getElementById('payment_type')?.addEventListener('change', function() {
         var val = this.value;
         document.getElementById('due_date_field').style.display = val === 'due' ? '' : 'none';
@@ -337,6 +407,191 @@
         document.getElementById('ttFields').style.display = val === 'tt' ? '' : 'none';
         document.getElementById('cardFields').style.display = val === 'card' ? '' : 'none';
     });
+
+    // ---- Dynamic check payments ----
+    var checkIndex = {{ $checkPayments->count() > 0 ? $checkPayments->count() : 1 }};
+    var addCheckBtn = document.getElementById('addCheckBtn');
+    var checkContainer = document.getElementById('checkPaymentsContainer');
+
+    function setupBankSearch(input) {
+        if (!input) return;
+        var results = input.closest('.col-md-6')?.querySelector('.bank-results');
+        if (!results) return;
+        var searchTimeout;
+        input.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            var term = this.value.trim();
+            if (term.length < 1) { results.style.display = 'none'; return; }
+            results.innerHTML = '<div class="list-group-item text-muted text-center py-2">Searching...</div>';
+            results.style.display = 'block';
+            searchTimeout = setTimeout(function() {
+                fetch(banksSearchUrl + '?term=' + encodeURIComponent(term), {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin'
+                })
+                .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+                .then(function(data) {
+                    results.innerHTML = '';
+                    if (!Array.isArray(data) || data.length === 0) {
+                        results.innerHTML = '<div class="list-group-item text-muted text-center py-2">No results</div>';
+                        return;
+                    }
+                    data.forEach(function(item) {
+                        var el = document.createElement('a');
+                        el.href = '#';
+                        el.className = 'list-group-item list-group-item-action';
+                        el.setAttribute('data-json', JSON.stringify(item));
+                        el.textContent = item.name;
+                        results.appendChild(el);
+                    });
+                })
+                .catch(function(err) {
+                    console.error('Search error:', err);
+                    results.innerHTML = '<div class="list-group-item text-danger text-center py-2">Error</div>';
+                });
+            }, 250);
+        });
+        results.addEventListener('click', function(e) {
+            e.preventDefault(); e.stopPropagation();
+            var item = e.target.closest('.list-group-item');
+            if (!item || !item.hasAttribute('data-json')) return;
+            var data = JSON.parse(item.getAttribute('data-json'));
+            if (data && data.name) input.value = data.name;
+            results.style.display = 'none';
+        });
+        document.addEventListener('click', function(e) {
+            if (!input.contains(e.target) && !results.contains(e.target)) results.style.display = 'none';
+        });
+    }
+
+    if (addCheckBtn) {
+        addCheckBtn.addEventListener('click', function() {
+            if (!checkContainer) return;
+            var div = document.createElement('div');
+            div.className = 'card border border-warning mb-3 check-payment-item';
+            div.setAttribute('data-index', checkIndex);
+            div.innerHTML = [
+                '<div class="card-header bg-warning text-dark py-2 d-flex justify-content-between align-items-center">',
+                '  <span><i class="bi bi-bank"></i> Cheque Payment #' + (checkIndex + 1) + '</span>',
+                '  <button type="button" class="btn btn-sm btn-danger remove-check-btn"><i class="bi bi-trash"></i> Remove</button>',
+                '</div>',
+                '<div class="card-body"><div class="row g-3">',
+                '  <div class="col-md-6" style="position: relative;">',
+                '    <label class="form-label">Bank Name <span class="text-danger">*</span></label>',
+                '    <div class="input-group">',
+                '      <input type="text" name="checks[' + checkIndex + '][bank_name]" class="form-control bank-search-input" placeholder="Search bank name..." autocomplete="off" required>',
+                '      <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#newBankModal"><i class="bi bi-plus"></i></button>',
+                '    </div>',
+                '    <div class="bank-results list-group position-absolute w-100 shadow search-dropdown" style="z-index: 1050; display: none; max-height: 250px; overflow-y: auto; top: 100%; left: 0; background: #fff;"></div>',
+                '  </div>',
+                '  <div class="col-md-6"><label class="form-label">Cheque No <span class="text-danger">*</span></label><input type="text" name="checks[' + checkIndex + '][check_no]" class="form-control" required></div>',
+                '  <div class="col-md-4"><label class="form-label">Cheque Amount <span class="text-danger">*</span></label><div class="input-group"><span class="input-group-text">৳</span><input type="number" step="0.01" name="checks[' + checkIndex + '][check_amount]" class="form-control check-amount-input" required></div></div>',
+                '  <div class="col-md-4"><label class="form-label">Cheque Date <span class="text-danger">*</span></label><input type="date" name="checks[' + checkIndex + '][check_date]" class="form-control" required></div>',
+                '  <div class="col-md-4"><label class="form-label">Reminder Date</label><input type="date" name="checks[' + checkIndex + '][check_reminder_date]" class="form-control"></div>',
+                '  <div class="col-md-4"><label class="form-label">Cheque Photo</label><input type="file" name="checks[' + checkIndex + '][check_photo]" class="form-control" accept="image/*"><small class="text-muted">Upload cheque image (max 5MB)</small></div>',
+                '</div></div></div>'
+            ].join('');
+            checkContainer.appendChild(div);
+            setupBankSearch(div.querySelector('.bank-search-input'));
+            checkIndex++;
+            updateCheckButtons();
+            updateCheckTotal();
+        });
+    }
+
+    if (checkContainer) {
+        checkContainer.addEventListener('click', function(e) {
+            if (e.target.closest('.remove-check-btn')) {
+                e.target.closest('.check-payment-item').remove();
+                updateCheckButtons();
+                updateCheckTotal();
+            }
+        });
+    }
+
+    function updateCheckButtons() {
+        var items = document.querySelectorAll('.check-payment-item');
+        items.forEach(function(item, i) {
+            var btn = item.querySelector('.remove-check-btn');
+            if (btn) btn.style.display = items.length > 1 ? 'block' : 'none';
+            var header = item.querySelector('.card-header span');
+            if (header) header.innerHTML = '<i class="bi bi-bank"></i> Cheque Payment #' + (i + 1);
+        });
+    }
+
+    function updateCheckTotal() {
+        var total = 0;
+        document.querySelectorAll('.check-amount-input').forEach(function(inp) {
+            total += parseFloat(inp.value) || 0;
+        });
+        var el = document.getElementById('totalCheckAmount');
+        if (el) el.textContent = total.toFixed(2);
+        updateCheckRemainingDue();
+    }
+
+    function updateCheckRemainingDue() {
+        var billAmt = document.getElementById('bill_amount');
+        var discAmt = document.getElementById('discount');
+        var payAmt = document.getElementById('payment_amount');
+        var bill = parseFloat(billAmt ? billAmt.value : 0) || 0;
+        var disc = parseFloat(discAmt ? discAmt.value : 0) || 0;
+        var totalCheck = parseFloat((document.getElementById('totalCheckAmount') || {}).textContent) || 0;
+        var other = parseFloat(payAmt ? payAmt.value : 0) || 0;
+        var remain = bill - disc - totalCheck - other;
+        var el = document.getElementById('checkRemainingDue');
+        if (el) el.textContent = remain.toFixed(2);
+    }
+
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('check-amount-input')) updateCheckTotal();
+        if (e.target.id === 'bill_amount' || e.target.id === 'discount' || e.target.id === 'payment_amount') {
+            updateCheckRemainingDue();
+        }
+    });
+
+    // Initialize bank search for existing items
+    document.querySelectorAll('.bank-search-input').forEach(function(inp) {
+        setupBankSearch(inp);
+    });
+
+    updateCheckButtons();
+    updateCheckTotal();
+
+    // ---- New Bank Form (AJAX) ----
+    (function() {
+        var form = document.getElementById('newBankForm');
+        if (!form) return;
+        var modalEl = document.getElementById('newBankModal');
+        if (!modalEl) return;
+        var modal;
+        try { modal = new bootstrap.Modal(modalEl); } catch(e) { return; }
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var fd = new FormData(this);
+            fetch(this.action, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: fd,
+                credentials: 'same-origin'
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    var bankName = fd.get('name');
+                    document.querySelectorAll('.bank-search-input').forEach(function(inp) {
+                        if (inp.value === '' || inp.dataset.fromModal) {
+                            inp.value = bankName;
+                            inp.dataset.fromModal = 'true';
+                        }
+                    });
+                    modal.hide();
+                    form.reset();
+                }
+            })
+            .catch(function(err) { console.error('Error creating bank:', err); });
+        });
+    })();
+})();
 </script>
 @endpush
 @endsection
