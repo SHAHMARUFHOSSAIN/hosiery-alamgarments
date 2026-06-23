@@ -115,6 +115,22 @@
                             @enderror
                             <div id="reportDateWarning" class="text-warning small d-none"><i class="bi bi-exclamation-triangle"></i> This date has a closed sales report. Only admins can create bills for this date.</div>
                         </div>
+                        @auth
+                        @if(Auth::user()->isAdmin())
+                        <div class="col-md-4">
+                            <label for="user_id" class="form-label">User <span class="text-danger">*</span></label>
+                            <select name="user_id" id="user_id" class="form-select @error('user_id') is-invalid @enderror" required>
+                                <option value="">-- Select User --</option>
+                                @foreach($users as $user)
+                                <option value="{{ $user->id }}" {{ old('user_id') == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('user_id')
+                            <div class="text-danger small">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        @endif
+                        @endauth
                         <div class="col-md-4">
                             <label for="payment_type" class="form-label">Payment Type <span class="text-danger">*</span></label>
                             <select name="payment_type" id="payment_type" class="form-select @error('payment_type') is-invalid @enderror" required>
@@ -229,7 +245,7 @@
                                             <div id="ttBankResults" class="list-group position-absolute w-100 shadow search-dropdown" style="z-index: 1050; display: none; max-height: 250px; overflow-y: auto; top: 100%; left: 0; background: #fff;"></div>
                                         </div>
                                         <div class="col-md-6">
-                                            <label for="tt_account_no" class="form-label">Account No <span class="text-danger">*</span></label>
+                                            <label for="tt_account_no" class="form-label">Account No</label>
                                             <input type="text" name="tt_account_no" id="tt_account_no" class="form-control @error('tt_account_no') is-invalid @enderror" value="{{ old('tt_account_no') }}">
                                             @error('tt_account_no')
                                             <div class="invalid-feedback">{{ $message }}</div>

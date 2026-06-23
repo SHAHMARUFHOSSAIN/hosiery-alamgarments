@@ -283,7 +283,7 @@
                                     @enderror
                                 </div>
                                 <div class="col-md-6">
-                                    <label for="tt_account_no" class="form-label">Account No <span class="text-danger">*</span></label>
+                                    <label for="tt_account_no" class="form-label">Account No</label>
                                     <input type="text" name="tt_account_no" id="tt_account_no" class="form-control @error('tt_account_no') is-invalid @enderror" value="{{ old('tt_account_no', $mainPayment?->tt_account_no) }}">
                                     @error('tt_account_no')
                                     <div class="invalid-feedback">{{ $message }}</div>

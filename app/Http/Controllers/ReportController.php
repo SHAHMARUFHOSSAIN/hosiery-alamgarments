@@ -243,7 +243,17 @@ class ReportController extends Controller
         }
 
         $dues = $query->paginate(20);
-        $totalAmount = Due::where('status', 'pending')->sum('amount');
+
+        $totalQuery = Due::where('status', 'pending');
+        if (Auth::user()->isAdmin()) {
+            if ($request->filled('user_id')) {
+                $totalQuery->where('created_by', $request->user_id);
+            }
+        } else {
+            $totalQuery->where('created_by', Auth::id());
+        }
+        $totalAmount = $totalQuery->sum('amount');
+
         $users = User::where('role', 'user')->get(['id', 'name']);
 
         return view('reports.dues', compact('dues', 'totalAmount', 'users'));
@@ -506,9 +516,13 @@ class ReportController extends Controller
             $q->whereIn('id', $billIds);
         })->sum('amount');
 
+        $duePendingAmount = Due::whereIn('bill_id', $billIds)
+            ->where('status', 'pending')
+            ->sum('amount');
+
         return view('reports.resources', compact(
             'users', 'bills', 'totalBills', 'grossAmount', 'totalDiscount',
-            'paymentTotals', 'chequeEncashed', 'dueCollection'
+            'paymentTotals', 'chequeEncashed', 'dueCollection', 'duePendingAmount'
         ));
     }
 

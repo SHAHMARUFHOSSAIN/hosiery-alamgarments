@@ -121,8 +121,8 @@
     <div class="col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
-                <h6 class="text-muted mb-1">Due (Pending)</h6>
-                <h3 class="text-danger mb-0">৳{{ number_format($paymentTotals->due_total ?? 0, 2) }}</h3>
+                <h6 class="text-muted mb-1">Dues Pending</h6>
+                <h3 class="text-danger mb-0">৳{{ number_format($duePendingAmount ?? 0, 2) }}</h3>
             </div>
         </div>
     </div>

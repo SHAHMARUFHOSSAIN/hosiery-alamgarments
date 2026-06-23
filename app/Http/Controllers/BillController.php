@@ -9,6 +9,7 @@ use App\Models\Due;
 use App\Models\MainBalance;
 use App\Models\Payment;
 use App\Models\TodaySalesReport;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -106,7 +107,9 @@ class BillController extends Controller
                 ->toArray();
         }
 
-        return view('bills.create', compact('closedDates'));
+        $users = Auth::user()->isAdmin() ? User::where('role', 'user')->orderBy('name')->get(['id', 'name']) : collect();
+
+        return view('bills.create', compact('closedDates', 'users'));
     }
 
     public function store(Request $request): RedirectResponse|JsonResponse
@@ -131,13 +134,14 @@ class BillController extends Controller
             'checks.*.check_reminder_date' => 'nullable|date',
             'checks.*.check_photo' => 'nullable|image|max:5120',
             'tt_bank_name' => 'nullable|required_if:payment_type,tt|string|max:255',
-            'tt_account_no' => 'nullable|required_if:payment_type,tt|string|max:255',
+            'tt_account_no' => 'nullable|string|max:255',
             'tt_amount' => 'nullable|required_if:payment_type,tt|numeric|min:0',
             'tt_date' => 'nullable|required_if:payment_type,tt|date',
             'card_reference' => 'nullable|required_if:payment_type,card|string|max:255',
             'card_location' => 'nullable|required_if:payment_type,card|string|max:255',
             'card_amount' => 'nullable|required_if:payment_type,card|numeric|min:0',
             'card_date' => 'nullable|required_if:payment_type,card|date',
+            'user_id' => 'nullable|exists:users,id',
         ]);
 
         // Validate that at least one check is provided when payment type is check
@@ -148,8 +152,12 @@ class BillController extends Controller
             }
         }
 
+        $targetUserId = Auth::user()->isAdmin() && $request->filled('user_id')
+            ? $validated['user_id']
+            : Auth::id();
+
         if (!Auth::user()->isAdmin()) {
-            $closedReport = TodaySalesReport::where('user_id', Auth::id())
+            $closedReport = TodaySalesReport::where('user_id', $targetUserId)
                 ->where('report_date', $validated['report_date'])
                 ->where('status', 'closed')
                 ->exists();
@@ -166,7 +174,7 @@ class BillController extends Controller
             'bill_amount' => $validated['bill_amount'],
             'discount' => $validated['discount'] ?? 0,
             'report_date' => $validated['report_date'],
-            'user_id' => Auth::id(),
+            'user_id' => $targetUserId,
         ]);
 
         $cashAmount = $validated['payment_amount'] ?? 0;
@@ -264,7 +272,7 @@ class BillController extends Controller
         $netAmount = $validated['bill_amount'] - ($validated['discount'] ?? 0);
 
         if ($mainBalanceAmount > 0) {
-            $lastBal = MainBalance::where('branch_id', Auth::id())->orderBy('id', 'desc')->value('balance') ?? 0;
+            $lastBal = MainBalance::where('branch_id', $targetUserId)->orderBy('id', 'desc')->value('balance') ?? 0;
             $customer = Customer::find($validated['customer_id']);
             $note = 'Bill: ৳' . number_format($netAmount, 2) . ' | Received: ' . ($cashAmount > 0 ? 'Cash: ' . $cashAmount : $validated['payment_type']);
             if ($totalCheckAmount > 0) {
@@ -279,8 +287,8 @@ class BillController extends Controller
                 'invoice_no' => $bill->bill_no,
                 'party_name' => $customer?->name,
                 'note' => $note,
-                'user_id' => Auth::id(),
-                'branch_id' => Auth::id(),
+                'user_id' => $targetUserId,
+                'branch_id' => $targetUserId,
             ]);
         }
 
@@ -359,7 +367,7 @@ class BillController extends Controller
             'payment_details' => 'nullable|string',
             'due_date' => 'nullable|date',
             'tt_bank_name' => 'nullable|required_if:payment_type,tt|string|max:255',
-            'tt_account_no' => 'nullable|required_if:payment_type,tt|string|max:255',
+            'tt_account_no' => 'nullable|string|max:255',
             'tt_amount' => 'nullable|required_if:payment_type,tt|numeric|min:0',
             'tt_date' => 'nullable|required_if:payment_type,tt|date',
             'card_reference' => 'nullable|required_if:payment_type,card|string|max:255',
@@ -570,7 +578,7 @@ class BillController extends Controller
                     'original_amount' => $dueAmount,
                     'due_date' => $dueDate,
                     'status' => 'pending',
-                    'created_by' => Auth::id(),
+                'created_by' => $targetUserId,
                 ]);
             }
         } elseif ($existingDue) {
