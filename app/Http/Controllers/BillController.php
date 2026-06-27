@@ -569,7 +569,7 @@ class BillController extends Controller
                     'original_amount' => $dueAmount,
                     'due_date' => $dueDate,
                     'status' => 'pending',
-                'created_by' => $targetUserId,
+                'created_by' => $bill->user_id,
                 ]);
             }
         } elseif ($existingDue) {
