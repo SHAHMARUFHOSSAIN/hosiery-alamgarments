@@ -367,6 +367,10 @@
                         <label class="form-label">Discount</label>
                         <input type="number" step="0.01" name="discount" class="form-control" value="{{ $bill->discount }}">
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Report Date</label>
+                        <input type="date" name="report_date" class="form-control" value="{{ $bill->report_date?->format('Y-m-d') }}">
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>

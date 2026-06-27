@@ -197,6 +197,7 @@ class SettingsController extends Controller
             'bill_man' => $request->bill_man,
             'bill_amount' => $request->bill_amount,
             'discount' => $request->discount,
+            'report_date' => $request->report_date,
             'edited_at' => now(),
             'edited_by' => Auth::id(),
         ]);
