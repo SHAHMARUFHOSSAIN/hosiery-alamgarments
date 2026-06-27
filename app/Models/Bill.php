@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Auth;
 
 class Bill extends Model
 {
@@ -67,14 +66,11 @@ class Bill extends Model
 
     public function isEditable(): bool
     {
-        if (Auth::user()?->isAdmin()) {
-            return true;
-        }
-        return $this->created_at && $this->created_at->diffInHours(now()) < 24;
+        return true;
     }
 
     public function isDeletable(): bool
     {
-        return $this->isEditable();
+        return true;
     }
 }

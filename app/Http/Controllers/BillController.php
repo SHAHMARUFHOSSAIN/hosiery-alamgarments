@@ -337,10 +337,6 @@ class BillController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        if (!$bill->isEditable()) {
-            abort(403, 'Bills can only be edited within 24 hours of creation. Contact an admin.');
-        }
-
         return view('bills.edit', compact('bill'));
     }
 
@@ -348,11 +344,6 @@ class BillController extends Controller
     {
         if (!Auth::user()->isAdmin() && $bill->user_id !== Auth::id()) {
             abort(403, 'Unauthorized action.');
-        }
-
-        if (!$bill->isEditable()) {
-            return redirect()->route('bills.index')
-                ->with('error', 'Bills can only be edited within 24 hours of creation. Contact an admin.');
         }
 
         $validated = $request->validate([
@@ -690,11 +681,6 @@ class BillController extends Controller
     {
         if (!Auth::user()->isAdmin() && $bill->user_id !== Auth::id()) {
             abort(403, 'Unauthorized action.');
-        }
-
-        if (!$bill->isDeletable()) {
-            return redirect()->route('bills.index')
-                ->with('error', 'Bills can only be deleted within 24 hours of creation. Contact an admin.');
         }
 
         $deletedByBranch = [];

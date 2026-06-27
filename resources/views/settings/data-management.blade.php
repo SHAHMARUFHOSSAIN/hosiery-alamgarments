@@ -79,12 +79,9 @@
                             <td>{{ $bill->user->name ?? 'N/A' }}</td>
                             <td>{{ $bill->report_date?->format('M d, Y') ?? $bill->created_at->format('M d, Y') }}</td>
                             <td class="text-end">
-                                @if($bill->isEditable())
                                 <button class="btn btn-sm btn-outline-primary py-0 px-2" data-bs-toggle="modal" data-bs-target="#editBill{{ $bill->id }}">
                                     <i class="bi bi-pencil"></i>
                                 </button>
-                                @endif
-                                @if($bill->isDeletable())
                                 <form method="POST" action="{{ route('settings.bills.delete', $bill) }}" class="d-inline" onsubmit="return confirm('Delete this bill?')">
                                     @csrf
                                     @method('DELETE')
@@ -92,7 +89,6 @@
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
-                                @endif
                             </td>
                         </tr>
                         @empty

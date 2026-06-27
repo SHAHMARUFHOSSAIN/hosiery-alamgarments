@@ -22,11 +22,9 @@
         @endif
     </h2>
     <div>
-        @if($bill->isEditable())
         <a href="{{ route('bills.edit', $bill) }}" class="btn btn-secondary">
             <i class="bi bi-pencil"></i> Edit
         </a>
-        @endif
         <a href="{{ route('bills.index') }}" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left"></i> Back
         </a>

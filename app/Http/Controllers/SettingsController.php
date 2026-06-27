@@ -168,10 +168,6 @@ class SettingsController extends Controller
 
     public function deleteBill(Bill $bill)
     {
-        if (!$bill->isDeletable()) {
-            return redirect()->route('settings.data')->with('error', 'Bills can only be deleted within 24 hours of creation.');
-        }
-
         $billNumber = $bill->bill_no;
         $bill->delete();
         
@@ -195,10 +191,6 @@ class SettingsController extends Controller
 
     public function editBill(Request $request, Bill $bill)
     {
-        if (!$bill->isEditable()) {
-            return redirect()->route('settings.data')->with('error', 'Bills can only be edited within 24 hours of creation.');
-        }
-
         $bill->update([
             'bill_no' => $request->bill_no,
             'shop_name' => $request->shop_name,

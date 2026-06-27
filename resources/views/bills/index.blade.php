@@ -165,12 +165,9 @@
                         <a href="{{ route('bills.show', $bill) }}" class="btn btn-sm btn-outline-primary py-0 px-2">
                             <i class="bi bi-eye"></i>
                         </a>
-                        @if($bill->isEditable())
                         <a href="{{ route('bills.edit', $bill) }}" class="btn btn-sm btn-outline-secondary py-0 px-2">
                             <i class="bi bi-pencil"></i>
                         </a>
-                        @endif
-                        @if($bill->isDeletable())
                         <form method="POST" action="{{ route('bills.destroy', $bill) }}" 
                               class="d-inline" onsubmit="return confirm('Delete this bill?')">
                             @csrf
@@ -179,7 +176,6 @@
                                 <i class="bi bi-trash"></i>
                             </button>
                         </form>
-                        @endif
                     </td>
                 </tr>
                 @empty
