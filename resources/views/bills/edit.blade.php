@@ -406,7 +406,16 @@
         document.getElementById('checkFields').style.display = val === 'check' ? '' : 'none';
         document.getElementById('ttFields').style.display = val === 'tt' ? '' : 'none';
         document.getElementById('cardFields').style.display = val === 'card' ? '' : 'none';
+        var cf = document.getElementById('checkFields');
+        if (cf) {
+            cf.querySelectorAll('input, select, textarea').forEach(function(el) {
+                el.disabled = val !== 'check';
+            });
+        }
     });
+
+    // Set initial disabled state on page load
+    document.getElementById('payment_type')?.dispatchEvent(new Event('change'));
 
     // ---- Dynamic check payments ----
     var checkIndex = {{ $checkPayments->count() > 0 ? $checkPayments->count() : 1 }};
@@ -492,6 +501,12 @@
                 '</div></div></div>'
             ].join('');
             checkContainer.appendChild(div);
+            var curPtype = document.getElementById('payment_type')?.value;
+            if (curPtype !== 'check') {
+                div.querySelectorAll('input, select, textarea').forEach(function(el) {
+                    el.disabled = true;
+                });
+            }
             setupBankSearch(div.querySelector('.bank-search-input'));
             checkIndex++;
             updateCheckButtons();

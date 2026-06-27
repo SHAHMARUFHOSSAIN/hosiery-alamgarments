@@ -14,6 +14,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 
 class BillController extends Controller
@@ -382,262 +384,283 @@ class BillController extends Controller
             }
         }
 
-        $oldBillAmount = $bill->bill_amount;
-        $oldDiscount = $bill->discount;
-        $oldNetAmount = $oldBillAmount - $oldDiscount;
+        try {
+            DB::beginTransaction();
 
-        $bill->update([
-            'bill_no' => $validated['bill_no'],
-            'shop_name' => $validated['shop_name'] ?? null,
-            'bill_man' => $validated['bill_man'] ?? null,
-            'report_date' => $validated['report_date'],
-            'bill_amount' => $validated['bill_amount'],
-            'discount' => $validated['discount'] ?? 0,
-            'edited_at' => now(),
-            'edited_by' => Auth::id(),
-        ]);
+            $oldBillAmount = $bill->bill_amount;
+            $oldDiscount = $bill->discount;
+            $oldNetAmount = $oldBillAmount - $oldDiscount;
 
-        $newNetAmount = $validated['bill_amount'] - ($validated['discount'] ?? 0);
+            $bill->update([
+                'bill_no' => $validated['bill_no'],
+                'shop_name' => $validated['shop_name'] ?? null,
+                'bill_man' => $validated['bill_man'] ?? null,
+                'report_date' => $validated['report_date'],
+                'bill_amount' => $validated['bill_amount'],
+                'discount' => $validated['discount'] ?? 0,
+                'edited_at' => now(),
+                'edited_by' => Auth::id(),
+            ]);
 
-        // Auto-scale payment amounts proportionally when bill amount/discount changes
-        // Only applies when payment type hasn't changed (to avoid overriding intentional changes)
-        $oldPayments = $bill->payments()->get();
-        $cashAmount = $validated['payment_amount'] ?? 0;
-        $ptype = $validated['payment_type'];
-        $oldPtype = $oldPayments->firstWhere('payment_type', '!=', 'cash')?->payment_type ?? 'cash';
-        if ($oldNetAmount > 0 && abs($oldNetAmount - $newNetAmount) > 0.001 && $ptype === $oldPtype) {
-            $ratio = $newNetAmount / $oldNetAmount;
-            $checkIdx = 0;
-            foreach ($oldPayments as $op) {
-                if ($op->payment_type !== $ptype && $op->payment_type !== 'cash') continue;
-                $scaled = round($op->amount * $ratio, 2);
-                if ($op->payment_type === 'cash') {
-                    $cashAmount = $scaled;
-                } elseif ($op->payment_type === 'check') {
-                    if (isset($validated['checks'][$checkIdx])) {
-                        $validated['checks'][$checkIdx]['check_amount'] = $scaled;
+            $newNetAmount = $validated['bill_amount'] - ($validated['discount'] ?? 0);
+
+            // Auto-scale payment amounts proportionally when bill amount/discount changes
+            // Only applies when payment type hasn't changed (to avoid overriding intentional changes)
+            $oldPayments = $bill->payments()->get();
+            $cashAmount = $validated['payment_amount'] ?? 0;
+            $ptype = $validated['payment_type'];
+            $oldPtype = $oldPayments->firstWhere('payment_type', '!=', 'cash')?->payment_type ?? 'cash';
+            if ($oldNetAmount > 0 && abs($oldNetAmount - $newNetAmount) > 0.001 && $ptype === $oldPtype) {
+                $ratio = $newNetAmount / $oldNetAmount;
+                $checkIdx = 0;
+                foreach ($oldPayments as $op) {
+                    if ($op->payment_type !== $ptype && $op->payment_type !== 'cash') continue;
+                    $scaled = round($op->amount * $ratio, 2);
+                    if ($op->payment_type === 'cash') {
+                        $cashAmount = $scaled;
+                    } elseif ($op->payment_type === 'check') {
+                        if (isset($validated['checks'][$checkIdx])) {
+                            $validated['checks'][$checkIdx]['check_amount'] = $scaled;
+                        }
+                        $checkIdx++;
+                    } elseif ($op->payment_type === 'tt') {
+                        $validated['tt_amount'] = $scaled;
+                    } elseif ($op->payment_type === 'card') {
+                        $validated['card_amount'] = $scaled;
                     }
-                    $checkIdx++;
-                } elseif ($op->payment_type === 'tt') {
-                    $validated['tt_amount'] = $scaled;
-                } elseif ($op->payment_type === 'card') {
-                    $validated['card_amount'] = $scaled;
                 }
             }
-        }
-        // Cap individual amounts to new net
-        foreach (['tt_amount', 'card_amount'] as $f) {
-            if (($validated[$f] ?? 0) > $newNetAmount) $validated[$f] = $newNetAmount;
-        }
-        if (isset($validated['checks']) && is_array($validated['checks'])) {
-            foreach ($validated['checks'] as $idx => $checkData) {
-                if (($checkData['check_amount'] ?? 0) > $newNetAmount) {
-                    $validated['checks'][$idx]['check_amount'] = $newNetAmount;
+            // Cap individual amounts to new net
+            foreach (['tt_amount', 'card_amount'] as $f) {
+                if (($validated[$f] ?? 0) > $newNetAmount) $validated[$f] = $newNetAmount;
+            }
+            if (isset($validated['checks']) && is_array($validated['checks'])) {
+                foreach ($validated['checks'] as $idx => $checkData) {
+                    if (($checkData['check_amount'] ?? 0) > $newNetAmount) {
+                        $validated['checks'][$idx]['check_amount'] = $newNetAmount;
+                    }
                 }
             }
-        }
-        if ($cashAmount > $newNetAmount) $cashAmount = $newNetAmount;
+            if ($cashAmount > $newNetAmount) $cashAmount = $newNetAmount;
 
-        $netAmount = $newNetAmount;
+            $netAmount = $newNetAmount;
 
-        // --- Handle Payment Records ---
+            // --- Handle Payment Records ---
 
-        // Determine effective amount and received amount based on payment type
-        $effectiveAmount = match ($validated['payment_type']) {
-            'tt' => $validated['tt_amount'] ?? $cashAmount,
-            'card' => $validated['card_amount'] ?? $cashAmount,
-            default => $cashAmount,
-        };
-        $isPendingPayment = in_array($validated['payment_type'], ['due', 'card', 'check']);
+            // Determine effective amount and received amount based on payment type
+            $effectiveAmount = match ($validated['payment_type']) {
+                'tt' => $validated['tt_amount'] ?? $cashAmount,
+                'card' => $validated['card_amount'] ?? $cashAmount,
+                default => $cashAmount,
+            };
+            $isPendingPayment = in_array($validated['payment_type'], ['due', 'card', 'check']);
 
-        // Delete all non-check payments to rebuild cleanly
-        $bill->payments()->where('payment_type', '!=', 'check')->delete();
+            // Delete all non-check payments to rebuild cleanly
+            $bill->payments()->where('payment_type', '!=', 'check')->delete();
 
-        // For check type, check payments + optional cash payment are created separately
-        if ($validated['payment_type'] === 'check') {
-            $bill->payments()->where('payment_type', 'check')->delete();
+            // For check type, check payments + optional cash payment are created separately
+            if ($validated['payment_type'] === 'check') {
+                $bill->payments()->where('payment_type', 'check')->delete();
 
-            if (!empty($validated['checks'])) {
-                foreach ($validated['checks'] as $index => $checkData) {
-                    $checkPhotoPath = null;
-                    if ($request->hasFile("checks.{$index}.check_photo")) {
-                        $checkPhotoPath = $request->file("checks.{$index}.check_photo")->store('cheque', 'public');
+                if (!empty($validated['checks'])) {
+                    foreach ($validated['checks'] as $index => $checkData) {
+                        $checkPhotoPath = null;
+                        if ($request->hasFile("checks.{$index}.check_photo")) {
+                            $checkPhotoPath = $request->file("checks.{$index}.check_photo")->store('cheque', 'public');
+                        }
+
+                        Payment::create([
+                            'bill_id' => $bill->id,
+                            'payment_type' => 'check',
+                            'amount' => $checkData['check_amount'],
+                            'details' => $validated['payment_details'] ?? null,
+                            'bank_name' => $checkData['bank_name'],
+                            'check_no' => $checkData['check_no'],
+                            'check_date' => $checkData['check_date'],
+                            'check_reminder_date' => $checkData['check_reminder_date'] ?? null,
+                            'check_amount' => $checkData['check_amount'],
+                            'status' => 'pending',
+                            'check_photo' => $checkPhotoPath,
+                        ]);
                     }
+                }
 
+                if ($cashAmount > 0) {
                     Payment::create([
                         'bill_id' => $bill->id,
-                        'payment_type' => 'check',
-                        'amount' => $checkData['check_amount'],
+                        'payment_type' => 'cash',
+                        'amount' => $cashAmount,
                         'details' => $validated['payment_details'] ?? null,
-                        'bank_name' => $checkData['bank_name'],
-                        'check_no' => $checkData['check_no'],
-                        'check_date' => $checkData['check_date'],
-                        'check_reminder_date' => $checkData['check_reminder_date'] ?? null,
-                        'check_amount' => $checkData['check_amount'],
-                        'status' => 'pending',
-                        'check_photo' => $checkPhotoPath,
+                        'status' => 'encashed',
                     ]);
+                }
+            } else {
+                // Create separate cash payment for due/card types when cashAmount > 0
+                if ($cashAmount > 0 && in_array($validated['payment_type'], ['card', 'due'])) {
+                    Payment::create([
+                        'bill_id' => $bill->id,
+                        'payment_type' => 'cash',
+                        'amount' => $cashAmount,
+                        'details' => $validated['payment_details'] ?? null,
+                        'status' => 'encashed',
+                    ]);
+                }
+
+                // Create the main payment record with type-specific fields
+                $mainPaymentData = [
+                    'bill_id' => $bill->id,
+                    'payment_type' => $validated['payment_type'],
+                    'amount' => $effectiveAmount,
+                    'details' => $validated['payment_details'] ?? null,
+                    'status' => $isPendingPayment ? 'pending' : 'encashed',
+                ];
+
+                if ($validated['payment_type'] === 'tt') {
+                    $mainPaymentData['tt_bank_name'] = $validated['tt_bank_name'];
+                    $mainPaymentData['tt_account_no'] = $validated['tt_account_no'];
+                    $mainPaymentData['tt_amount'] = $validated['tt_amount'];
+                    $mainPaymentData['tt_date'] = $validated['tt_date'];
+                } elseif ($validated['payment_type'] === 'card') {
+                    $mainPaymentData['card_reference'] = $validated['card_reference'];
+                    $mainPaymentData['card_location'] = $validated['card_location'];
+                    $mainPaymentData['card_amount'] = $validated['card_amount'];
+                    $mainPaymentData['card_date'] = $validated['card_date'];
+                } elseif ($validated['payment_type'] === 'due') {
+                    $mainPaymentData['due_date'] = $validated['due_date'] ?? now()->addDays(7)->toDateString();
+                }
+
+                Payment::create($mainPaymentData);
+            }
+
+            // --- Recalculate Total Received and Due ---
+
+            $totalCheckAmount = 0;
+            if ($validated['payment_type'] === 'check' && !empty($validated['checks'])) {
+                foreach ($validated['checks'] as $checkData) {
+                    $totalCheckAmount += (float) ($checkData['check_amount'] ?? 0);
                 }
             }
 
-            if ($cashAmount > 0) {
-                Payment::create([
-                    'bill_id' => $bill->id,
-                    'payment_type' => 'cash',
-                    'amount' => $cashAmount,
-                    'details' => $validated['payment_details'] ?? null,
-                    'status' => 'encashed',
+            $totalReceived = match ($validated['payment_type']) {
+                'card' => $cashAmount + (float) ($validated['card_amount'] ?? 0),
+                'check' => $cashAmount + $totalCheckAmount,
+                'due' => $cashAmount,
+                default => $effectiveAmount,
+            };
+
+            $mainBalanceAmount = match ($validated['payment_type']) {
+                'card', 'due', 'check' => $cashAmount,
+                default => $effectiveAmount,
+            };
+
+            $dueAmount = $netAmount - $totalReceived;
+
+            $existingDue = $bill->dues()->first();
+
+            if ($dueAmount > 0) {
+                $dueDate = $validated['due_date'] ?? now()->addDays(7)->toDateString();
+
+                if ($existingDue) {
+                    $existingDue->update([
+                        'amount' => $dueAmount,
+                        'due_date' => $dueDate,
+                        'status' => 'pending',
+                    ]);
+                } else {
+                    Due::create([
+                        'customer_id' => $bill->customer_id,
+                        'bill_id' => $bill->id,
+                        'amount' => $dueAmount,
+                        'original_amount' => $dueAmount,
+                        'due_date' => $dueDate,
+                        'status' => 'pending',
+                    'created_by' => $bill->user_id,
+                    ]);
+                }
+            } elseif ($existingDue) {
+                if (!$existingDue->hasPartialPayments()) {
+                    $existingDue->delete();
+                } else {
+                    $existingDue->update(['status' => 'paid', 'amount' => 0]);
+                }
+            }
+
+            // --- Reverse Cheque Encashed MainBalance entries (payments are being recreated) ---
+            $chequeEncashEntries = MainBalance::where('name', 'like', 'Cheque Encashed - Bill #' . $bill->bill_no . '%')->get();
+            foreach ($chequeEncashEntries as $ce) {
+                $lastBal = MainBalance::where('branch_id', $ce->branch_id)->orderBy('id', 'desc')->value('balance') ?? 0;
+                MainBalance::create([
+                    'voucher_no' => VoucherHelper::generateVoucherNo(),
+                    'name' => 'Reversal - Cheque Encashed Bill #' . $bill->bill_no . ' Edited',
+                    'amount' => $ce->amount,
+                    'balance' => $lastBal - $ce->amount,
+                    'type' => 'debit',
+                    'note' => 'Auto-reversal: Encashed cheque for Bill #' . $bill->bill_no . ' due to edit',
+                    'user_id' => Auth::id(),
+                    'branch_id' => $ce->branch_id,
                 ]);
             }
-        } else {
-            // Create separate cash payment for due/card types when cashAmount > 0
-            if ($cashAmount > 0 && in_array($validated['payment_type'], ['card', 'due'])) {
-                Payment::create([
-                    'bill_id' => $bill->id,
-                    'payment_type' => 'cash',
-                    'amount' => $cashAmount,
-                    'details' => $validated['payment_details'] ?? null,
-                    'status' => 'encashed',
+
+            // --- Reverse Due Payment/Due Collection MainBalance entries on edit ---
+            $dueMbEntries = MainBalance::where(function ($q) use ($bill) {
+                $q->where('note', 'like', '%Bill: ' . $bill->bill_no . '%')
+                  ->orWhere('note', 'like', '%(Bill: ' . $bill->bill_no . ')%');
+            })->get();
+            foreach ($dueMbEntries as $de) {
+                $lastBal = MainBalance::where('branch_id', $de->branch_id)->orderBy('id', 'desc')->value('balance') ?? 0;
+                MainBalance::create([
+                    'voucher_no' => VoucherHelper::generateVoucherNo(),
+                    'name' => 'Reversal - Due Payment Bill #' . $bill->bill_no . ' Edited',
+                    'amount' => $de->amount,
+                    'balance' => $lastBal - $de->amount,
+                    'type' => 'debit',
+                    'note' => 'Auto-reversal: Due payment for Bill #' . $bill->bill_no . ' due to edit',
+                    'user_id' => Auth::id(),
+                    'branch_id' => $de->branch_id,
                 ]);
             }
 
-            // Create the main payment record with type-specific fields
-            $mainPaymentData = [
-                'bill_id' => $bill->id,
-                'payment_type' => $validated['payment_type'],
-                'amount' => $effectiveAmount,
-                'details' => $validated['payment_details'] ?? null,
-                'status' => $isPendingPayment ? 'pending' : 'encashed',
-            ];
+            // --- Adjust MainBalance ---
 
-            if ($validated['payment_type'] === 'tt') {
-                $mainPaymentData['tt_bank_name'] = $validated['tt_bank_name'];
-                $mainPaymentData['tt_account_no'] = $validated['tt_account_no'];
-                $mainPaymentData['tt_amount'] = $validated['tt_amount'];
-                $mainPaymentData['tt_date'] = $validated['tt_date'];
-            } elseif ($validated['payment_type'] === 'card') {
-                $mainPaymentData['card_reference'] = $validated['card_reference'];
-                $mainPaymentData['card_location'] = $validated['card_location'];
-                $mainPaymentData['card_amount'] = $validated['card_amount'];
-                $mainPaymentData['card_date'] = $validated['card_date'];
-            } elseif ($validated['payment_type'] === 'due') {
-                $mainPaymentData['due_date'] = $validated['due_date'] ?? now()->addDays(7)->toDateString();
-            }
+            $existingMainBalance = MainBalance::where('invoice_no', $bill->bill_no)
+                ->where('name', 'like', 'Sales - Bill #%')
+                ->first();
 
-            Payment::create($mainPaymentData);
-        }
-
-        // --- Recalculate Total Received and Due ---
-
-        $totalCheckAmount = 0;
-        if ($validated['payment_type'] === 'check' && !empty($validated['checks'])) {
-            foreach ($validated['checks'] as $checkData) {
-                $totalCheckAmount += (float) ($checkData['check_amount'] ?? 0);
-            }
-        }
-
-        $totalReceived = match ($validated['payment_type']) {
-            'card' => $cashAmount + (float) ($validated['card_amount'] ?? 0),
-            'check' => $cashAmount + $totalCheckAmount,
-            'due' => $cashAmount,
-            default => $effectiveAmount,
-        };
-
-        $mainBalanceAmount = match ($validated['payment_type']) {
-            'card', 'due', 'check' => $cashAmount,
-            default => $effectiveAmount,
-        };
-
-        $dueAmount = $netAmount - $totalReceived;
-
-        $existingDue = $bill->dues()->first();
-
-        if ($dueAmount > 0) {
-            $dueDate = $validated['due_date'] ?? now()->addDays(7)->toDateString();
-
-            if ($existingDue) {
-                $existingDue->update([
-                    'amount' => $dueAmount,
-                    'due_date' => $dueDate,
-                    'status' => 'pending',
+            if ($existingMainBalance && $existingMainBalance->amount != $mainBalanceAmount) {
+                // Reverse the old MainBalance entry
+                $lastBal = MainBalance::where('branch_id', $bill->user_id)->orderBy('id', 'desc')->value('balance') ?? 0;
+                MainBalance::create([
+                    'voucher_no' => VoucherHelper::generateVoucherNo(),
+                    'name' => 'Reversal - Bill #' . $bill->bill_no . ' Edited',
+                    'amount' => $existingMainBalance->amount,
+                    'balance' => $lastBal - $existingMainBalance->amount,
+                    'type' => 'debit',
+                    'invoice_no' => $bill->bill_no,
+                    'note' => 'Auto-reversal: Bill #' . $bill->bill_no . ' was edited',
+                    'user_id' => Auth::id(),
+                    'branch_id' => $bill->user_id,
                 ]);
-            } else {
-                Due::create([
-                    'customer_id' => $bill->customer_id,
-                    'bill_id' => $bill->id,
-                    'amount' => $dueAmount,
-                    'original_amount' => $dueAmount,
-                    'due_date' => $dueDate,
-                    'status' => 'pending',
-                'created_by' => $bill->user_id,
-                ]);
-            }
-        } elseif ($existingDue) {
-            if (!$existingDue->hasPartialPayments()) {
-                $existingDue->delete();
-            } else {
-                $existingDue->update(['status' => 'paid', 'amount' => 0]);
-            }
-        }
 
-        // --- Reverse Cheque Encashed MainBalance entries (payments are being recreated) ---
-        $chequeEncashEntries = MainBalance::where('name', 'like', 'Cheque Encashed - Bill #' . $bill->bill_no . '%')->get();
-        foreach ($chequeEncashEntries as $ce) {
-            $lastBal = MainBalance::where('branch_id', $ce->branch_id)->orderBy('id', 'desc')->value('balance') ?? 0;
-            MainBalance::create([
-                'voucher_no' => VoucherHelper::generateVoucherNo(),
-                'name' => 'Reversal - Cheque Encashed Bill #' . $bill->bill_no . ' Edited',
-                'amount' => $ce->amount,
-                'balance' => $lastBal - $ce->amount,
-                'type' => 'debit',
-                'note' => 'Auto-reversal: Encashed cheque for Bill #' . $bill->bill_no . ' due to edit',
-                'user_id' => Auth::id(),
-                'branch_id' => $ce->branch_id,
-            ]);
-        }
-
-        // --- Reverse Due Payment/Due Collection MainBalance entries on edit ---
-        $dueMbEntries = MainBalance::where(function ($q) use ($bill) {
-            $q->where('note', 'like', '%Bill: ' . $bill->bill_no . '%')
-              ->orWhere('note', 'like', '%(Bill: ' . $bill->bill_no . ')%');
-        })->get();
-        foreach ($dueMbEntries as $de) {
-            $lastBal = MainBalance::where('branch_id', $de->branch_id)->orderBy('id', 'desc')->value('balance') ?? 0;
-            MainBalance::create([
-                'voucher_no' => VoucherHelper::generateVoucherNo(),
-                'name' => 'Reversal - Due Payment Bill #' . $bill->bill_no . ' Edited',
-                'amount' => $de->amount,
-                'balance' => $lastBal - $de->amount,
-                'type' => 'debit',
-                'note' => 'Auto-reversal: Due payment for Bill #' . $bill->bill_no . ' due to edit',
-                'user_id' => Auth::id(),
-                'branch_id' => $de->branch_id,
-            ]);
-        }
-
-        // --- Adjust MainBalance ---
-
-        $existingMainBalance = MainBalance::where('invoice_no', $bill->bill_no)
-            ->where('name', 'like', 'Sales - Bill #%')
-            ->first();
-
-        if ($existingMainBalance && $existingMainBalance->amount != $mainBalanceAmount) {
-            // Reverse the old MainBalance entry
-            $lastBal = MainBalance::where('branch_id', $bill->user_id)->orderBy('id', 'desc')->value('balance') ?? 0;
-            MainBalance::create([
-                'voucher_no' => VoucherHelper::generateVoucherNo(),
-                'name' => 'Reversal - Bill #' . $bill->bill_no . ' Edited',
-                'amount' => $existingMainBalance->amount,
-                'balance' => $lastBal - $existingMainBalance->amount,
-                'type' => 'debit',
-                'invoice_no' => $bill->bill_no,
-                'note' => 'Auto-reversal: Bill #' . $bill->bill_no . ' was edited',
-                'user_id' => Auth::id(),
-                'branch_id' => $bill->user_id,
-            ]);
-
-            // Create new entry if amount was received
-            if ($mainBalanceAmount > 0) {
+                // Create new entry if amount was received
+                if ($mainBalanceAmount > 0) {
+                    $lastBal = MainBalance::where('branch_id', $bill->user_id)->orderBy('id', 'desc')->value('balance') ?? 0;
+                    $customer = Customer::find($bill->customer_id);
+                    $note = 'Bill: ৳' . number_format($netAmount, 2) . ' | Received: ' . ($cashAmount > 0 ? 'Cash: ' . $cashAmount : $validated['payment_type']);
+                    MainBalance::create([
+                        'voucher_no' => VoucherHelper::generateVoucherNo(),
+                        'name' => 'Sales - Bill #' . $bill->bill_no,
+                        'amount' => $mainBalanceAmount,
+                        'balance' => $lastBal + $mainBalanceAmount,
+                        'type' => 'credit',
+                        'invoice_no' => $bill->bill_no,
+                        'party_name' => $customer?->name,
+                        'note' => $note,
+                        'user_id' => Auth::id(),
+                        'branch_id' => $bill->user_id,
+                    ]);
+                }
+            } elseif (!$existingMainBalance && $mainBalanceAmount > 0) {
+                // Brand new MainBalance entry
                 $lastBal = MainBalance::where('branch_id', $bill->user_id)->orderBy('id', 'desc')->value('balance') ?? 0;
                 $customer = Customer::find($bill->customer_id);
                 $note = 'Bill: ৳' . number_format($netAmount, 2) . ' | Received: ' . ($cashAmount > 0 ? 'Cash: ' . $cashAmount : $validated['payment_type']);
@@ -654,27 +677,15 @@ class BillController extends Controller
                     'branch_id' => $bill->user_id,
                 ]);
             }
-        } elseif (!$existingMainBalance && $mainBalanceAmount > 0) {
-            // Brand new MainBalance entry
-            $lastBal = MainBalance::where('branch_id', $bill->user_id)->orderBy('id', 'desc')->value('balance') ?? 0;
-            $customer = Customer::find($bill->customer_id);
-            $note = 'Bill: ৳' . number_format($netAmount, 2) . ' | Received: ' . ($cashAmount > 0 ? 'Cash: ' . $cashAmount : $validated['payment_type']);
-            MainBalance::create([
-                'voucher_no' => VoucherHelper::generateVoucherNo(),
-                'name' => 'Sales - Bill #' . $bill->bill_no,
-                'amount' => $mainBalanceAmount,
-                'balance' => $lastBal + $mainBalanceAmount,
-                'type' => 'credit',
-                'invoice_no' => $bill->bill_no,
-                'party_name' => $customer?->name,
-                'note' => $note,
-                'user_id' => Auth::id(),
-                'branch_id' => $bill->user_id,
-            ]);
-        }
 
-        return redirect()->route('bills.index')
-            ->with('success', 'Bill updated successfully');
+            DB::commit();
+
+            return redirect()->route('bills.index')
+                ->with('success', 'Bill updated successfully');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withInput()->with('error', 'Update failed: ' . $e->getMessage());
+        }
     }
 
     public function destroy(Bill $bill): RedirectResponse
