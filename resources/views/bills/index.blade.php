@@ -165,10 +165,10 @@
                         <a href="{{ route('bills.show', $bill) }}" class="btn btn-sm btn-outline-primary py-0 px-2">
                             <i class="bi bi-eye"></i>
                         </a>
-                        <a href="{{ route('bills.edit', $bill) }}" class="btn btn-sm btn-outline-secondary py-0 px-2">
+                        <a href="{{ route('bills.edit', ['bill' => $bill, 'page' => request('page')]) }}" class="btn btn-sm btn-outline-secondary py-0 px-2">
                             <i class="bi bi-pencil"></i>
                         </a>
-                        <form method="POST" action="{{ route('bills.destroy', $bill) }}" 
+                        <form method="POST" action="{{ route('bills.destroy', ['bill' => $bill, 'page' => request('page')]) }}" 
                               class="d-inline" onsubmit="return confirm('Delete this bill?')">
                             @csrf
                             @method('DELETE')

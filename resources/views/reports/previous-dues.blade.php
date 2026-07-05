@@ -87,6 +87,7 @@
                 <tr>
                     <th>ID</th>
                     <th>Customer</th>
+                    <th>Location</th>
                     <th>Mobile</th>
                     <th>Original</th>
                     <th>Paid</th>
@@ -102,6 +103,7 @@
                 <tr>
                     <td>{{ $pd->id }}</td>
                     <td>{{ $pd->customer->name ?? 'N/A' }}</td>
+                    <td>{{ $pd->customer->location ?? 'N/A' }}</td>
                     <td>{{ $pd->customer->mobile ?? 'N/A' }}</td>
                     <td>৳{{ number_format($pd->original_amount, 2) }}</td>
                     <td class="text-success fw-bold">৳{{ number_format($pd->total_paid, 2) }}</td>
@@ -124,7 +126,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="10" class="text-center py-3">No previous dues found</td></tr>
+                <tr><td colspan="11" class="text-center py-3">No previous dues found</td></tr>
                 @endforelse
             </tbody>
         </table>

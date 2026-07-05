@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Bill;
+use App\Models\CheckEncashment;
 use App\Models\Customer;
 use App\Models\Due;
 use App\Models\DuePayment;
@@ -68,6 +69,29 @@ class ReportController extends Controller
             ->when(!Auth::user()->isAdmin(), fn($q) => $q->where('user_id', Auth::id()))
             ->sum('discount_amt');
 
+        $duePayDiscount = DuePayment::where(fn($q) => $q->where('payment_type', '!=', 'check')->orWhere('status', 'encashed'))
+            ->whereHas('due.bill', function ($q) {
+                if (!Auth::user()->isAdmin()) {
+                    $q->where('user_id', Auth::id());
+                }
+            })->sum('discount');
+
+        $prevDuePayDiscount = PreviousDuePayment::where(fn($q) => $q->where('payment_type', '!=', 'check')->orWhere('status', 'encashed'))
+            ->whereHas('previousDue', function ($q) {
+                if (!Auth::user()->isAdmin()) {
+                    $q->where('created_by', Auth::id());
+                }
+            })->sum('discount');
+
+        $encashDiscountQuery = CheckEncashment::whereHas('payment.bill', function ($q) {
+            if (!Auth::user()->isAdmin()) {
+                $q->where('user_id', Auth::id());
+            }
+        });
+        $encashDiscount = (clone $encashDiscountQuery)->sum('discount');
+
+        $totalDueDiscount = ($duePayDiscount ?? 0) + ($prevDuePayDiscount ?? 0) + ($encashDiscount ?? 0);
+
         $encashQuery = Payment::query();
         if (!Auth::user()->isAdmin()) {
             $encashQuery->whereHas('bill', fn($q) => $q->where('user_id', Auth::id()));
@@ -87,12 +111,13 @@ class ReportController extends Controller
             + ($chequeEncashed ?? 0)
             + ($cardEncashed ?? 0)
             + ($totalPrevCollected ?? 0)
-            + ($duePaymentCollection ?? 0)
-            - ($totalReportDiscount ?? 0);
+            + ($duePaymentCollection ?? 0);
+
+        $totalDiscountAll = ($totalDiscount ?? 0) + ($totalReportDiscount ?? 0) + ($totalDueDiscount ?? 0);
 
         return view('reports.index', compact(
             'users', 'totalSales', 'totalDues', 'paidDues', 'totalPrevDues', 'totalPrevCollected',
-            'paymentTotals', 'totalDiscount', 'totalReportDiscount', 'mainBalance', 'duePaymentCollection'
+            'paymentTotals', 'totalDiscount', 'totalReportDiscount', 'totalDueDiscount', 'totalDiscountAll', 'mainBalance', 'duePaymentCollection'
         ));
     }
 
@@ -512,17 +537,43 @@ class ReportController extends Controller
             ->where('payment_type', 'check')
             ->sum('encashed_amount');
 
+        $chequeDiscount = CheckEncashment::whereHas('payment', function ($q) use ($billIds) {
+            $q->whereIn('bill_id', $billIds)->where('payment_type', 'check');
+        })->sum('discount');
+
         $dueCollection = DuePayment::whereHas('due.bill', function ($q) use ($billIds) {
             $q->whereIn('id', $billIds);
         })->sum('amount');
+
+        $duePayDiscount = DuePayment::where(fn($q) => $q->where('payment_type', '!=', 'check')->orWhere('status', 'encashed'))
+            ->whereHas('due.bill', function ($q) use ($billIds) {
+                $q->whereIn('id', $billIds);
+            })->sum('discount');
 
         $duePendingAmount = Due::whereIn('bill_id', $billIds)
             ->where('status', 'pending')
             ->sum('amount');
 
+        $prevDuePayDiscount = PreviousDuePayment::where(fn($q) => $q->where('payment_type', '!=', 'check')->orWhere('status', 'encashed'))
+            ->whereHas('previousDue', function ($q) use ($request) {
+                if ($request->filled('user_id')) {
+                    $q->where('created_by', $request->user_id);
+                } elseif (!Auth::user()->isAdmin()) {
+                    $q->where('created_by', Auth::id());
+                }
+            })->sum('discount');
+
+        $repDiscount = TodaySalesReport::where('status', 'closed')
+            ->when(Auth::user()->isAdmin() && $request->filled('user_id'), fn($q) => $q->where('user_id', $request->user_id))
+            ->when(!Auth::user()->isAdmin(), fn($q) => $q->where('user_id', Auth::id()))
+            ->when($request->filled('date_from'), fn($q) => $q->whereDate('report_date', '>=', $request->date_from))
+            ->when($request->filled('date_to'), fn($q) => $q->whereDate('report_date', '<=', $request->date_to))
+            ->sum('discount_amt');
+
         return view('reports.resources', compact(
             'users', 'bills', 'totalBills', 'grossAmount', 'totalDiscount',
-            'paymentTotals', 'chequeEncashed', 'dueCollection', 'duePendingAmount'
+            'paymentTotals', 'chequeEncashed', 'chequeDiscount', 'dueCollection',
+            'duePayDiscount', 'prevDuePayDiscount', 'duePendingAmount', 'repDiscount'
         ));
     }
 

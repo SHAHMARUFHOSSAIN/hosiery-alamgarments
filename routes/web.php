@@ -68,6 +68,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/mark-paid/{id}', [DueController::class, 'markPaid'])->name('dues.mark-paid');
         Route::post('/add-payment', [DueController::class, 'addPayment'])->name('dues.add-payment');
         Route::post('/encash/{id}', [DueController::class, 'encashCheck'])->name('dues.encash');
+        Route::post('/due-encash', [DueController::class, 'dueEncashCheck'])->name('dues.due-encash');
+        Route::post('/prev-due-encash', [DueController::class, 'prevDueEncashCheck'])->name('dues.prev-due-encash');
     });
 
     Route::prefix('card-payments')->group(function () {

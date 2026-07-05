@@ -73,6 +73,22 @@
     <div class="col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
+                <h6 class="text-muted mb-1">Rep Discount</h6>
+                <h3 class="text-danger mb-0">৳{{ number_format($repDiscount ?? 0, 2) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-1">Due Discount</h6>
+                <h3 class="text-danger mb-0">৳{{ number_format(($duePayDiscount ?? 0) + ($prevDuePayDiscount ?? 0) + ($chequeDiscount ?? 0), 2) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
                 <h6 class="text-muted mb-1">Net Amount</h6>
                 <h3 class="text-success mb-0">৳{{ number_format($grossAmount - $totalDiscount, 2) }}</h3>
             </div>
@@ -90,7 +106,7 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
                 <h6 class="text-muted mb-1">Cheque (Pending)</h6>
-                <h3 class="text-warning mb-0">৳{{ number_format(($paymentTotals->check_total ?? 0) - ($chequeEncashed ?? 0), 2) }}</h3>
+                <h3 class="text-warning mb-0">৳{{ number_format(($paymentTotals->check_total ?? 0) - ($chequeEncashed ?? 0) - ($chequeDiscount ?? 0), 2) }}</h3>
             </div>
         </div>
     </div>
@@ -160,21 +176,25 @@
             <thead class="table-light">
                 <tr>
                     <th>Bill No</th>
+                    <th>Bill Date</th>
                     <th>Customer</th>
+                    <th>Location</th>
                     <th>Shop</th>
                     <th>Amount</th>
                     <th>Discount</th>
                     <th>Net</th>
                     <th>Payment</th>
                     <th>User</th>
-                    <th>Date</th>
+                    <th>Entry Date</th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($bills as $bill)
                 <tr>
                     <td><a href="{{ route('bills.show', $bill) }}">{{ $bill->bill_no }}</a></td>
+                    <td>{{ $bill->report_date?->format('d/m/Y') ?? 'N/A' }}</td>
                     <td>{{ $bill->customer?->name ?? 'N/A' }}</td>
+                    <td>{{ $bill->customer?->location ?? 'N/A' }}</td>
                     <td>{{ $bill->shop_name ?? '-' }}</td>
                     <td>৳{{ number_format($bill->bill_amount, 2) }}</td>
                     <td>৳{{ number_format($bill->discount, 2) }}</td>
@@ -190,11 +210,11 @@
                         @endforeach
                     </td>
                     <td>{{ $bill->user?->name ?? 'N/A' }}</td>
-                    <td>{{ $bill->report_date?->format('d/m/Y') }}</td>
+                    <td>{{ $bill->created_at?->format('d/m/Y') ?? 'N/A' }}</td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="9" class="text-center text-muted py-4">No bills found for the selected filters.</td>
+                    <td colspan="11" class="text-center text-muted py-4">No bills found for the selected filters.</td>
                 </tr>
                 @endforelse
             </tbody>

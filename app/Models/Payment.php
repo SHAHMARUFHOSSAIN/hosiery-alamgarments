@@ -62,9 +62,14 @@ class Payment extends Model
         return $this->hasMany(CheckEncashment::class);
     }
 
+    public function getTotalEncashmentDiscountAttribute(): float
+    {
+        return (float) $this->checkEncashments()->sum('discount');
+    }
+
     public function remainingCheckAmount(): float
     {
-        return (float) $this->check_amount - (float) $this->encashed_amount;
+        return (float) $this->check_amount - (float) $this->encashed_amount - (float) $this->total_encashment_discount;
     }
 
     public function hasPartialEncashments(): bool

@@ -95,10 +95,18 @@
         </div>
     </div>
     <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <h6 class="text-muted mb-1">Due Discount</h6>
+                <h3 class="text-danger mb-0">৳{{ number_format($totalDueDiscount ?? 0, 2) }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
         <div class="card border-0 shadow-sm bg-dark">
             <div class="card-body text-center">
                 <h6 class="text-white mb-1">Total Discount</h6>
-                <h3 class="text-warning mb-0">৳{{ number_format(($totalDiscount ?? 0) + ($totalReportDiscount ?? 0), 2) }}</h3>
+                <h3 class="text-warning mb-0">৳{{ number_format($totalDiscountAll ?? 0, 2) }}</h3>
             </div>
         </div>
     </div>

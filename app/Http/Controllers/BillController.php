@@ -339,7 +339,9 @@ class BillController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        return view('bills.edit', compact('bill'));
+        $page = request('page', 1);
+
+        return view('bills.edit', compact('bill', 'page'));
     }
 
     public function update(Request $request, Bill $bill): RedirectResponse
@@ -680,7 +682,9 @@ class BillController extends Controller
 
             DB::commit();
 
-            return redirect()->route('bills.index')
+            $page = $request->input('page', 1);
+
+            return redirect()->route('bills.index', ['page' => $page])
                 ->with('success', 'Bill updated successfully');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -743,7 +747,9 @@ class BillController extends Controller
         // Delete the bill (cascades to payments, dues, check_encashments, due_payments)
         $bill->delete();
 
-        return redirect()->route('bills.index')
+        $page = request('page', 1);
+
+        return redirect()->route('bills.index', ['page' => $page])
             ->with('success', 'Bill deleted permanently with all associated entries.');
     }
 }

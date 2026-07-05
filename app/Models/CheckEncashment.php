@@ -10,6 +10,7 @@ class CheckEncashment extends Model
     protected $fillable = [
         'payment_id',
         'encash_amount',
+        'discount',
         'payment_type',
         'encash_date',
         'next_due_date',
@@ -22,6 +23,7 @@ class CheckEncashment extends Model
         'encash_date' => 'date',
         'next_due_date' => 'date',
         'encash_amount' => 'decimal:2',
+        'discount' => 'decimal:2',
     ];
 
     public function payment(): BelongsTo

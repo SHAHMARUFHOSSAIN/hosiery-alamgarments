@@ -85,7 +85,9 @@
             <thead class="table-light">
                 <tr>
                     <th>Bill No</th>
+                    <th>Bill Date</th>
                     <th>Customer</th>
+                    <th>Location</th>
                     <th>
                         <a href="{{ route('dues.tt-report', ['sort' => 'tt_bank_name', 'direction' => request('sort') == 'tt_bank_name' && request('direction') == 'asc' ? 'desc' : 'asc'] + request()->only('status', 'bank', 'date_from', 'date_to', 'search')) }}" class="text-decoration-none">
                             Bank @if(request('sort') == 'tt_bank_name'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif
@@ -114,7 +116,9 @@
                 @forelse($ttPayments as $payment)
                 <tr>
                     <td><a href="{{ route('bills.show', $payment->bill) }}">{{ $payment->bill->bill_no ?? 'N/A' }}</a></td>
+                    <td>{{ $payment->bill->report_date?->format('M d, Y') ?? 'N/A' }}</td>
                     <td>{{ $payment->bill->customer->name ?? 'N/A' }}</td>
+                    <td>{{ $payment->bill->customer->location ?? 'N/A' }}</td>
                     <td>{{ $payment->tt_bank_name ?? 'N/A' }}</td>
                     <td>{{ $payment->tt_account_no ?? 'N/A' }}</td>
                     <td class="fw-bold">{{ number_format($payment->tt_amount, 2) }}</td>
@@ -133,7 +137,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="8" class="text-center py-3">No TT payments found</td></tr>
+                <tr><td colspan="10" class="text-center py-3">No TT payments found</td></tr>
                 @endforelse
             </tbody>
         </table>

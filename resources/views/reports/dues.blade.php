@@ -88,8 +88,10 @@
                 <tr>
                     <th>ID</th>
                     <th>Customer</th>
+                    <th>Location</th>
                     <th>Mobile</th>
                     <th>Bill No</th>
+                    <th>Bill Date</th>
                     <th>
                         <a href="{{ route('reports.dues', ['sort' => 'original_amount', 'direction' => request('sort') == 'original_amount' && request('direction') == 'asc' ? 'desc' : 'asc'] + request()->only('user_id', 'status', 'date_from', 'date_to', 'search')) }}" class="text-decoration-none">
                             Original @if(request('sort') == 'original_amount'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif
@@ -120,8 +122,10 @@
                 <tr class="{{ $due->status == 'paid' ? '' : ($due->due_date->isPast() ? 'table-danger' : '') }}">
                     <td>{{ $due->id }}</td>
                     <td>{{ $due->customer->name ?? 'N/A' }}</td>
+                    <td>{{ $due->customer->location ?? 'N/A' }}</td>
                     <td>{{ $due->customer->mobile ?? 'N/A' }}</td>
                     <td><a href="{{ route('bills.show', $due->bill) }}">{{ $due->bill->bill_no ?? 'N/A' }}</a></td>
+                    <td>{{ $due->bill->report_date?->format('M d, Y') ?? 'N/A' }}</td>
                     <td>{{ number_format($due->original_amount, 2) }}</td>
                     <td class="text-success fw-bold">{{ number_format($due->total_paid, 2) }}</td>
                     <td class="text-danger fw-bold">{{ number_format($due->remaining_amount, 2) }}</td>
@@ -151,7 +155,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="11" class="text-center py-3">No dues found</td></tr>
+                <tr><td colspan="13" class="text-center py-3">No dues found</td></tr>
                 @endforelse
             </tbody>
         </table>

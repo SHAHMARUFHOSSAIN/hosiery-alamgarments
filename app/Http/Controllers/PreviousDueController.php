@@ -111,64 +111,111 @@ class PreviousDueController extends Controller
 
     public function addPayment(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
+        $rules = [
             'previous_due_id' => 'required|exists:previous_dues,id',
             'payment_amount' => 'required|numeric|min:0.01',
+            'discount' => 'nullable|numeric|min:0',
             'payment_type' => 'required|in:cash,check,mobile_banking',
-            'bank_name' => 'nullable|string|max:255',
-            'check_no' => 'nullable|string|max:255',
             'note' => 'nullable|string|max:500',
             'transaction_id' => 'nullable|string|max:100',
-        ]);
+        ];
+
+        if ($request->payment_type === 'check') {
+            $rules = array_merge($rules, [
+                'bank_name' => 'required|string|max:255',
+                'check_no' => 'required|string|max:255',
+                'check_date' => 'required|date',
+                'check_amount' => 'required|numeric|min:0.01',
+                'check_reminder_date' => 'nullable|date',
+                'check_photo' => 'nullable|image|max:5120',
+            ]);
+        }
+
+        $validated = $request->validate($rules);
 
         $previousDue = PreviousDue::with('customer')->findOrFail($validated['previous_due_id']);
         $remaining = $previousDue->remaining_amount;
+        $discount = (float) ($validated['discount'] ?? 0);
 
-        if ($validated['payment_amount'] > $remaining) {
-            return redirect()->back()->with('error', 'Payment amount cannot exceed remaining due amount');
+        if ($validated['payment_amount'] + $discount > $remaining) {
+            return redirect()->back()->with('error', 'Payment amount plus discount cannot exceed remaining due amount');
         }
 
-        $newRemaining = $remaining - $validated['payment_amount'];
+        $newRemaining = $remaining - $validated['payment_amount'] - $discount;
 
-        PreviousDuePayment::create([
+        $payData = [
             'previous_due_id' => $previousDue->id,
             'amount' => $validated['payment_amount'],
+            'discount' => $discount,
             'payment_type' => $validated['payment_type'],
             'payment_date' => now(),
-            'remaining_amount' => $newRemaining,
+            'remaining_amount' => $request->payment_type === 'check' ? $remaining : $newRemaining,
             'note' => $validated['note'] ?? null,
             'transaction_id' => $validated['transaction_id'] ?? null,
-            'bank_name' => $validated['bank_name'] ?? null,
-            'check_no' => $validated['check_no'] ?? null,
             'user_id' => Auth::id(),
-        ]);
+        ];
 
-        $previousDue->update([
-            'amount' => $newRemaining,
-            'status' => $newRemaining <= 0 ? 'paid' : 'pending',
-        ]);
-
-        $customer = $previousDue->customer;
-        if ($customer) {
-            $newOpeningBalance = max(0, $customer->opening_balance - $validated['payment_amount']);
-            $customer->update(['opening_balance' => $newOpeningBalance]);
+        if ($request->payment_type === 'check') {
+            $checkPhotoPath = null;
+            if ($request->hasFile('check_photo')) {
+                $checkPhotoPath = $request->file('check_photo')->store('cheque', 'public');
+            }
+            $payData = array_merge($payData, [
+                'bank_name' => $validated['bank_name'],
+                'check_no' => $validated['check_no'],
+                'check_date' => $validated['check_date'],
+                'check_amount' => $validated['check_amount'],
+                'check_reminder_date' => $validated['check_reminder_date'] ?? null,
+                'check_photo' => $checkPhotoPath,
+                'encashed_amount' => 0,
+                'status' => 'pending',
+            ]);
         }
 
-        $lastBal = MainBalance::where('branch_id', Auth::id())->orderBy('id', 'desc')->value('balance') ?? 0;
-        $mainBalanceNote = 'Payment via ' . $validated['payment_type'] . ' (' . ($validated['bank_name'] ? $validated['bank_name'] . ' - ' . $validated['check_no'] : '') . ')';
-        if ($validated['transaction_id'] ?? null) {
-            $mainBalanceNote .= ' | TxnID: ' . $validated['transaction_id'];
+        PreviousDuePayment::create($payData);
+
+        if ($request->payment_type !== 'check') {
+            $previousDue->update([
+                'amount' => $newRemaining,
+                'status' => $newRemaining <= 0 ? 'paid' : 'pending',
+            ]);
+
+            $customer = $previousDue->customer;
+            if ($customer) {
+                $newOpeningBalance = max(0, $customer->opening_balance - $validated['payment_amount']);
+                $customer->update(['opening_balance' => $newOpeningBalance]);
+            }
+
+            $lastBal = MainBalance::where('branch_id', Auth::id())->orderBy('id', 'desc')->value('balance') ?? 0;
+            $mainBalanceNote = 'Payment via ' . $validated['payment_type'];
+            if ($validated['transaction_id'] ?? null) {
+                $mainBalanceNote .= ' | TxnID: ' . $validated['transaction_id'];
+            }
+            MainBalance::create([
+                'voucher_no' => VoucherHelper::generateVoucherNo(),
+                'name' => 'Previous Due Payment - ' . ($customer->name ?? 'Customer'),
+                'amount' => $validated['payment_amount'],
+                'balance' => $lastBal + $validated['payment_amount'],
+                'type' => 'credit',
+                'note' => $mainBalanceNote,
+                'user_id' => Auth::id(),
+                'branch_id' => Auth::id(),
+            ]);
+
+            if ($discount > 0) {
+                $newBal = MainBalance::where('branch_id', Auth::id())->orderBy('id', 'desc')->value('balance') ?? 0;
+                MainBalance::create([
+                    'voucher_no' => VoucherHelper::generateVoucherNo(),
+                    'name' => 'Discount - ' . ($customer->name ?? 'Customer'),
+                    'amount' => $discount,
+                    'balance' => $newBal - $discount,
+                    'type' => 'debit',
+                    'note' => 'Discount on previous due payment',
+                    'user_id' => Auth::id(),
+                    'branch_id' => Auth::id(),
+                ]);
+            }
         }
-        MainBalance::create([
-            'voucher_no' => VoucherHelper::generateVoucherNo(),
-            'name' => 'Previous Due Payment - ' . ($customer->name ?? 'Customer'),
-            'amount' => $validated['payment_amount'],
-            'balance' => $lastBal + $validated['payment_amount'],
-            'type' => 'credit',
-            'note' => $mainBalanceNote,
-            'user_id' => Auth::id(),
-            'branch_id' => Auth::id(),
-        ]);
 
         return redirect()->back()->with('success', 'Payment recorded successfully');
     }

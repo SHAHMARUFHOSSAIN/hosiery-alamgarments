@@ -8,7 +8,7 @@
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-        <li class="breadcrumb-item"><a href="{{ route('bills.index') }}">Bills</a></li>
+        <li class="breadcrumb-item"><a href="{{ route('bills.index', ['page' => $page]) }}">Bills</a></li>
         <li class="breadcrumb-item active">Edit</li>
     </ol>
 </nav>
@@ -17,7 +17,7 @@
 @section('content')
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
     <h2 class="mb-0">Edit Bill</h2>
-    <a href="{{ route('bills.index') }}" class="btn btn-outline-secondary">
+    <a href="{{ route('bills.index', ['page' => $page]) }}" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left"></i> Back
     </a>
 </div>
@@ -27,6 +27,7 @@
         <form method="POST" action="{{ route('bills.update', $bill) }}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
+            <input type="hidden" name="page" value="{{ $page }}">
             <div class="row g-3">
                 <div class="col-md-6">
                     <label for="bill_no" class="form-label">Bill No <span class="text-danger">*</span></label>

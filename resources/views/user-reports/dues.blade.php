@@ -76,7 +76,9 @@
             <thead class="table-light">
                 <tr>
                     <th>Customer</th>
+                    <th>Location</th>
                     <th>Bill No</th>
+                    <th>Bill Date</th>
                     <th class="text-end">Amount</th>
                     <th>Due Date</th>
                     <th>Status</th>
@@ -92,7 +94,9 @@
                         <br><small class="text-muted">{{ $due->customer->mobile }}</small>
                         @endif
                     </td>
+                    <td>{{ $due->customer->location ?? 'N/A' }}</td>
                     <td>{{ $due->bill->bill_no ?? 'N/A' }}</td>
+                    <td>{{ $due->bill->report_date?->format('M d, Y') ?? 'N/A' }}</td>
                     <td class="text-end text-danger fw-bold">৳{{ number_format($due->amount, 2) }}</td>
                     <td>{{ $due->due_date->format('M d, Y') }}</td>
                     <td>
@@ -105,7 +109,7 @@
                     <td>{{ $due->created_at->format('M d, Y') }}</td>
                 </tr>
                 @empty
-                <tr><td colspan="6" class="text-center py-3">No dues found</td></tr>
+                <tr><td colspan="8" class="text-center py-3">No dues found</td></tr>
                 @endforelse
             </tbody>
         </table>

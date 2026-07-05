@@ -45,12 +45,21 @@ class PreviousDue extends Model
 
     public function getTotalPaidAttribute(): float
     {
-        return $this->payments()->sum('amount');
+        return $this->payments()
+            ->where(fn($q) => $q->where('payment_type', '!=', 'check')->orWhere('status', 'encashed'))
+            ->sum('amount');
+    }
+
+    public function getTotalDiscountAttribute(): float
+    {
+        return $this->payments()
+            ->where(fn($q) => $q->where('payment_type', '!=', 'check')->orWhere('status', 'encashed'))
+            ->sum('discount');
     }
 
     public function getRemainingAmountAttribute(): float
     {
-        return $this->original_amount - $this->total_paid;
+        return max(0, $this->original_amount - $this->total_paid - $this->total_discount);
     }
 
     public function hasPartialPayments(): bool

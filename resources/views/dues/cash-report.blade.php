@@ -74,7 +74,9 @@
             <thead class="table-light">
                 <tr>
                     <th>Bill No</th>
+                    <th>Bill Date</th>
                     <th>Customer</th>
+                    <th>Location</th>
                     <th>Details</th>
                     <th>
                         <a href="{{ route('dues.cash-report', ['sort' => 'amount', 'direction' => request('sort') == 'amount' && request('direction') == 'asc' ? 'desc' : 'asc'] + request()->only('status', 'date_from', 'date_to', 'search')) }}" class="text-decoration-none">
@@ -98,7 +100,9 @@
                 @forelse($cashPayments as $payment)
                 <tr>
                     <td><a href="{{ route('bills.show', $payment->bill) }}">{{ $payment->bill->bill_no ?? 'N/A' }}</a></td>
+                    <td>{{ $payment->bill->report_date?->format('M d, Y') ?? 'N/A' }}</td>
                     <td>{{ $payment->bill->customer->name ?? 'N/A' }}</td>
+                    <td>{{ $payment->bill->customer->location ?? 'N/A' }}</td>
                     <td>{{ $payment->details ?? 'N/A' }}</td>
                     <td class="fw-bold">৳{{ number_format($payment->amount, 2) }}</td>
                     <td>{{ $payment->created_at->format('M d, Y') }}</td>
@@ -116,7 +120,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="7" class="text-center py-3">No cash payments found</td></tr>
+                <tr><td colspan="9" class="text-center py-3">No cash payments found</td></tr>
                 @endforelse
             </tbody>
         </table>
