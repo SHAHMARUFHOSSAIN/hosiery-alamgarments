@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Schema;
 
 class Due extends Model
 {
@@ -50,18 +51,33 @@ class Due extends Model
         return $this->hasMany(DuePayment::class)->orderBy('created_at', 'asc');
     }
 
+    protected static ?bool $hasDuePaymentsStatus = null;
+
+    protected function duePaymentsWithEncashment(): HasMany
+    {
+        if (static::$hasDuePaymentsStatus === null) {
+            static::$hasDuePaymentsStatus = Schema::hasColumn('due_payments', 'status');
+        }
+
+        $query = $this->duePayments();
+
+        if (static::$hasDuePaymentsStatus) {
+            $query->where(fn($q) => $q->where('payment_type', '!=', 'check')->orWhere('status', 'encashed'));
+        } else {
+            $query->where('payment_type', '!=', 'check');
+        }
+
+        return $query;
+    }
+
     public function getTotalPaidAttribute(): float
     {
-        return $this->duePayments()
-            ->where(fn($q) => $q->where('payment_type', '!=', 'check')->orWhere('status', 'encashed'))
-            ->sum('amount');
+        return $this->duePaymentsWithEncashment()->sum('amount');
     }
 
     public function getTotalDiscountAttribute(): float
     {
-        return $this->duePayments()
-            ->where(fn($q) => $q->where('payment_type', '!=', 'check')->orWhere('status', 'encashed'))
-            ->sum('discount');
+        return $this->duePaymentsWithEncashment()->sum('discount');
     }
 
     public function getRemainingAmountAttribute(): float

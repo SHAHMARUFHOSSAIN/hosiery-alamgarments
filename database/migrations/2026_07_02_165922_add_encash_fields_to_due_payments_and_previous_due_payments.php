@@ -13,18 +13,22 @@ return new class extends Migration
     {
         if (!Schema::hasColumn('due_payments', 'encashed_amount')) {
             Schema::table('due_payments', function (Blueprint $table) {
-                $table->decimal('encashed_amount', 12, 2)->default(0)->after('check_photo');
-                $table->string('status', 50)->default('pending')->after('encashed_amount');
+                $table->decimal('encashed_amount', 12, 2)->default(0);
+                $table->string('status', 50)->default('pending');
             });
-            \DB::table('due_payments')->where('payment_type', 'check')->where('status', 'pending')->update(['status' => 'encashed', 'encashed_amount' => \DB::raw('check_amount')]);
+            if (Schema::hasColumn('due_payments', 'status') && Schema::hasColumn('due_payments', 'check_amount')) {
+                \DB::table('due_payments')->where('payment_type', 'check')->where('status', 'pending')->update(['status' => 'encashed', 'encashed_amount' => \DB::raw('check_amount')]);
+            }
         }
 
         if (!Schema::hasColumn('previous_due_payments', 'encashed_amount')) {
             Schema::table('previous_due_payments', function (Blueprint $table) {
-                $table->decimal('encashed_amount', 12, 2)->default(0)->after('check_photo');
-                $table->string('status', 50)->default('pending')->after('encashed_amount');
+                $table->decimal('encashed_amount', 12, 2)->default(0);
+                $table->string('status', 50)->default('pending');
             });
-            \DB::table('previous_due_payments')->where('payment_type', 'check')->where('status', 'pending')->update(['status' => 'encashed', 'encashed_amount' => \DB::raw('check_amount')]);
+            if (Schema::hasColumn('previous_due_payments', 'status') && Schema::hasColumn('previous_due_payments', 'check_amount')) {
+                \DB::table('previous_due_payments')->where('payment_type', 'check')->where('status', 'pending')->update(['status' => 'encashed', 'encashed_amount' => \DB::raw('check_amount')]);
+            }
         }
     }
 
@@ -33,12 +37,18 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('due_payments', function (Blueprint $table) {
-            $table->dropColumn(['encashed_amount', 'status']);
-        });
+        $dueColumns = array_filter(['encashed_amount', 'status'], fn($col) => Schema::hasColumn('due_payments', $col));
+        if (!empty($dueColumns)) {
+            Schema::table('due_payments', function (Blueprint $table) use ($dueColumns) {
+                $table->dropColumn($dueColumns);
+            });
+        }
 
-        Schema::table('previous_due_payments', function (Blueprint $table) {
-            $table->dropColumn(['encashed_amount', 'status']);
-        });
+        $prevDueColumns = array_filter(['encashed_amount', 'status'], fn($col) => Schema::hasColumn('previous_due_payments', $col));
+        if (!empty($prevDueColumns)) {
+            Schema::table('previous_due_payments', function (Blueprint $table) use ($prevDueColumns) {
+                $table->dropColumn($prevDueColumns);
+            });
+        }
     }
 };

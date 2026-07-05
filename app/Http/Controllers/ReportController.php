@@ -14,6 +14,7 @@ use App\Models\TodaySalesReport;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class ReportController extends Controller
@@ -69,14 +70,26 @@ class ReportController extends Controller
             ->when(!Auth::user()->isAdmin(), fn($q) => $q->where('user_id', Auth::id()))
             ->sum('discount_amt');
 
-        $duePayDiscount = DuePayment::where(fn($q) => $q->where('payment_type', '!=', 'check')->orWhere('status', 'encashed'))
+        $duePayQuery = DuePayment::query();
+        if (Schema::hasColumn('due_payments', 'status')) {
+            $duePayQuery->where(fn($q) => $q->where('payment_type', '!=', 'check')->orWhere('status', 'encashed'));
+        } else {
+            $duePayQuery->where('payment_type', '!=', 'check');
+        }
+        $duePayDiscount = $duePayQuery
             ->whereHas('due.bill', function ($q) {
                 if (!Auth::user()->isAdmin()) {
                     $q->where('user_id', Auth::id());
                 }
             })->sum('discount');
 
-        $prevDuePayDiscount = PreviousDuePayment::where(fn($q) => $q->where('payment_type', '!=', 'check')->orWhere('status', 'encashed'))
+        $prevDuePayQuery = PreviousDuePayment::query();
+        if (Schema::hasColumn('previous_due_payments', 'status')) {
+            $prevDuePayQuery->where(fn($q) => $q->where('payment_type', '!=', 'check')->orWhere('status', 'encashed'));
+        } else {
+            $prevDuePayQuery->where('payment_type', '!=', 'check');
+        }
+        $prevDuePayDiscount = $prevDuePayQuery
             ->whereHas('previousDue', function ($q) {
                 if (!Auth::user()->isAdmin()) {
                     $q->where('created_by', Auth::id());
@@ -545,7 +558,13 @@ class ReportController extends Controller
             $q->whereIn('id', $billIds);
         })->sum('amount');
 
-        $duePayDiscount = DuePayment::where(fn($q) => $q->where('payment_type', '!=', 'check')->orWhere('status', 'encashed'))
+        $duePayDiscountQ = DuePayment::query();
+        if (Schema::hasColumn('due_payments', 'status')) {
+            $duePayDiscountQ->where(fn($q) => $q->where('payment_type', '!=', 'check')->orWhere('status', 'encashed'));
+        } else {
+            $duePayDiscountQ->where('payment_type', '!=', 'check');
+        }
+        $duePayDiscount = $duePayDiscountQ
             ->whereHas('due.bill', function ($q) use ($billIds) {
                 $q->whereIn('id', $billIds);
             })->sum('discount');
@@ -554,7 +573,13 @@ class ReportController extends Controller
             ->where('status', 'pending')
             ->sum('amount');
 
-        $prevDuePayDiscount = PreviousDuePayment::where(fn($q) => $q->where('payment_type', '!=', 'check')->orWhere('status', 'encashed'))
+        $prevDuePayQ = PreviousDuePayment::query();
+        if (Schema::hasColumn('previous_due_payments', 'status')) {
+            $prevDuePayQ->where(fn($q) => $q->where('payment_type', '!=', 'check')->orWhere('status', 'encashed'));
+        } else {
+            $prevDuePayQ->where('payment_type', '!=', 'check');
+        }
+        $prevDuePayDiscount = $prevDuePayQ
             ->whereHas('previousDue', function ($q) use ($request) {
                 if ($request->filled('user_id')) {
                     $q->where('created_by', $request->user_id);
