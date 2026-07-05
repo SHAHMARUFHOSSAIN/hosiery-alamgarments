@@ -17,7 +17,7 @@ return new class extends Migration
                 $table->string('status', 50)->default('pending');
             });
             if (Schema::hasColumn('due_payments', 'status') && Schema::hasColumn('due_payments', 'check_amount')) {
-                \DB::table('due_payments')->where('payment_type', 'check')->where('status', 'pending')->update(['status' => 'encashed', 'encashed_amount' => \DB::raw('check_amount')]);
+                \DB::table('due_payments')->where('payment_type', 'check')->where('status', 'pending')->update(['status' => 'encashed', 'encashed_amount' => \DB::raw('COALESCE(check_amount, 0)')]);
             }
         }
 
@@ -27,7 +27,7 @@ return new class extends Migration
                 $table->string('status', 50)->default('pending');
             });
             if (Schema::hasColumn('previous_due_payments', 'status') && Schema::hasColumn('previous_due_payments', 'check_amount')) {
-                \DB::table('previous_due_payments')->where('payment_type', 'check')->where('status', 'pending')->update(['status' => 'encashed', 'encashed_amount' => \DB::raw('check_amount')]);
+                \DB::table('previous_due_payments')->where('payment_type', 'check')->where('status', 'pending')->update(['status' => 'encashed', 'encashed_amount' => \DB::raw('COALESCE(check_amount, 0)')]);
             }
         }
     }
