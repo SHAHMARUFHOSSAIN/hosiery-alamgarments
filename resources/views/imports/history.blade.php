@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'Import History')
-@section('header', 'Import History')
+@section('title', __('Import History'))
+@section('header', __('Import History'))
 
 @section('content')
 <div class="row g-3 mb-4">
@@ -10,7 +10,7 @@
             <div class="card-body text-center py-3">
                 <div class="text-primary fs-1 mb-1"><i class="bi bi-upload"></i></div>
                 <h3 class="mb-0 fw-bold">{{ $stats['total_imports'] }}</h3>
-                <small class="text-muted">Total Imports</small>
+                <small class="text-muted">{{ __('Total Imports') }}</small>
             </div>
         </div>
     </div>
@@ -18,8 +18,8 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center py-3">
                 <div class="text-success fs-1 mb-1"><i class="bi bi-database"></i></div>
-                <h3 class="mb-0 fw-bold">{{ number_format($stats['total_records']) }}</h3>
-                <small class="text-muted">Total Records</small>
+                <h3 class="mb-0 fw-bold">{{ format_number($stats['total_records']) }}</h3>
+                <small class="text-muted">{{ __('Total Records') }}</small>
             </div>
         </div>
     </div>
@@ -27,8 +27,8 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center py-3">
                 <div class="text-info fs-1 mb-1"><i class="bi bi-plus-circle"></i></div>
-                <h3 class="mb-0 fw-bold">{{ number_format($stats['total_inserted']) }}</h3>
-                <small class="text-muted">Records Inserted</small>
+                <h3 class="mb-0 fw-bold">{{ format_number($stats['total_inserted']) }}</h3>
+                <small class="text-muted">{{ __('Records Inserted') }}</small>
             </div>
         </div>
     </div>
@@ -36,8 +36,8 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center py-3">
                 <div class="text-warning fs-1 mb-1"><i class="bi bi-arrow-clockwise"></i></div>
-                <h3 class="mb-0 fw-bold">{{ number_format($stats['total_updated']) }}</h3>
-                <small class="text-muted">Records Updated</small>
+                <h3 class="mb-0 fw-bold">{{ format_number($stats['total_updated']) }}</h3>
+                <small class="text-muted">{{ __('Records Updated') }}</small>
             </div>
         </div>
     </div>
@@ -50,7 +50,7 @@
                 <i class="bi bi-people fs-1 text-primary"></i>
                 <div>
                     <div class="fw-bold fs-4">{{ $stats['customer_imports'] }}</div>
-                    <small class="text-muted">Customer Imports</small>
+                    <small class="text-muted">{{ __('Customer Imports') }}</small>
                 </div>
             </div>
         </div>
@@ -61,7 +61,7 @@
                 <i class="bi bi-receipt fs-1 text-secondary"></i>
                 <div>
                     <div class="fw-bold fs-4">{{ $stats['bill_imports'] }}</div>
-                    <small class="text-muted">Bill Imports</small>
+                    <small class="text-muted">{{ __('Bill Imports') }}</small>
                 </div>
             </div>
         </div>
@@ -72,7 +72,7 @@
                 <i class="bi bi-check-circle fs-1 text-info"></i>
                 <div>
                     <div class="fw-bold fs-4">{{ $stats['completed_count'] }}</div>
-                    <small class="text-muted">Successful</small>
+                    <small class="text-muted">{{ __('Successful') }}</small>
                 </div>
             </div>
         </div>
@@ -83,7 +83,7 @@
                 <i class="bi bi-star fs-1 text-success"></i>
                 <div>
                     <div class="fw-bold fs-4">{{ $stats['total_inserted'] + $stats['total_updated'] }}</div>
-                    <small class="text-muted">Total Affected</small>
+                    <small class="text-muted">{{ __('Total Affected') }}</small>
                 </div>
             </div>
         </div>
@@ -96,27 +96,27 @@
         <form method="GET" action="{{ route('imports.history') }}" class="d-flex align-items-center gap-2 flex-wrap">
             @auth
             @if(auth()->user()->isAdmin())
-            <label class="form-label mb-0 small text-nowrap">User:</label>
+            <label class="form-label mb-0 small text-nowrap">{{ __('User:') }}</label>
             <select name="user_id" class="form-select form-select-sm" style="width: 150px">
-                <option value="">All Users</option>
+                <option value="">{{ __('All Users') }}</option>
                 @foreach($users as $u)
                 <option value="{{ $u->id }}" {{ request('user_id') == $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
                 @endforeach
             </select>
             @endif
             @endauth
-            <label class="form-label mb-0 small text-nowrap">Date:</label>
+            <label class="form-label mb-0 small text-nowrap">{{ __('Date:') }}</label>
             <input type="date" name="date" class="form-control form-control-sm" style="width: 150px"
                    value="{{ request('date') }}">
-            <label class="form-label mb-0 small text-nowrap">Type:</label>
+            <label class="form-label mb-0 small text-nowrap">{{ __('Type:') }}</label>
             <select name="type" class="form-select form-select-sm" style="width: 120px">
-                <option value="">All</option>
-                <option value="customers" {{ request('type') === 'customers' ? 'selected' : '' }}>Customers</option>
-                <option value="bills" {{ request('type') === 'bills' ? 'selected' : '' }}>Bills</option>
+                <option value="">{{ __('All') }}</option>
+                <option value="customers" {{ request('type') === 'customers' ? 'selected' : '' }}>{{ __('Customers') }}</option>
+                <option value="bills" {{ request('type') === 'bills' ? 'selected' : '' }}>{{ __('Bills') }}</option>
             </select>
             <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-search"></i></button>
             @if(request('date') || request('type') || request('user_id'))
-            <a href="{{ route('imports.history') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-x"></i> Clear</a>
+            <a href="{{ route('imports.history') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-x"></i> {{ __('Clear') }}</a>
             @endif
         </form>
     </div>
@@ -124,28 +124,28 @@
 
 <div class="card border-0 shadow-sm">
     <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-        <h6 class="mb-0"><i class="bi bi-clock-history"></i> Import Logs</h6>
+        <h6 class="mb-0"><i class="bi bi-clock-history"></i> {{ __('Import Logs') }}</h6>
         <a href="{{ route('imports.index') }}" class="btn btn-primary btn-sm">
-            <i class="bi bi-upload"></i> New Import
+            <i class="bi bi-upload"></i> {{ __('New Import') }}
         </a>
     </div>
     <div class="table-responsive">
         <table class="table table-hover mb-0">
             <thead class="table-light">
                 <tr>
-                    <th>Date</th>
-                    <th>File</th>
-                    <th>Type</th>
-                    <th>Total</th>
-                    <th>Inserted</th>
-                    <th>Updated</th>
-                    <th>Skipped</th>
-                    <th>User</th>
-                    <th>Status</th>
-                    <th>Errors</th>
-                    <th>Data</th>
+                    <th>{{ __('Date') }}</th>
+                    <th>{{ __('File') }}</th>
+                    <th>{{ __('Type') }}</th>
+                    <th>{{ __('Total') }}</th>
+                    <th>{{ __('Inserted') }}</th>
+                    <th>{{ __('Updated') }}</th>
+                    <th>{{ __('Skipped') }}</th>
+                    <th>{{ __('User') }}</th>
+                    <th>{{ __('Status') }}</th>
+                    <th>{{ __('Errors') }}</th>
+                    <th>{{ __('Data') }}</th>
                     @if(auth()->user()->isAdmin())
-                    <th>Actions</th>
+                    <th>{{ __('Actions') }}</th>
                     @endif
                 </tr>
             </thead>
@@ -173,11 +173,11 @@
                     <td class="small">{{ $log->user->name ?? 'N/A' }}</td>
                     <td>
                         @if($log->status === 'completed')
-                        <span class="badge bg-success">Completed</span>
+                        <span class="badge bg-success">{{ __('Completed') }}</span>
                         @elseif($log->status === 'processing')
-                        <span class="badge bg-warning text-dark">Processing</span>
+                        <span class="badge bg-warning text-dark">{{ __('Processing') }}</span>
                         @elseif($log->status === 'failed')
-                        <span class="badge bg-danger">Failed</span>
+                        <span class="badge bg-danger">{{ __('Failed') }}</span>
                         @else
                         <span class="badge bg-secondary">{{ ucfirst($log->status) }}</span>
                         @endif
@@ -189,13 +189,13 @@
                             <i class="bi bi-exclamation-triangle"></i> {{ count($log->errors) }}
                         </button>
                         @else
-                        <span class="text-muted small">None</span>
+                        <span class="text-muted small">{{ __('None') }}</span>
                         @endif
                     </td>
                     <td>
                         @if($log->imported_data && count($log->imported_data['rows']) > 0)
                         <button type="button" class="btn btn-sm btn-outline-info py-0 px-2" data-bs-toggle="modal" data-bs-target="#dataModal{{ $log->id }}">
-                            <i class="bi bi-table"></i> View
+                            <i class="bi bi-table"></i> {{ __('View') }}
                         </button>
                         @else
                         <span class="text-muted small">N/A</span>
@@ -204,7 +204,7 @@
                     @if(auth()->user()->isAdmin())
                     <td>
                         <form action="{{ route('imports.destroy', $log) }}" method="POST"
-                              onsubmit="return confirm('Delete this import log? This cannot be undone.')">
+                              onsubmit="return confirm('{{ __("Delete this import log? This cannot be undone.") }}')">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2">
@@ -215,7 +215,7 @@
                     @endif
                 </tr>
                 @empty
-                <tr><td colspan="{{ auth()->user()->isAdmin() ? 12 : 11 }}" class="text-center py-5 text-muted">No imports found</td></tr>
+                <tr><td colspan="{{ auth()->user()->isAdmin() ? 12 : 11 }}" class="text-center py-5 text-muted">{{ __('No imports found') }}</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -235,7 +235,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Import Errors - {{ $log->file_name }}</h5>
+                <h5 class="modal-title">{{ __('Import Errors') }} - {{ $log->file_name }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -244,7 +244,7 @@
                         <thead class="table-danger">
                             <tr>
                                 <th>#</th>
-                                <th>Error</th>
+                                <th>{{ __('Error') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -259,7 +259,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
             </div>
         </div>
     </div>
@@ -272,7 +272,7 @@
             <div class="modal-header">
                 <h5 class="modal-title">
                     <i class="bi bi-table"></i>
-                    {{ ucfirst($log->import_type) }} Data - {{ $log->file_name }}
+                    {{ ucfirst($log->import_type) }} {{ __('Data') }} - {{ $log->file_name }}
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
@@ -302,14 +302,14 @@
             </div>
             @if($log->imported_data['total_valid'] > 50)
             <div class="card-footer bg-white text-center text-muted small">
-                Showing 50 of {{ $log->imported_data['total_valid'] }} valid rows
+                {{ __('Showing 50 of') }} {{ $log->imported_data['total_valid'] }} {{ __('valid rows') }}
             </div>
             @endif
             <div class="modal-footer">
                 <span class="text-muted small me-auto">
-                    {{ $log->imported_data['total_valid'] }} valid row(s) imported on {{ $log->created_at->format('M d, Y h:i A') }}
+                    {{ $log->imported_data['total_valid'] }} {{ __('valid row(s) imported on') }} {{ $log->created_at->format('M d, Y h:i A') }}
                 </span>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
             </div>
         </div>
     </div>

@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
-@section('title', 'Previous Dues')
-@section('header', 'Previous Dues')
+@section('title', __('Previous Dues'))
+@section('header', __('Previous Dues'))
 
 @section('content')
 <div class="card border-0 shadow-sm mb-4">
@@ -9,27 +9,27 @@
         <form method="GET" class="row g-2 align-items-end flex-grow-1">
             <div class="col-md-4">
                 <input type="text" name="search" class="form-control"
-                       placeholder="Search customer..." value="{{ request('search') }}">
+                       placeholder="{{ __('Search customer...') }}" value="{{ request('search') }}">
             </div>
             <div class="col-md-2">
                 <select name="status" class="form-select">
-                    <option value="">All Status</option>
-                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
-                    <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Paid</option>
+                    <option value="">{{ __('All Status') }}</option>
+                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>{{ __('Pending') }}</option>
+                    <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>{{ __('Paid') }}</option>
                 </select>
             </div>
             <div class="col-md-2">
-                <button type="submit" class="btn btn-secondary"><i class="bi bi-search"></i> Filter</button>
-                <a href="{{ route('previous-dues.index') }}" class="btn btn-outline-secondary">Clear</a>
+                <button type="submit" class="btn btn-secondary"><i class="bi bi-search"></i> {{ __('Filter') }}</button>
+                <a href="{{ route('previous-dues.index') }}" class="btn btn-outline-secondary">{{ __('Clear') }}</a>
             </div>
         </form>
         <a href="{{ route('previous-dues.create') }}" class="btn btn-primary">
-            <i class="bi bi-plus"></i> New Previous Due
+            <i class="bi bi-plus"></i> {{ __('New Previous Due') }}
         </a>
     </div>
 </div>
 
-<h2 class="mb-4">All Previous Dues ({{ $previousDues->total() }})</h2>
+<h2 class="mb-4">{{ __('All Previous Dues') }} ({{ $previousDues->total() }})</h2>
 
 <div class="card border-0 shadow-sm">
     <div class="table-responsive">
@@ -37,13 +37,13 @@
             <thead class="table-light">
                 <tr>
                     <th>#</th>
-                    <th>Customer</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>Notes</th>
-                    <th>Created By</th>
-                    <th>Date</th>
-                    <th>Action</th>
+                    <th>{{ __('Customer') }}</th>
+                    <th>{{ __('Amount') }}</th>
+                    <th>{{ __('Status') }}</th>
+                    <th>{{ __('Notes') }}</th>
+                    <th>{{ __('Created By') }}</th>
+                    <th>{{ __('Date') }}</th>
+                    <th>{{ __('Action') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -52,18 +52,18 @@
                     <td>{{ $pd->id }}</td>
                     <td>
                         <a href="{{ route('previous-dues.show', $pd) }}" class="fw-semibold">
-                            {{ $pd->customer->name ?? 'Unknown' }}
+                            {{ $pd->customer->name ?? __('Unknown') }}
                         </a>
                         @if($pd->customer->mobile)
                         <br><small>{{ $pd->customer->mobile }}</small>
                         @endif
                     </td>
-                    <td class="fw-bold text-danger">৳{{ number_format($pd->amount, 2) }}</td>
+                    <td class="fw-bold text-danger">{{ format_currency($pd->amount) }}</td>
                     <td>
                         @if($pd->status == 'paid')
-                        <span class="badge bg-success">Paid</span>
+                        <span class="badge bg-success">{{ __('Paid') }}</span>
                         @else
-                        <span class="badge bg-warning text-dark">Pending</span>
+                        <span class="badge bg-warning text-dark">{{ __('Pending') }}</span>
                         @endif
                     </td>
                     <td>{{ Str::limit($pd->notes, 40) ?? '—' }}</td>
@@ -71,21 +71,21 @@
                     <td><small>{{ $pd->created_at->format('M d, Y') }}</small></td>
                     <td>
                         <div class="d-flex gap-1">
-                            <a href="{{ route('previous-dues.show', $pd) }}" class="btn btn-sm btn-info" title="View">
+                            <a href="{{ route('previous-dues.show', $pd) }}" class="btn btn-sm btn-info" title="{{ __('View') }}">
                                 <i class="bi bi-eye"></i>
                             </a>
-                            <a href="{{ route('previous-dues.edit', $pd) }}" class="btn btn-sm btn-primary" title="Edit">
+                            <a href="{{ route('previous-dues.edit', $pd) }}" class="btn btn-sm btn-primary" title="{{ __('Edit') }}">
                                 <i class="bi bi-pencil"></i>
                             </a>
-                            <form method="POST" action="{{ route('previous-dues.destroy', $pd) }}" onsubmit="return confirm('Delete this previous due?')">
+                            <form method="POST" action="{{ route('previous-dues.destroy', $pd) }}" onsubmit="return confirm(__('Delete this previous due?'))">
                                 @csrf @method('DELETE')
-                                <button class="btn btn-sm btn-danger" title="Delete"><i class="bi bi-trash"></i></button>
+                                <button class="btn btn-sm btn-danger" title="{{ __('Delete') }}"><i class="bi bi-trash"></i></button>
                             </form>
                         </div>
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="8" class="text-center py-4"><strong>No previous dues found</strong></td></tr>
+                <tr><td colspan="8" class="text-center py-4"><strong>{{ __('No previous dues found') }}</strong></td></tr>
                 @endforelse
             </tbody>
         </table>

@@ -1,120 +1,120 @@
 @extends('layouts.admin')
 
-@section('title', 'Reports')
+@section('title', __('Reports'))
 
-@section('header', 'Reports & Export')
+@section('header', __('Reports & Export'))
 
 @section('content')
 <div class="row g-4 mb-4">
     <div class="col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
-                <h6 class="text-muted mb-1">Total Sales</h6>
-                <h3 class="text-primary mb-0">৳{{ number_format($totalSales ?? 0, 2) }}</h3>
+                <h6 class="text-muted mb-1">{{ __('Total Sales') }}</h6>
+                <h3 class="text-primary mb-0">{{ format_currency($totalSales ?? 0) }}</h3>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
-                <h6 class="text-muted mb-1">Total Due</h6>
-                <h3 class="text-danger mb-0">৳{{ number_format($totalDues ?? 0, 2) }}</h3>
+                <h6 class="text-muted mb-1">{{ __('Total Due') }}</h6>
+                <h3 class="text-danger mb-0">{{ format_currency($totalDues ?? 0) }}</h3>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
-                <h6 class="text-muted mb-1">Due Collected</h6>
-                <h3 class="text-success mb-0">৳{{ number_format($duePaymentCollection ?? 0, 2) }}</h3>
+                <h6 class="text-muted mb-1">{{ __('Due Collected') }}</h6>
+                <h3 class="text-success mb-0">{{ format_currency($duePaymentCollection ?? 0) }}</h3>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
-                <h6 class="text-muted mb-1">Prev. Due Pending</h6>
-                <h3 class="text-danger mb-0">৳{{ number_format($totalPrevDues ?? 0, 2) }}</h3>
+                <h6 class="text-muted mb-1">{{ __('Prev. Due Pending') }}</h6>
+                <h3 class="text-danger mb-0">{{ format_currency($totalPrevDues ?? 0) }}</h3>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
-                <h6 class="text-muted mb-1">Prev. Due Collected</h6>
-                <h3 class="text-success mb-0">৳{{ number_format($totalPrevCollected ?? 0, 2) }}</h3>
+                <h6 class="text-muted mb-1">{{ __('Prev. Due Collected') }}</h6>
+                <h3 class="text-success mb-0">{{ format_currency($totalPrevCollected ?? 0) }}</h3>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
-                <h6 class="text-muted mb-1">Cash Received</h6>
-                <h3 class="text-success mb-0">৳{{ number_format($paymentTotals->cash_total ?? 0, 2) }}</h3>
+                <h6 class="text-muted mb-1">{{ __('Cash Received') }}</h6>
+                <h3 class="text-success mb-0">{{ format_currency($paymentTotals->cash_total ?? 0) }}</h3>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
-                <h6 class="text-muted mb-1">Cheque Reports</h6>
-                <h3 class="text-primary mb-0">৳{{ number_format($paymentTotals->check_total ?? 0, 2) }}</h3>
+                <h6 class="text-muted mb-1">{{ __('Cheque Reports') }}</h6>
+                <h3 class="text-primary mb-0">{{ format_currency($paymentTotals->check_total ?? 0) }}</h3>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
-                <h6 class="text-muted mb-1">TT Reports</h6>
-                <h3 class="text-info mb-0">৳{{ number_format($paymentTotals->tt_total ?? 0, 2) }}</h3>
+                <h6 class="text-muted mb-1">{{ __('TT Reports') }}</h6>
+                <h3 class="text-info mb-0">{{ format_currency($paymentTotals->tt_total ?? 0) }}</h3>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
-                <h6 class="text-muted mb-1">Reference Card</h6>
-                <h3 class="text-secondary mb-0">৳{{ number_format($paymentTotals->card_total ?? 0, 2) }}</h3>
+                <h6 class="text-muted mb-1">{{ __('Reference Card') }}</h6>
+                <h3 class="text-secondary mb-0">{{ format_currency($paymentTotals->card_total ?? 0) }}</h3>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
-                <h6 class="text-muted mb-1">Discount</h6>
-                <h3 class="text-danger mb-0">৳{{ number_format($totalDiscount ?? 0, 2) }}</h3>
+                <h6 class="text-muted mb-1">{{ __('Discount') }}</h6>
+                <h3 class="text-danger mb-0">{{ format_currency($totalDiscount ?? 0) }}</h3>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
-                <h6 class="text-muted mb-1">Rep Discount</h6>
-                <h3 class="text-danger mb-0">৳{{ number_format($totalReportDiscount ?? 0, 2) }}</h3>
+                <h6 class="text-muted mb-1">{{ __('Rep Discount') }}</h6>
+                <h3 class="text-danger mb-0">{{ format_currency($totalReportDiscount ?? 0) }}</h3>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
-                <h6 class="text-muted mb-1">Due Discount</h6>
-                <h3 class="text-danger mb-0">৳{{ number_format($totalDueDiscount ?? 0, 2) }}</h3>
+                <h6 class="text-muted mb-1">{{ __('Due Discount') }}</h6>
+                <h3 class="text-danger mb-0">{{ format_currency($totalDueDiscount ?? 0) }}</h3>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card border-0 shadow-sm bg-dark">
             <div class="card-body text-center">
-                <h6 class="text-white mb-1">Total Discount</h6>
-                <h3 class="text-warning mb-0">৳{{ number_format($totalDiscountAll ?? 0, 2) }}</h3>
+                <h6 class="text-white mb-1">{{ __('Total Discount') }}</h6>
+                <h3 class="text-warning mb-0">{{ format_currency($totalDiscountAll ?? 0) }}</h3>
             </div>
         </div>
     </div>
     <div class="col-md-3">
         <div class="card border-0 shadow-sm bg-primary">
             <div class="card-body text-center">
-                <h6 class="text-white mb-1">Main Balance</h6>
-                <h3 class="text-white mb-0">৳{{ number_format($mainBalance ?? 0, 2) }}</h3>
+                <h6 class="text-white mb-1">{{ __('Main Balance') }}</h6>
+                <h3 class="text-white mb-0">{{ format_currency($mainBalance ?? 0) }}</h3>
             </div>
         </div>
     </div>
@@ -125,9 +125,9 @@
             <div class="bg-warning bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
                 <i class="bi bi-diagram-3 text-warning fs-2"></i>
             </div>
-            <h5>Resources</h5>
-            <p class="text-muted">User-wise data with date filters — bills, payments, dues, collections</p>
-            <a href="{{ route('reports.resources') }}" class="btn btn-warning">View Resources</a>
+            <h5>{{ __('Resources') }}</h5>
+            <p class="text-muted">{{ __('User-wise data with date filters — bills, payments, dues, collections') }}</p>
+            <a href="{{ route('reports.resources') }}" class="btn btn-warning">{{ __('View Resources') }}</a>
         </div>
     </div>
     <div class="col-md-4">
@@ -135,9 +135,9 @@
             <div class="bg-primary bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
                 <i class="bi bi-receipt text-primary fs-2"></i>
             </div>
-            <h5>Sales Report</h5>
-            <p class="text-muted">View and export bill sales with date range and user filters</p>
-            <a href="{{ route('reports.sales') }}" class="btn btn-primary">View Sales</a>
+            <h5>{{ __('Sales Report') }}</h5>
+            <p class="text-muted">{{ __('View and export bill sales with date range and user filters') }}</p>
+            <a href="{{ route('reports.sales') }}" class="btn btn-primary">{{ __('View Sales') }}</a>
         </div>
     </div>
     <div class="col-md-4">
@@ -145,9 +145,9 @@
             <div class="bg-danger bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
                 <i class="bi bi-clock-history text-danger fs-2"></i>
             </div>
-            <h5>Dues Report</h5>
-            <p class="text-muted">Track all dues with status and date filters</p>
-            <a href="{{ route('reports.dues') }}" class="btn btn-danger">View Dues</a>
+            <h5>{{ __('Dues Report') }}</h5>
+            <p class="text-muted">{{ __('Track all dues with status and date filters') }}</p>
+            <a href="{{ route('reports.dues') }}" class="btn btn-danger">{{ __('View Dues') }}</a>
         </div>
     </div>
     <div class="col-md-4">
@@ -155,9 +155,9 @@
             <div class="bg-dark bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
                 <i class="bi bi-hourglass-split text-dark fs-2"></i>
             </div>
-            <h5>Previous Due Report</h5>
-            <p class="text-muted">Track opening balance dues with payments and status</p>
-            <a href="{{ route('reports.previous-dues') }}" class="btn btn-dark">View Prev. Dues</a>
+            <h5>{{ __('Previous Due Report') }}</h5>
+            <p class="text-muted">{{ __('Track opening balance dues with payments and status') }}</p>
+            <a href="{{ route('reports.previous-dues') }}" class="btn btn-dark">{{ __('View Prev. Dues') }}</a>
         </div>
     </div>
     <div class="col-md-4">
@@ -165,9 +165,9 @@
             <div class="bg-success bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
                 <i class="bi bi-graph-up text-success fs-2"></i>
             </div>
-            <h5>Daily Report</h5>
-            <p class="text-muted">View dues due today with export options</p>
-            <a href="{{ route('dues.daily-report') }}" class="btn btn-success">Daily Report</a>
+            <h5>{{ __('Daily Report') }}</h5>
+            <p class="text-muted">{{ __('View dues due today with export options') }}</p>
+            <a href="{{ route('dues.daily-report') }}" class="btn btn-success">{{ __('Daily Report') }}</a>
         </div>
     </div>
     @if(auth()->user()->isAdmin())
@@ -176,9 +176,9 @@
             <div class="bg-info bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
                 <i class="bi bi-bar-chart-line text-info fs-2"></i>
             </div>
-            <h5>Data Analytics</h5>
-            <p class="text-muted">Comprehensive business intelligence with charts and insights</p>
-            <a href="{{ route('reports.analytics') }}" class="btn btn-info text-white">Analytics</a>
+            <h5>{{ __('Data Analytics') }}</h5>
+            <p class="text-muted">{{ __('Comprehensive business intelligence with charts and insights') }}</p>
+            <a href="{{ route('reports.analytics') }}" class="btn btn-info text-white">{{ __('Analytics') }}</a>
         </div>
     </div>
     @endif
@@ -188,9 +188,9 @@
             <div class="bg-secondary bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
                 <i class="bi bi-person-x text-secondary fs-2"></i>
             </div>
-            <h5>Inactive Customers</h5>
-            <p class="text-muted">Customers with no bill in last 30 days</p>
-            <a href="{{ route('reports.inactive-customers') }}" class="btn btn-secondary">View Inactive</a>
+            <h5>{{ __('Inactive Customers') }}</h5>
+            <p class="text-muted">{{ __('Customers with no bill in last 30 days') }}</p>
+            <a href="{{ route('reports.inactive-customers') }}" class="btn btn-secondary">{{ __('View Inactive') }}</a>
         </div>
     </div>
     @endif

@@ -1,25 +1,25 @@
 @extends('layouts.admin')
 
-@section('title', 'Daily Due Report')
+@section('title', __('Daily Due Report'))
 
-@section('header', 'Daily Due Report - ' . now()->format('M d, Y'))
+@section('header', __('Daily Due Report') . ' - ' . now()->format('M d, Y'))
 
 @section('breadcrumb')
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-        <li class="breadcrumb-item"><a href="{{ route('dues.index') }}">Dues</a></li>
-        <li class="breadcrumb-item active">Daily Report</li>
+        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">{{ __('Dashboard') }}</a></li>
+        <li class="breadcrumb-item"><a href="{{ route('dues.index') }}">{{ __('Dues') }}</a></li>
+        <li class="breadcrumb-item active">{{ __('Daily Report') }}</li>
     </ol>
 </nav>
 @endsection
 
 @section('content')
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
-    <h2 class="mb-0">Due Today: {{ $todayDues->total() }}</h2>
+    <h2 class="mb-0">{{ __('Due Today') }}: {{ $todayDues->total() }}</h2>
     <div>
         <a href="{{ route('dues.index') }}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Back
+            <i class="bi bi-arrow-left"></i> {{ __('Back') }}
         </a>
     </div>
 </div>
@@ -29,10 +29,10 @@
         <div class="d-flex justify-content-between align-items-center">
             <h5 class="mb-0">
                 <i class="bi bi-calendar-event"></i> 
-                Total: {{ number_format($totalAmount, 2) }}
+                {{ __('Total') }}: {{ format_number($totalAmount, 2) }}
             </h5>
             <a href="{{ route('export.dues', ['date_from' => now()->toDateString(), 'date_to' => now()->toDateString()]) }}" class="btn btn-sm btn-success">
-                <i class="bi bi-download"></i> Export
+                <i class="bi bi-download"></i> {{ __('Export') }}
             </a>
         </div>
     </div>
@@ -40,16 +40,16 @@
         <table class="table table-hover mb-0">
             <thead class="table-light">
                 <tr>
-                    <th>ID</th>
-                    <th>Customer</th>
-                    <th>Location</th>
-                    <th>Mobile</th>
-                    <th>Original</th>
-                    <th>Paid</th>
-                    <th>Remaining</th>
-                    <th>Due Date</th>
-                    <th>User</th>
-                    <th>Action</th>
+                    <th>{{ __('ID') }}</th>
+                    <th>{{ __('Customer') }}</th>
+                    <th>{{ __('Location') }}</th>
+                    <th>{{ __('Mobile') }}</th>
+                    <th>{{ __('Original') }}</th>
+                    <th>{{ __('Paid') }}</th>
+                    <th>{{ __('Remaining') }}</th>
+                    <th>{{ __('Due Date') }}</th>
+                    <th>{{ __('User') }}</th>
+                    <th>{{ __('Action') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -59,16 +59,16 @@
                     <td><a href="{{ route('customers.show', $due->customer) }}" class="fw-semibold">{{ $due->customer->name ?? 'N/A' }}</a></td>
                     <td>{{ $due->customer->location ?? 'N/A' }}</td>
                     <td>{{ $due->customer->mobile ?? 'N/A' }}</td>
-                    <td>{{ number_format($due->original_amount, 2) }}</td>
-                    <td class="text-success fw-bold">{{ number_format($due->total_paid, 2) }}</td>
-                    <td class="text-danger fw-bold fs-5">{{ number_format($due->remaining_amount, 2) }}</td>
+                    <td>{{ format_number($due->original_amount, 2) }}</td>
+                    <td class="text-success fw-bold">{{ format_number($due->total_paid, 2) }}</td>
+                    <td class="text-danger fw-bold fs-5">{{ format_number($due->remaining_amount, 2) }}</td>
                     <td><span class="badge bg-danger text-white">{{ $due->due_date->format('M d, Y') }}</span></td>
                     <td><span class="badge bg-secondary">{{ $due->creator->name ?? 'N/A' }}</span></td>
                     <td>
                         <button type="button" class="btn btn-sm btn-success py-0 px-2" 
                                 data-bs-toggle="modal" 
                                 data-bs-target="#dailyPayModal{{ $due->id }}">
-                            <i class="bi bi-credit-card"></i> Pay
+                            <i class="bi bi-credit-card"></i> {{ __('Pay') }}
                         </button>
                     </td>
                 </tr>
@@ -76,7 +76,7 @@
                 <tr>
                     <td colspan="10" class="text-center py-4 text-success">
                         <i class="bi bi-check-circle-fill fs-1 d-block mb-2"></i>
-                        <strong>No pending dues for today!</strong>
+                        <strong>{{ __('No pending dues for today!') }}</strong>
                     </td>
                 </tr>
                 @endforelse
@@ -84,8 +84,8 @@
             @if($todayDues->total() > 0)
             <tfoot class="table-dark">
                 <tr>
-                    <td colspan="6" class="text-end"><strong>Total Remaining:</strong></td>
-                    <td class="text-danger fw-bold fs-5">{{ number_format($totalAmount, 2) }}</td>
+                    <td colspan="6" class="text-end"><strong>{{ __('Total Remaining:') }}</strong></td>
+                    <td class="text-danger fw-bold fs-5">{{ format_number($totalAmount, 2) }}</td>
                     <td colspan="3"></td>
                 </tr>
             </tfoot>
@@ -104,7 +104,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Make Payment</h5>
+                <h5 class="modal-title">{{ __('Make Payment') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{{ route('dues.add-payment') }}" enctype="multipart/form-data">
@@ -112,21 +112,21 @@
                 <input type="hidden" name="due_id" value="{{ $due->id }}">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <strong>Customer:</strong> {{ $due->customer->name ?? 'N/A' }}
+                        <strong>{{ __('Customer:') }}</strong> {{ $due->customer->name ?? 'N/A' }}
                     </div>
                     <div class="mb-3">
-                        <strong>Original Amount:</strong> ৳{{ number_format($due->original_amount, 2) }}
+                        <strong>{{ __('Original Amount:') }}</strong> {{ format_currency($due->original_amount) }}
                     </div>
                     @if($due->hasPartialPayments())
                     <div class="mb-3">
-                        <strong>Total Paid:</strong> <span class="text-success">৳{{ number_format($due->total_paid, 2) }}</span>
+                        <strong>{{ __('Total Paid:') }}</strong> <span class="text-success">{{ format_currency($due->total_paid) }}</span>
                     </div>
                     @endif
                     <div class="mb-3 alert alert-warning">
-                        <strong>Remaining:</strong> <span class="text-danger fw-bold">৳{{ number_format($due->remaining_amount, 2) }}</span>
+                        <strong>{{ __('Remaining:') }}</strong> <span class="text-danger fw-bold">{{ format_currency($due->remaining_amount) }}</span>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Payment Amount <span class="text-danger">*</span></label>
+                        <label class="form-label">{{ __('Payment Amount') }} <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text">৳</span>
                             <input type="number" step="0.01" name="payment_amount" id="payment_amount_{{ $due->id }}"
@@ -136,7 +136,7 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Discount <small class="text-muted">(optional, auto subtracts)</small></label>
+                        <label class="form-label">{{ __('Discount') }} <small class="text-muted">{{ __('(optional, auto subtracts)') }}</small></label>
                         <div class="input-group">
                             <span class="input-group-text">৳</span>
                             <input type="number" step="0.01" name="discount" id="discount_{{ $due->id }}"
@@ -144,27 +144,27 @@
                                     oninput="updateDiscount(this, {{ $due->remaining_amount }}, {{ $due->total_discount }})">
                         </div>
                         <div id="discount_info_{{ $due->id }}" class="form-text mt-1">
-                            Total discount: ৳{{ number_format($due->total_discount, 2) }} | Remaining after: ৳{{ number_format($due->remaining_amount, 2) }}
+                            {{ __('Total discount:') }} {{ format_currency($due->total_discount) }} | {{ __('Remaining after:') }} {{ format_currency($due->remaining_amount) }}
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Payment Type <span class="text-danger">*</span></label>
+                        <label class="form-label">{{ __('Payment Type') }} <span class="text-danger">*</span></label>
                         <select name="payment_type" class="form-select" required onchange="toggleChequeFields(this)">
-                            <option value="cash">Cash</option>
-                            <option value="check">Cheque</option>
-                            <option value="mobile_banking">Mobile Banking</option>
+                            <option value="cash">{{ __('Cash') }}</option>
+                            <option value="check">{{ __('Cheque') }}</option>
+                            <option value="mobile_banking">{{ __('Mobile Banking') }}</option>
                         </select>
                     </div>
                     <div class="card border border-warning mb-3 cheque-fields" style="display:none;">
                         <div class="card-header bg-warning bg-opacity-10 py-2">
-                            <h6 class="mb-0"><i class="bi bi-bank"></i> Cheque Payment Details</h6>
+                            <h6 class="mb-0"><i class="bi bi-bank"></i> {{ __('Cheque Payment Details') }}</h6>
                         </div>
                         <div class="card-body">
                             <div class="row g-3">
                                 <div class="col-md-6" style="position: relative;">
-                                    <label class="form-label">Bank Name <span class="text-danger">*</span></label>
+                                    <label class="form-label">{{ __('Bank Name') }} <span class="text-danger">*</span></label>
                                     <div class="input-group">
-                                        <input type="text" name="bank_name" class="form-control bank-search-input" placeholder="Search bank name..." autocomplete="off" data-req="1">
+                                        <input type="text" name="bank_name" class="form-control bank-search-input" placeholder="{{ __('Search bank name...') }}" autocomplete="off" data-req="1">
                                         <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#newBankModal">
                                             <i class="bi bi-plus"></i>
                                         </button>
@@ -172,50 +172,50 @@
                                     <div class="bank-results list-group position-absolute w-100 shadow search-dropdown" style="z-index: 1050; display: none; max-height: 250px; overflow-y: auto; top: 100%; left: 0; background: #fff;"></div>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Cheque No <span class="text-danger">*</span></label>
+                                    <label class="form-label">{{ __('Cheque No') }} <span class="text-danger">*</span></label>
                                     <input type="text" name="check_no" class="form-control" data-req="1">
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">Cheque Date <span class="text-danger">*</span></label>
+                                    <label class="form-label">{{ __('Cheque Date') }} <span class="text-danger">*</span></label>
                                     <input type="date" name="check_date" class="form-control" data-req="1">
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">Cheque Amount <span class="text-danger">*</span></label>
+                                    <label class="form-label">{{ __('Cheque Amount') }} <span class="text-danger">*</span></label>
                                     <div class="input-group">
                                         <span class="input-group-text">৳</span>
                                         <input type="number" step="0.01" name="check_amount" class="form-control" data-req="1">
                                     </div>
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label">Reminder Date</label>
+                                    <label class="form-label">{{ __('Reminder Date') }}</label>
                                     <input type="date" name="check_reminder_date" class="form-control">
-                                    <small class="text-muted">Date to remind before check date</small>
+                                    <small class="text-muted">{{ __('Date to remind before cheque date') }}</small>
                                 </div>
                                 <div class="col-12">
-                                    <label class="form-label">Cheque Photo</label>
+                                    <label class="form-label">{{ __('Cheque Photo') }}</label>
                                     <input type="file" name="check_photo" class="form-control" accept="image/*">
-                                    <small class="text-muted">Upload cheque image (max 5MB)</small>
+                                    <small class="text-muted">{{ __('Upload cheque image (max 5MB)') }}</small>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Next Due Date <small class="text-muted">(if remaining balance)</small></label>
+                        <label class="form-label">{{ __('Next Due Date') }} <small class="text-muted">{{ __('(if remaining balance)') }}</small></label>
                         <input type="date" name="next_due_date" class="form-control">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Transaction ID <small class="text-muted">(for reference)</small></label>
-                        <input type="text" name="transaction_id" class="form-control" placeholder="e.g. TXN12345">
+                        <label class="form-label">{{ __('Transaction ID') }} <small class="text-muted">{{ __('(for reference)') }}</small></label>
+                        <input type="text" name="transaction_id" class="form-control" placeholder="{{ __('e.g. TXN12345') }}">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Note</label>
-                        <textarea name="note" class="form-control" rows="2" placeholder="Optional note..."></textarea>
+                        <label class="form-label">{{ __('Note') }}</label>
+                        <textarea name="note" class="form-control" rows="2" placeholder="{{ __('Optional note...') }}"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
                     <button type="submit" class="btn btn-success">
-                        <i class="bi bi-check-circle"></i> Record Payment
+                        <i class="bi bi-check-circle"></i> {{ __('Record Payment') }}
                     </button>
                 </div>
             </form>
@@ -228,20 +228,20 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">New Bank</h5>
+                <h5 class="modal-title">{{ __('New Bank') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="newBankForm" method="POST" action="{{ route('banks.store') }}">
                 @csrf
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="bank_modal_name" class="form-label">Bank Name <span class="text-danger">*</span></label>
+                        <label for="bank_modal_name" class="form-label">{{ __('Bank Name') }} <span class="text-danger">*</span></label>
                         <input type="text" name="name" id="bank_modal_name" class="form-control" required>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create & Select</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ __('Create & Select') }}</button>
                 </div>
             </form>
         </div>

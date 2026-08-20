@@ -1,15 +1,15 @@
 @extends('layouts.admin')
 
-@section('title', 'Create Bill')
+@section('title', __('Create Bill'))
 
-@section('header', 'Create Bill')
+@section('header', __('Create Bill'))
 
 @section('breadcrumb')
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-        <li class="breadcrumb-item"><a href="{{ route('bills.index') }}">Bills</a></li>
-        <li class="breadcrumb-item active">Create</li>
+        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">{{ __('Dashboard') }}</a></li>
+        <li class="breadcrumb-item"><a href="{{ route('bills.index') }}">{{ __('Bills') }}</a></li>
+        <li class="breadcrumb-item active">{{ __('Create') }}</li>
     </ol>
 </nav>
 @endsection
@@ -44,9 +44,9 @@
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3">
                 <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">New Bill</h5>
+                    <h5 class="mb-0">{{ __('New Bill') }}</h5>
                     <a href="{{ route('bills.index') }}" class="btn btn-outline-secondary btn-sm">
-                        <i class="bi bi-arrow-left"></i> Back
+                        <i class="bi bi-arrow-left"></i> {{ __('Back') }}
                     </a>
                 </div>
             </div>
@@ -55,43 +55,43 @@
                     @csrf
                     <div class="row g-3">
                         <div class="col-12" style="position: relative;">
-                            <label class="form-label">Customer <span class="text-danger">*</span></label>
+                            <label class="form-label">{{ __('Customer') }} <span class="text-danger">*</span></label>
                             <div class="input-group">
-                                <input type="text" id="customerSearch" class="form-control @error('customer_id') is-invalid @enderror" placeholder="Search by name or phone..." autocomplete="off">
+                                <input type="text" id="customerSearch" class="form-control @error('customer_id') is-invalid @enderror" placeholder="{{ __('Search by name or phone...') }}" autocomplete="off">
                                 <input type="hidden" name="customer_id" id="customerId" value="{{ old('customer_id') }}">
                                 <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#newCustomerModal">
-                                    <i class="bi bi-plus"></i> New
+                                    <i class="bi bi-plus"></i> {{ __('New') }}
                                 </button>
                             </div>
                             <div class="mt-2">
                                 <select id="customerSelect" class="form-select @error('customer_id') is-invalid @enderror"></select>
-                                <small class="text-muted">Or type in the search field above</small>
+                                <small class="text-muted">{{ __('Or type in the search field above') }}</small>
                             </div>
                             @error('customer_id')
                             <div class="alert alert-danger py-1 mt-1 mb-0"><small><i class="bi bi-exclamation-triangle"></i> {{ $message }}</small></div>
                             @enderror
-                            <div id="customerIdError" class="alert alert-danger py-1 mt-1 mb-0" style="display:none;"><small><i class="bi bi-exclamation-triangle"></i> Please select a customer.</small></div>
+                            <div id="customerIdError" class="alert alert-danger py-1 mt-1 mb-0" style="display:none;"><small><i class="bi bi-exclamation-triangle"></i> {{ __('Please select a customer.') }}</small></div>
                             <div id="customerResults" class="list-group position-absolute w-100 shadow search-dropdown" style="z-index: 1050; display: none; max-height: 250px; overflow-y: auto; top: 100%; left: 0; background: #fff;"></div>
                         </div>
 
                         <div class="col-md-6">
-                            <label for="bill_no" class="form-label">Bill No <span class="text-danger">*</span></label>
+                            <label for="bill_no" class="form-label">{{ __('Bill No') }} <span class="text-danger">*</span></label>
                             <input type="text" name="bill_no" id="bill_no" class="form-control @error('bill_no') is-invalid @enderror" value="{{ old('bill_no') }}" required>
                             @error('bill_no')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="col-md-6">
-                            <label for="shop_name" class="form-label">Shop Name</label>
+                            <label for="shop_name" class="form-label">{{ __('Shop Name') }}</label>
                             <input type="text" name="shop_name" id="shop_name" class="form-control" value="{{ old('shop_name') }}">
                         </div>
                         <div class="col-md-6">
-                            <label for="bill_man" class="form-label">Bill Man</label>
+                            <label for="bill_man" class="form-label">{{ __('Bill Man') }}</label>
                             <input type="text" name="bill_man" id="bill_man" class="form-control" value="{{ old('bill_man') }}">
                         </div>
 
                         <div class="col-md-4">
-                            <label for="bill_amount" class="form-label">Bill Amount <span class="text-danger">*</span></label>
+                            <label for="bill_amount" class="form-label">{{ __('Bill Amount') }} <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text">৳</span>
                                 <input type="number" step="0.01" name="bill_amount" id="bill_amount" class="form-control @error('bill_amount') is-invalid @enderror" value="{{ old('bill_amount') }}" required>
@@ -101,26 +101,26 @@
                             @enderror
                         </div>
                         <div class="col-md-4">
-                            <label for="discount" class="form-label">Discount</label>
+                            <label for="discount" class="form-label">{{ __('Discount') }}</label>
                             <div class="input-group">
                                 <span class="input-group-text">৳</span>
                                 <input type="number" step="0.01" name="discount" id="discount" class="form-control" value="{{ old('discount', 0) }}">
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <label for="report_date" class="form-label">Report Date <span class="text-danger">*</span></label>
+                            <label for="report_date" class="form-label">{{ __('Report Date') }} <span class="text-danger">*</span></label>
                             <input type="date" name="report_date" id="report_date" class="form-control @error('report_date') is-invalid @enderror" value="{{ old('report_date', now()->subDay()->toDateString()) }}" required>
                             @error('report_date')
                             <div class="text-danger small">{{ $message }}</div>
                             @enderror
-                            <div id="reportDateWarning" class="text-warning small d-none"><i class="bi bi-exclamation-triangle"></i> This date has a closed sales report. Only admins can create bills for this date.</div>
+                            <div id="reportDateWarning" class="text-warning small d-none"><i class="bi bi-exclamation-triangle"></i> {{ __('This date has a closed sales report. Only admins can create bills for this date.') }}</div>
                         </div>
                         @auth
                         @if(Auth::user()->isAdmin())
                         <div class="col-md-4">
-                            <label for="user_id" class="form-label">User <span class="text-danger">*</span></label>
+                            <label for="user_id" class="form-label">{{ __('User') }} <span class="text-danger">*</span></label>
                             <select name="user_id" id="user_id" class="form-select @error('user_id') is-invalid @enderror" required>
-                                <option value="">-- Select User --</option>
+                                <option value="">{{ __('-- Select User --') }}</option>
                                 @foreach($users as $user)
                                 <option value="{{ $user->id }}" {{ old('user_id') == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
                                 @endforeach
@@ -132,14 +132,14 @@
                         @endif
                         @endauth
                         <div class="col-md-4">
-                            <label for="payment_type" class="form-label">Payment Type <span class="text-danger">*</span></label>
+                            <label for="payment_type" class="form-label">{{ __('Payment Type') }} <span class="text-danger">*</span></label>
                             <select name="payment_type" id="payment_type" class="form-select @error('payment_type') is-invalid @enderror" required>
-                                <option value="">-- Select --</option>
-                                <option value="cash" {{ old('payment_type') == 'cash' ? 'selected' : '' }}>Cash</option>
-                                <option value="check" {{ old('payment_type') == 'check' ? 'selected' : '' }}>Cheque</option>
-                                <option value="tt" {{ old('payment_type') == 'tt' ? 'selected' : '' }}>TT</option>
-                                <option value="card" {{ old('payment_type') == 'card' ? 'selected' : '' }}>Reference Card</option>
-                                <option value="due" {{ old('payment_type') == 'due' ? 'selected' : '' }}>Due</option>
+                                <option value="">{{ __('-- Select --') }}</option>
+                                <option value="cash" {{ old('payment_type') == 'cash' ? 'selected' : '' }}>{{ __('Cash') }}</option>
+                                <option value="check" {{ old('payment_type') == 'check' ? 'selected' : '' }}>{{ __('Cheque') }}</option>
+                                <option value="tt" {{ old('payment_type') == 'tt' ? 'selected' : '' }}>{{ __('TT') }}</option>
+                                <option value="card" {{ old('payment_type') == 'card' ? 'selected' : '' }}>{{ __('Reference Card') }}</option>
+                                <option value="due" {{ old('payment_type') == 'due' ? 'selected' : '' }}>{{ __('Due') }}</option>
                             </select>
                             @error('payment_type')
                             <div class="text-danger small">{{ $message }}</div>
@@ -147,19 +147,19 @@
                         </div>
 
                         <div class="col-md-4">
-                            <label for="payment_amount" class="form-label">Payment Received</label>
+                            <label for="payment_amount" class="form-label">{{ __('Payment Received') }}</label>
                             <div class="input-group">
                                 <span class="input-group-text">৳</span>
                                 <input type="number" step="0.01" name="payment_amount" id="payment_amount" class="form-control" value="{{ old('payment_amount', 0) }}">
                             </div>
-                            <small class="text-muted">Amount received now (if any)</small>
+                            <small class="text-muted">{{ __('Amount received now (if any)') }}</small>
                         </div>
                         <div class="col-md-4">
-                            <label for="payment_details" class="form-label">Payment Details</label>
+                            <label for="payment_details" class="form-label">{{ __('Payment Details') }}</label>
                             <input type="text" name="payment_details" id="payment_details" class="form-control" value="{{ old('payment_details') }}">
                         </div>
                         <div class="col-md-4" id="dueDateSection" style="display: none;">
-                            <label for="due_date" class="form-label">Due Date <span class="text-danger">*</span></label>
+                            <label for="due_date" class="form-label">{{ __('Due Date') }} <span class="text-danger">*</span></label>
                             <input type="date" name="due_date" id="due_date" class="form-control @error('due_date') is-invalid @enderror" value="{{ old('due_date') }}">
                             @error('due_date')
                             <div class="text-danger small">{{ $message }}</div>
@@ -168,25 +168,25 @@
 
                         <div class="col-12" id="checkFields" style="display: none;">
                             <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6 class="mb-0 text-warning"><i class="bi bi-bank"></i> Cheque Payment Details</h6>
+                                <h6 class="mb-0 text-warning"><i class="bi bi-bank"></i> {{ __('Cheque Payment Details') }}</h6>
                                 <button type="button" class="btn btn-sm btn-warning" id="addCheckBtn">
-                                    <i class="bi bi-plus"></i> Add Another Cheque
+                                    <i class="bi bi-plus"></i> {{ __('Add Another Cheque') }}
                                 </button>
                             </div>
                             <div id="checkPaymentsContainer">
                                 <div class="card border border-warning mb-3 check-payment-item" data-index="0">
                                     <div class="card-header bg-warning text-dark py-2 d-flex justify-content-between align-items-center">
-                                        <span><i class="bi bi-bank"></i> Cheque Payment #1</span>
+                                        <span><i class="bi bi-bank"></i> {{ __('Cheque Payment') }} #1</span>
                                         <button type="button" class="btn btn-sm btn-danger remove-check-btn" style="display: none;">
-                                            <i class="bi bi-trash"></i> Remove
+                                            <i class="bi bi-trash"></i> {{ __('Remove') }}
                                         </button>
                                     </div>
                                     <div class="card-body">
                                         <div class="row g-3">
                                             <div class="col-md-6" style="position: relative;">
-                                                <label class="form-label">Bank Name <span class="text-danger">*</span></label>
+                                                <label class="form-label">{{ __('Bank Name') }} <span class="text-danger">*</span></label>
                                                 <div class="input-group">
-                                                    <input type="text" name="checks[0][bank_name]" class="form-control bank-search-input" placeholder="Search bank name..." autocomplete="off" required>
+                                                    <input type="text" name="checks[0][bank_name]" class="form-control bank-search-input" placeholder="{{ __('Search bank name...') }}" autocomplete="off" required>
                                                     <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#newBankModal">
                                                         <i class="bi bi-plus"></i>
                                                     </button>
@@ -194,65 +194,65 @@
                                                 <div class="bank-results list-group position-absolute w-100 shadow search-dropdown" style="z-index: 1050; display: none; max-height: 250px; overflow-y: auto; top: 100%; left: 0; background: #fff;"></div>
                                             </div>
                                             <div class="col-md-6">
-                                                <label class="form-label">Cheque No <span class="text-danger">*</span></label>
+                                                <label class="form-label">{{ __('Cheque No') }} <span class="text-danger">*</span></label>
                                                 <input type="text" name="checks[0][check_no]" class="form-control" required>
                                             </div>
                                             <div class="col-md-4">
-                                                <label class="form-label">Cheque Date <span class="text-danger">*</span></label>
+                                                <label class="form-label">{{ __('Cheque Date') }} <span class="text-danger">*</span></label>
                                                 <input type="date" name="checks[0][check_date]" class="form-control" required>
                                             </div>
                                             <div class="col-md-4">
-                                                <label class="form-label">Cheque Amount <span class="text-danger">*</span></label>
+                                                <label class="form-label">{{ __('Cheque Amount') }} <span class="text-danger">*</span></label>
                                                 <div class="input-group">
                                                     <span class="input-group-text">৳</span>
                                                     <input type="number" step="0.01" name="checks[0][check_amount]" class="form-control check-amount-input" required>
                                                 </div>
                                             </div>
                                             <div class="col-md-4">
-                                                <label class="form-label">Reminder Date</label>
+                                                <label class="form-label">{{ __('Reminder Date') }}</label>
                                                 <input type="date" name="checks[0][check_reminder_date]" class="form-control">
-                                                <small class="text-muted">Date to remind before check date</small>
+                                                <small class="text-muted">{{ __('Date to remind before check date') }}</small>
                                             </div>
                                             <div class="col-md-4">
-                                                <label class="form-label">Cheque Photo</label>
+                                                <label class="form-label">{{ __('Cheque Photo') }}</label>
                                                 <input type="file" name="checks[0][check_photo]" class="form-control" accept="image/*">
-                                                <small class="text-muted">Upload cheque image (max 5MB)</small>
+                                                <small class="text-muted">{{ __('Upload cheque image (max 5MB)') }}</small>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="alert alert-info">
-                                <strong>Total Cheque Amount: </strong><span id="totalCheckAmount">0.00</span>
+                                <strong>{{ __('Total Cheque Amount:') }}</strong> <span id="totalCheckAmount">0.00</span>
                                 <br>
-                                <strong>Remaining Due: </strong><span id="checkRemainingDue" class="fw-bold text-danger">0.00</span>
+                                <strong>{{ __('Remaining Due:') }}</strong> <span id="checkRemainingDue" class="fw-bold text-danger">0.00</span>
                             </div>
                         </div>
 
                         <div class="col-12" id="ttFields" style="display: none;">
                             <div class="card border border-info">
                                 <div class="card-header bg-info text-dark py-2">
-                                    <h6 class="mb-0"><i class="bi bi-bank"></i> TT Payment Details</h6>
+                                    <h6 class="mb-0"><i class="bi bi-bank"></i> {{ __('TT Payment Details') }}</h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="row g-3">
                                         <div class="col-md-6" style="position: relative;">
-                                            <label for="ttBankSearch" class="form-label">Bank Name <span class="text-danger">*</span></label>
+                                            <label for="ttBankSearch" class="form-label">{{ __('Bank Name') }} <span class="text-danger">*</span></label>
                                             <div class="input-group">
-                                                <input type="text" id="ttBankSearch" class="form-control" placeholder="Search bank name..." autocomplete="off">
+                                                <input type="text" id="ttBankSearch" class="form-control" placeholder="{{ __('Search bank name...') }}" autocomplete="off">
                                                 <input type="hidden" name="tt_bank_name" id="ttBankNameInput">
                                             </div>
                                             <div id="ttBankResults" class="list-group position-absolute w-100 shadow search-dropdown" style="z-index: 1050; display: none; max-height: 250px; overflow-y: auto; top: 100%; left: 0; background: #fff;"></div>
                                         </div>
                                         <div class="col-md-6">
-                                            <label for="tt_account_no" class="form-label">Account No</label>
+                                            <label for="tt_account_no" class="form-label">{{ __('Account No') }}</label>
                                             <input type="text" name="tt_account_no" id="tt_account_no" class="form-control @error('tt_account_no') is-invalid @enderror" value="{{ old('tt_account_no') }}">
                                             @error('tt_account_no')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
                                         <div class="col-md-6">
-                                            <label for="tt_amount" class="form-label">TT Amount <span class="text-danger">*</span></label>
+                                            <label for="tt_amount" class="form-label">{{ __('TT Amount') }} <span class="text-danger">*</span></label>
                                             <div class="input-group">
                                                 <span class="input-group-text">৳</span>
                                                 <input type="number" step="0.01" name="tt_amount" id="tt_amount" class="form-control @error('tt_amount') is-invalid @enderror" value="{{ old('tt_amount') }}">
@@ -262,7 +262,7 @@
                                             @enderror
                                         </div>
                                         <div class="col-md-6">
-                                            <label for="tt_date" class="form-label">TT Date <span class="text-danger">*</span></label>
+                                            <label for="tt_date" class="form-label">{{ __('TT Date') }} <span class="text-danger">*</span></label>
                                             <input type="date" name="tt_date" id="tt_date" class="form-control @error('tt_date') is-invalid @enderror" value="{{ old('tt_date', date('Y-m-d')) }}">
                                             @error('tt_date')
                                             <div class="invalid-feedback">{{ $message }}</div>
@@ -276,26 +276,26 @@
                         <div class="col-12" id="cardFields" style="display: none;">
                             <div class="card border border-secondary">
                                 <div class="card-header bg-secondary text-white py-2">
-                                    <h6 class="mb-0"><i class="bi bi-credit-card-2-front"></i> Reference Card Payment Details</h6>
+                                    <h6 class="mb-0"><i class="bi bi-credit-card-2-front"></i> {{ __('Reference Card Payment Details') }}</h6>
                                 </div>
                                 <div class="card-body">
                                     <div class="row g-3">
                                         <div class="col-md-6">
-                                            <label for="card_reference" class="form-label">Reference Card <span class="text-danger">*</span></label>
+                                            <label for="card_reference" class="form-label">{{ __('Reference Card') }} <span class="text-danger">*</span></label>
                                             <input type="text" name="card_reference" id="card_reference" class="form-control @error('card_reference') is-invalid @enderror" value="{{ old('card_reference') }}">
                                             @error('card_reference')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
                                         <div class="col-md-6">
-                                            <label for="card_location" class="form-label">Location <span class="text-danger">*</span></label>
+                                            <label for="card_location" class="form-label">{{ __('Location') }} <span class="text-danger">*</span></label>
                                             <input type="text" name="card_location" id="card_location" class="form-control @error('card_location') is-invalid @enderror" value="{{ old('card_location') }}">
                                             @error('card_location')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
                                         <div class="col-md-6">
-                                            <label for="card_amount" class="form-label">Card Amount <span class="text-danger">*</span></label>
+                                            <label for="card_amount" class="form-label">{{ __('Card Amount') }} <span class="text-danger">*</span></label>
                                             <div class="input-group">
                                                 <span class="input-group-text">৳</span>
                                                 <input type="number" step="0.01" name="card_amount" id="card_amount" class="form-control @error('card_amount') is-invalid @enderror" value="{{ old('card_amount') }}">
@@ -305,7 +305,7 @@
                                             @enderror
                                         </div>
                                         <div class="col-md-6">
-                                            <label for="card_date" class="form-label">Card Date <span class="text-danger">*</span></label>
+                                            <label for="card_date" class="form-label">{{ __('Card Date') }} <span class="text-danger">*</span></label>
                                             <input type="date" name="card_date" id="card_date" class="form-control @error('card_date') is-invalid @enderror" value="{{ old('card_date', date('Y-m-d')) }}">
                                             @error('card_date')
                                             <div class="invalid-feedback">{{ $message }}</div>
@@ -319,11 +319,11 @@
                         <div class="col-12" id="duePreview">
                             <div class="alert alert-info mb-0 d-flex justify-content-between align-items-center">
                                 <div>
-                                    <strong>Due Amount:</strong> <span class="fs-5 fw-bold" id="calculatedDue">0.00</span>
-                                    <small class="text-muted d-block">(Bill Amount - Discount - Payment Received)</small>
+                                    <strong>{{ __('Due Amount:') }}</strong> <span class="fs-5 fw-bold" id="calculatedDue">0.00</span>
+                                    <small class="text-muted d-block">{{ __('(Bill Amount - Discount - Payment Received)') }}</small>
                                 </div>
                                 <div class="text-end">
-                                    <small class="text-muted d-block">Net Payable</small>
+                                    <small class="text-muted d-block">{{ __('Net Payable') }}</small>
                                     <span class="fs-4 fw-bold text-success" id="netPayable">0.00</span>
                                 </div>
                             </div>
@@ -337,7 +337,7 @@
 
                         <div class="col-12">
                             <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-save"></i> Save Bill
+                                <i class="bi bi-save"></i> {{ __('Save Bill') }}
                             </button>
                         </div>
                     </div>
@@ -351,20 +351,20 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">New Bank</h5>
+                <h5 class="modal-title">{{ __('New Bank') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="newBankForm" method="POST" action="{{ route('banks.store') }}">
                 @csrf
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="bank_modal_name" class="form-label">Bank Name <span class="text-danger">*</span></label>
+                        <label for="bank_modal_name" class="form-label">{{ __('Bank Name') }} <span class="text-danger">*</span></label>
                         <input type="text" name="name" id="bank_modal_name" class="form-control" required>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create & Select</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ __('Create & Select') }}</button>
                 </div>
             </form>
         </div>
@@ -375,28 +375,28 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">New Customer</h5>
+                <h5 class="modal-title">{{ __('New Customer') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form id="newCustomerForm" method="POST" action="{{ route('customers.store') }}">
                 @csrf
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="modal_name" class="form-label">Name <span class="text-danger">*</span></label>
+                        <label for="modal_name" class="form-label">{{ __('Name') }} <span class="text-danger">*</span></label>
                         <input type="text" name="name" id="modal_name" class="form-control" required>
                     </div>
                     <div class="mb-3">
-                        <label for="modal_mobile" class="form-label">Mobile</label>
+                        <label for="modal_mobile" class="form-label">{{ __('Mobile') }}</label>
                         <input type="text" name="mobile" id="modal_mobile" class="form-control">
                     </div>
                     <div class="mb-3">
-                        <label for="modal_location" class="form-label">Location</label>
+                        <label for="modal_location" class="form-label">{{ __('Location') }}</label>
                         <input type="text" name="location" id="modal_location" class="form-control">
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create & Select</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ __('Create & Select') }}</button>
                 </div>
             </form>
         </div>

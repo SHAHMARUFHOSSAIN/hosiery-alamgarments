@@ -39,7 +39,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
                                 </svg>
                             </div>
-                            <span class="text-white/90 font-semibold text-sm tracking-wider uppercase">Daily Report System</span>
+                            <span class="text-white/90 font-semibold text-sm tracking-wider uppercase">{{ __('Daily Report System') }}</span>
                         </div>
 
                         <h1 class="text-5xl font-bold text-white leading-tight mb-6">
@@ -48,7 +48,7 @@
                         </h1>
 
                         <p class="text-lg text-blue-100/70 max-w-md leading-relaxed">
-                            Streamlined daily reporting and analytics platform for managing operations, tracking performance, and driving business growth.
+                            {{ __('Streamlined daily reporting and analytics platform for managing operations, tracking performance, and driving business growth.') }}
                         </p>
                     </div>
 
@@ -60,8 +60,8 @@
                                 </svg>
                             </div>
                             <div>
-                                <p class="text-white font-medium text-sm">Real-time Analytics</p>
-                                <p class="text-blue-200/60 text-xs">Track daily performance metrics</p>
+                                <p class="text-white font-medium text-sm">{{ __('Real-time Analytics') }}</p>
+                                <p class="text-blue-200/60 text-xs">{{ __('Track daily performance metrics') }}</p>
                             </div>
                         </div>
 
@@ -72,13 +72,13 @@
                                 </svg>
                             </div>
                             <div>
-                                <p class="text-white font-medium text-sm">Secure Access</p>
-                                <p class="text-blue-200/60 text-xs">Enterprise-grade security</p>
+                                <p class="text-white font-medium text-sm">{{ __('Secure Access') }}</p>
+                                <p class="text-blue-200/60 text-xs">{{ __('Enterprise-grade security') }}</p>
                             </div>
                         </div>
 
                         <div class="pt-4 border-t border-white/10">
-                            <p class="text-blue-200/40 text-xs">&copy; {{ date('Y') }} Alam Hosiery & Store. All rights reserved.</p>
+                            <p class="text-blue-200/40 text-xs">&copy; {{ date('Y') }} Alam Hosiery & Store. {{ __('All rights reserved.') }}</p>
                         </div>
                     </div>
                 </div>
@@ -97,13 +97,13 @@
                             </div>
                         </div>
                         <h2 class="text-2xl font-bold text-gray-900">Alam Hosiery & Store</h2>
-                        <p class="text-sm text-gray-500 mt-1">Daily Report System</p>
+                        <p class="text-sm text-gray-500 mt-1">{{ __('Daily Report System') }}</p>
                     </div>
 
                     <!-- Desktop Header -->
                     <div class="hidden lg:block mb-8">
-                        <h2 class="text-3xl font-semibold text-gray-900 tracking-tight">Welcome back</h2>
-                        <p class="text-gray-500 mt-2 text-sm">Sign in to your account to continue</p>
+                        <h2 class="text-3xl font-semibold text-gray-900 tracking-tight">{{ __('Welcome back') }}</h2>
+                        <p class="text-gray-500 mt-2 text-sm">{{ __('Sign in to your account to continue') }}</p>
                     </div>
 
                     <!-- Session Status -->
@@ -116,7 +116,7 @@
 
                             <!-- Email Address -->
                             <div>
-                                <label for="email" class="block text-sm font-medium text-gray-700 mb-1.5">Email address</label>
+                                <label for="email" class="block text-sm font-medium text-gray-700 mb-1.5">{{ __('Email address') }}</label>
                                 <div class="relative">
                                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                                         <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,10 +133,10 @@
                             <!-- Password -->
                             <div>
                                 <div class="flex items-center justify-between mb-1.5">
-                                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                                    <label for="password" class="block text-sm font-medium text-gray-700">{{ __('Password') }}</label>
                                     @if (Route::has('password.request'))
                                         <a href="{{ route('password.request') }}" class="text-xs font-medium text-indigo-600 hover:text-indigo-500 transition-colors">
-                                            Forgot password?
+                                            {{ __('Forgot password?') }}
                                         </a>
                                     @endif
                                 </div>
@@ -148,7 +148,7 @@
                                     </div>
                                     <input id="password" type="password" name="password" required autocomplete="current-password"
                                         class="block w-full pl-11 pr-4 py-2.5 rounded-xl border border-gray-300 text-gray-900 placeholder-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 text-sm"
-                                        placeholder="Enter your password" />
+                                        placeholder="{{ __('Enter your password') }}" />
                                 </div>
                                 <x-input-error :messages="$errors->get('password')" class="mt-2" />
                             </div>
@@ -158,7 +158,7 @@
                                 <input id="remember_me" type="checkbox" name="remember"
                                     class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-2 focus:ring-indigo-500/20 cursor-pointer" />
                                 <label for="remember_me" class="ml-2.5 block text-sm text-gray-600 cursor-pointer select-none">
-                                    Remember me for 30 days
+                                    {{ __('Remember me for 30 days') }}
                                 </label>
                             </div>
 
@@ -168,7 +168,7 @@
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
                                 </svg>
-                                Sign in
+                                {{ __('Sign in') }}
                             </button>
                         </form>
                     </div>

@@ -15,9 +15,13 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserReportController;
 use App\Http\Controllers\TodaySalesReportController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\LanguageController;
+use App\Http\Controllers\Admin\TodayReportController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login');
+
+Route::get('/language/{locale}', [LanguageController::class, 'switch'])->name('language.switch');
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
@@ -101,6 +105,8 @@ Route::middleware('auth')->group(function () {
         ->name('cheque.show');
 
     Route::middleware(['admin'])->group(function () {
+        Route::get('/today-report', [TodayReportController::class, 'index'])->name('admin.today-report');
+
         Route::delete('/imports/{importLog}', [ImportController::class, 'destroy'])->name('imports.destroy');
         Route::prefix('users')->group(function () {
             Route::get('/', [UserController::class, 'index'])->name('users.index');

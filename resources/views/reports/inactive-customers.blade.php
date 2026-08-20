@@ -1,15 +1,15 @@
 @extends('layouts.admin')
 
-@section('title', 'Inactive Customers')
+@section('title', __('Inactive Customers'))
 
-@section('header', 'Inactive Customers')
+@section('header', __('Inactive Customers'))
 
 @section('breadcrumb')
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-        <li class="breadcrumb-item"><a href="{{ route('reports.index') }}">Reports</a></li>
-        <li class="breadcrumb-item active">Inactive Customers</li>
+        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">{{ __('Dashboard') }}</a></li>
+        <li class="breadcrumb-item"><a href="{{ route('reports.index') }}">{{ __('Reports') }}</a></li>
+        <li class="breadcrumb-item active">{{ __('Inactive Customers') }}</li>
     </ol>
 </nav>
 @endsection
@@ -20,14 +20,14 @@
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3">
                 <div class="d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Inactive Customers ({{ $customers->total() }})</h5>
+                    <h5 class="mb-0">{{ __('Inactive Customers') }} ({{ $customers->total() }})</h5>
                     <div class="d-flex gap-2">
                         <form method="GET" action="{{ route('reports.inactive-customers') }}" class="d-flex gap-2">
-                            <input type="text" name="search" class="form-control form-control-sm" placeholder="Search..." value="{{ request('search') }}">
-                            <button type="submit" class="btn btn-outline-secondary btn-sm">Search</button>
+                            <input type="text" name="search" class="form-control form-control-sm" placeholder="{{ __('Search...') }}" value="{{ request('search') }}">
+                            <button type="submit" class="btn btn-outline-secondary btn-sm">{{ __('Search') }}</button>
                         </form>
                         <a href="{{ route('export.inactive-customers') }}" class="btn btn-success btn-sm">
-                            <i class="bi bi-download"></i> Export
+                            <i class="bi bi-download"></i> {{ __('Export') }}
                         </a>
                     </div>
                 </div>
@@ -38,11 +38,11 @@
                         <thead class="table-light">
                             <tr>
                                 <th>ID</th>
-                                <th>Name</th>
-                                <th>Mobile</th>
-                                <th>Location</th>
-                                <th>Last Bill</th>
-                                <th>Created</th>
+                                <th>{{ __('Name') }}</th>
+                                <th>{{ __('Mobile') }}</th>
+                                <th>{{ __('Location') }}</th>
+                                <th>{{ __('Last Bill') }}</th>
+                                <th>{{ __('Created') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -57,7 +57,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="6" class="text-center text-muted py-4">No inactive customers found</td>
+                                <td colspan="6" class="text-center text-muted py-4">{{ __('No inactive customers found') }}</td>
                             </tr>
                             @endforelse
                         </tbody>

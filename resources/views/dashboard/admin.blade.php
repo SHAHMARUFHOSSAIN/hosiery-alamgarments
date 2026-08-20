@@ -4,17 +4,17 @@
 
 @extends('layouts.admin')
 
-@section('title', 'Admin Dashboard')
+@section('title', __('Admin Dashboard'))
 
-@section('header', 'Dashboard')
+@section('header', __('Dashboard'))
 
 @section('content')
 @if($stats['todayDues'] > 0)
 <div class="alert alert-warning d-flex align-items-center gap-2">
     <i class="bi bi-exclamation-triangle fs-4"></i>
     <div>
-        <strong>{{ $stats['todayDues'] }} dues</strong> due today worth {{ number_format($stats['totalDues'], 2) }}
-        <a href="{{ route('dues.daily-report') }}" class="alert-link">View Report</a>
+        <strong>{{ $stats['todayDues'] }} {{ __('dues') }}</strong> {{ __('due today worth') }} {{ format_number($stats['totalDues'], 2) }}
+        <a href="{{ route('dues.daily-report') }}" class="alert-link">{{ __('View Report') }}</a>
     </div>
 </div>
 @endif
@@ -26,8 +26,8 @@
                 <div class="bg-primary bg-opacity-10 p-3 rounded-circle d-inline-block mb-2">
                     <i class="bi bi-people text-primary fs-2"></i>
                 </div>
-                <h3 class="mb-1">{{ number_format($stats['totalCustomers']) }}</h3>
-                <p class="text-muted mb-0">Total Customers</p>
+                <h3 class="mb-1">{{ format_number($stats['totalCustomers']) }}</h3>
+                <p class="text-muted mb-0">{{ __('Total Customers') }}</p>
             </div>
         </div>
     </div>
@@ -37,8 +37,8 @@
                 <div class="bg-success bg-opacity-10 p-3 rounded-circle d-inline-block mb-2">
                     <i class="bi bi-receipt text-success fs-2"></i>
                 </div>
-                <h3 class="mb-1">{{ number_format($stats['totalBills']) }}</h3>
-                <p class="text-muted mb-0">Total Bills</p>
+                <h3 class="mb-1">{{ format_number($stats['totalBills']) }}</h3>
+                <p class="text-muted mb-0">{{ __('Total Bills') }}</p>
             </div>
         </div>
     </div>
@@ -48,8 +48,8 @@
                 <div class="bg-danger bg-opacity-10 p-3 rounded-circle d-inline-block mb-2">
                     <i class="bi bi-currency-dollar text-danger fs-2"></i>
                 </div>
-                <h3 class="mb-1 text-danger">{{ number_format($stats['totalDues'], 2) }}</h3>
-                <p class="text-muted mb-0">Pending Dues</p>
+                <h3 class="mb-1 text-danger">{{ format_number($stats['totalDues'], 2) }}</h3>
+                <p class="text-muted mb-0">{{ __('Pending Dues') }}</p>
             </div>
         </div>
     </div>
@@ -59,8 +59,8 @@
                 <div class="bg-warning bg-opacity-10 p-3 rounded-circle d-inline-block mb-2">
                     <i class="bi bi-calendar-event text-warning fs-2"></i>
                 </div>
-                <h3 class="mb-1">{{ number_format($stats['todayDues']) }}</h3>
-                <p class="text-muted mb-0">Due Today</p>
+                <h3 class="mb-1">{{ format_number($stats['todayDues']) }}</h3>
+                <p class="text-muted mb-0">{{ __('Due Today') }}</p>
             </div>
         </div>
     </div>
@@ -70,11 +70,11 @@
                 <div class="bg-info bg-opacity-10 p-3 rounded-circle d-inline-block mb-2">
                     <i class="bi bi-graph-up text-info fs-2"></i>
                 </div>
-                <h3 class="mb-1 text-info">৳{{ number_format($stats['totalSales'], 2) }}</h3>
+                <h3 class="mb-1 text-info">{{ format_currency($stats['totalSales']) }}</h3>
                 <p class="text-muted mb-0">
-                    Total Sales
+                    {{ __('Total Sales') }}
                     @if($dateFrom || $dateTo)
-                    <small class="d-block text-muted">{{ $dateFrom }} to {{ $dateTo }}</small>
+                    <small class="d-block text-muted">{{ $dateFrom }} {{ __('to') }} {{ $dateTo }}</small>
                     @endif
                 </p>
             </div>
@@ -84,24 +84,24 @@
 
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-header bg-white py-3">
-        <h5 class="mb-0"><i class="bi bi-funnel me-2"></i>Filter by Date</h5>
+        <h5 class="mb-0"><i class="bi bi-funnel me-2"></i>{{ __('Filter by Date') }}</h5>
     </div>
     <div class="card-body">
         <form method="GET" action="{{ route('dashboard') }}" class="row g-3 align-items-end">
             <div class="col-md-4">
-                <label class="form-label small fw-semibold">Date From</label>
+                <label class="form-label small fw-semibold">{{ __('Date From') }}</label>
                 <input type="date" name="date_from" class="form-control" value="{{ $dateFrom }}">
             </div>
             <div class="col-md-4">
-                <label class="form-label small fw-semibold">Date To</label>
+                <label class="form-label small fw-semibold">{{ __('Date To') }}</label>
                 <input type="date" name="date_to" class="form-control" value="{{ $dateTo }}">
             </div>
             <div class="col-md-4 d-flex gap-2">
                 <button type="submit" class="btn btn-primary">
-                    <i class="bi bi-search me-1"></i>Filter
+                    <i class="bi bi-search me-1"></i>{{ __('Filter') }}
                 </button>
                 <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-counterclockwise me-1"></i>Reset
+                    <i class="bi bi-arrow-counterclockwise me-1"></i>{{ __('Reset') }}
                 </a>
             </div>
         </form>
@@ -111,8 +111,8 @@
 @if(count($userStats) > 0)
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="bi bi-people-fill me-2"></i>User Performance Overview <small class="text-muted fs-6 fw-normal">({{ $dateFrom }} to {{ $dateTo }})</small></h5>
-        <span class="badge bg-primary fs-6">{{ count($userStats) }} users</span>
+        <h5 class="mb-0"><i class="bi bi-people-fill me-2"></i>{{ __('User Performance Overview') }} <small class="text-muted fs-6 fw-normal">({{ $dateFrom }} {{ __('to') }} {{ $dateTo }})</small></h5>
+        <span class="badge bg-primary fs-6">{{ count($userStats) }} {{ __('users') }}</span>
     </div>
     <div class="card-body p-3">
         <div class="row g-3">
@@ -123,24 +123,24 @@
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <h6 class="fw-bold mb-0">{{ $user['name'] }}</h6>
                             @if($user['todayDues'] > 0)
-                            <span class="badge bg-warning text-dark">{{ $user['todayDues'] }} due</span>
+                            <span class="badge bg-warning text-dark">{{ $user['todayDues'] }} {{ __('due') }}</span>
                             @endif
                         </div>
                         <div class="d-flex justify-content-between small mb-1">
-                            <span class="text-muted">Customers</span>
-                            <span class="fw-semibold">{{ number_format($user['customers']) }}</span>
+                            <span class="text-muted">{{ __('Customers') }}</span>
+                            <span class="fw-semibold">{{ format_number($user['customers']) }}</span>
                         </div>
                         <div class="d-flex justify-content-between small mb-1">
-                            <span class="text-muted">Bills</span>
-                            <span class="fw-semibold">{{ number_format($user['bills']) }}</span>
+                            <span class="text-muted">{{ __('Bills') }}</span>
+                            <span class="fw-semibold">{{ format_number($user['bills']) }}</span>
                         </div>
                         <div class="d-flex justify-content-between small mb-1">
-                            <span class="text-muted">Sales</span>
-                            <span class="fw-semibold text-primary">৳{{ number_format($user['sales'], 2) }}</span>
+                            <span class="text-muted">{{ __('Sales') }}</span>
+                            <span class="fw-semibold text-primary">{{ format_currency($user['sales']) }}</span>
                         </div>
                         <div class="d-flex justify-content-between small">
-                            <span class="text-muted">Pending Dues</span>
-                            <span class="fw-semibold text-danger">৳{{ number_format($user['dues'], 2) }}</span>
+                            <span class="text-muted">{{ __('Pending Dues') }}</span>
+                            <span class="fw-semibold text-danger">{{ format_currency($user['dues']) }}</span>
                         </div>
                     </div>
                 </div>
@@ -154,7 +154,7 @@
     <div class="col-12">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3">
-                <h5 class="mb-0"><i class="bi bi-bar-chart-line me-2"></i>Comparison Performance Chart <small class="text-muted fs-6 fw-normal">({{ $dateFrom }} to {{ $dateTo }})</small></h5>
+                <h5 class="mb-0"><i class="bi bi-bar-chart-line me-2"></i>{{ __('Comparison Performance Chart') }} <small class="text-muted fs-6 fw-normal">({{ $dateFrom }} {{ __('to') }} {{ $dateTo }})</small></h5>
             </div>
             <div class="card-body">
                 <canvas id="userComparisonChart" height="300"></canvas>
@@ -169,22 +169,22 @@
     <div class="col-12">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3">
-                <h5 class="mb-0"><i class="bi bi-trophy me-2"></i>Team Performance <small class="text-muted fs-6 fw-normal">({{ $dateFrom }} to {{ $dateTo }})</small></h5>
+                <h5 class="mb-0"><i class="bi bi-trophy me-2"></i>{{ __('Team Performance') }} <small class="text-muted fs-6 fw-normal">({{ $dateFrom }} {{ __('to') }} {{ $dateTo }})</small></h5>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Rank</th>
-                                <th>User</th>
-                                <th class="text-end">Total Sales</th>
-                                <th class="text-end">Bills</th>
-                                <th class="text-end">Discount</th>
-                                <th class="text-end">Rep Discount</th>
-                                <th class="text-end">Total Disc</th>
-                                <th class="text-end">Avg Bill</th>
-                                <th>Performance</th>
+                                <th>{{ __('Rank') }}</th>
+                                <th>{{ __('User') }}</th>
+                                <th class="text-end">{{ __('Total Sales') }}</th>
+                                <th class="text-end">{{ __('Bills') }}</th>
+                                <th class="text-end">{{ __('Discount') }}</th>
+                                <th class="text-end">{{ __('Rep Discount') }}</th>
+                                <th class="text-end">{{ __('Total Disc') }}</th>
+                                <th class="text-end">{{ __('Avg Bill') }}</th>
+                                <th>{{ __('Performance') }}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -192,12 +192,12 @@
                             <tr>
                                 <td><span class="badge bg-{{ $index === 0 ? 'warning text-dark' : 'secondary' }}">#{{ $index + 1 }}</span></td>
                                 <td class="fw-semibold">{{ $user['name'] }}</td>
-                                <td class="text-end fw-bold">৳{{ number_format($user['sales'], 2) }}</td>
+                                <td class="text-end fw-bold">{{ format_currency($user['sales']) }}</td>
                                 <td class="text-end">{{ $user['bills'] }}</td>
-                                <td class="text-end text-danger">৳{{ number_format($user['discount'], 2) }}</td>
-                                <td class="text-end text-danger">৳{{ number_format($user['report_discount'] ?? 0, 2) }}</td>
-                                <td class="text-end fw-bold text-danger">৳{{ number_format($user['discount'] + ($user['report_discount'] ?? 0), 2) }}</td>
-                                <td class="text-end">৳{{ number_format($user['bills'] > 0 ? $user['sales'] / $user['bills'] : 0, 2) }}</td>
+                                <td class="text-end text-danger">{{ format_currency($user['discount']) }}</td>
+                                <td class="text-end text-danger">{{ format_currency($user['report_discount'] ?? 0) }}</td>
+                                <td class="text-end fw-bold text-danger">{{ format_currency($user['discount'] + ($user['report_discount'] ?? 0)) }}</td>
+                                <td class="text-end">{{ format_currency($user['bills'] > 0 ? $user['sales'] / $user['bills'] : 0) }}</td>
                                 <td style="width: 200px;">
                                     @php
                                         $maxSales = max(array_column($userPerformance, 'sales'));
@@ -222,17 +222,17 @@
     <div class="col-lg-6">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Recent Bills</h5>
-                <a href="{{ route('bills.index') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                <h5 class="mb-0">{{ __('Recent Bills') }}</h5>
+                <a href="{{ route('bills.index') }}" class="btn btn-sm btn-outline-primary">{{ __('View All') }}</a>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>Bill No</th>
-                            <th>Customer</th>
-                            <th>Amount</th>
-                            <th>User</th>
+                            <th>{{ __('Bill No') }}</th>
+                            <th>{{ __('Customer') }}</th>
+                            <th>{{ __('Amount') }}</th>
+                            <th>{{ __('User') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -240,15 +240,15 @@
                         <tr>
                             <td><a href="{{ route('bills.show', $bill) }}">{{ $bill->bill_no }}</a>
                                 @if($bill->edited_at)
-                                    <span class="badge bg-warning text-dark ms-1" title="Edited by {{ $bill->editor?->name ?? 'Unknown' }}">Edited</span>
+                                    <span class="badge bg-warning text-dark ms-1" title="{{ __('Edited by') }} {{ $bill->editor?->name ?? __('Unknown') }}">{{ __('Edited') }}</span>
                                 @endif
                             </td>
                             <td>{{ $bill->customer->name ?? 'N/A' }}</td>
-                            <td>{{ number_format($bill->bill_amount, 2) }}</td>
+                            <td>{{ format_number($bill->bill_amount, 2) }}</td>
                             <td><span class="badge bg-secondary">{{ $bill->user->name ?? 'N/A' }}</span></td>
                         </tr>
                         @empty
-                        <tr><td colspan="4" class="text-center py-3">No bills found</td></tr>
+                        <tr><td colspan="4" class="text-center py-3">{{ __('No bills found') }}</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -259,37 +259,37 @@
     <div class="col-lg-6">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Pending Dues</h5>
-                <a href="{{ route('dues.daily-report') }}" class="btn btn-sm btn-warning">Today</a>
+                <h5 class="mb-0">{{ __('Pending Dues') }}</h5>
+                <a href="{{ route('dues.daily-report') }}" class="btn btn-sm btn-warning">{{ __('Today') }}</a>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>Customer</th>
-                            <th>Original</th>
-                            <th>Remaining</th>
-                            <th>Due Date</th>
-                            <th>Action</th>
+                            <th>{{ __('Customer') }}</th>
+                            <th>{{ __('Original') }}</th>
+                            <th>{{ __('Remaining') }}</th>
+                            <th>{{ __('Due Date') }}</th>
+                            <th>{{ __('Action') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($recentDues as $due)
                         <tr>
                             <td>{{ $due->customer->name ?? 'N/A' }}</td>
-                            <td>{{ number_format($due->original_amount, 2) }}</td>
-                            <td class="text-danger fw-bold">{{ number_format($due->remaining_amount, 2) }}</td>
+                            <td>{{ format_number($due->original_amount, 2) }}</td>
+                            <td class="text-danger fw-bold">{{ format_number($due->remaining_amount, 2) }}</td>
                             <td><span class="badge bg-warning text-dark">{{ $due->due_date->format('M d') }}</span></td>
                             <td>
                                 <button type="button" class="btn btn-sm btn-success py-0 px-2" 
                                         data-bs-toggle="modal" 
                                         data-bs-target="#dashPayModal{{ $due->id }}">
-                                    <i class="bi bi-credit-card"></i> Pay
+                                    <i class="bi bi-credit-card"></i> {{ __('Pay') }}
                                 </button>
                             </td>
                         </tr>
                         @empty
-                        <tr><td colspan="5" class="text-center py-3">No pending dues</td></tr>
+                        <tr><td colspan="5" class="text-center py-3">{{ __('No pending dues') }}</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -302,21 +302,21 @@
     <div class="col-12">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-clock-history me-2 text-warning"></i>Pending Cheques</h5>
-                <a href="{{ route('dues.checks-report') }}" class="btn btn-sm btn-outline-warning">View All</a>
+                <h5 class="mb-0"><i class="bi bi-clock-history me-2 text-warning"></i>{{ __('Pending Cheques') }}</h5>
+                <a href="{{ route('dues.checks-report') }}" class="btn btn-sm btn-outline-warning">{{ __('View All') }}</a>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>Bill No</th>
-                            <th>Customer</th>
-                            <th>Bank</th>
-                            <th>Cheque No</th>
-                            <th>Amount</th>
-                            <th>Cheque Date</th>
-                            <th>User</th>
-                            <th>Action</th>
+                            <th>{{ __('Bill No') }}</th>
+                            <th>{{ __('Customer') }}</th>
+                            <th>{{ __('Bank') }}</th>
+                            <th>{{ __('Cheque No') }}</th>
+                            <th>{{ __('Amount') }}</th>
+                            <th>{{ __('Cheque Date') }}</th>
+                            <th>{{ __('User') }}</th>
+                            <th>{{ __('Action') }}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -327,17 +327,17 @@
                             <td>{{ $cheque->bill->customer->name ?? 'N/A' }}</td>
                             <td>{{ $cheque->bank_name ?? 'N/A' }}</td>
                             <td>{{ $cheque->check_no ?? 'N/A' }}</td>
-                            <td class="fw-bold">৳{{ number_format($remaining, 2) }}</td>
+                            <td class="fw-bold">{{ format_currency($remaining) }}</td>
                             <td>{{ $cheque->check_date?->format('M d, Y') ?? 'N/A' }}</td>
                             <td><span class="badge bg-secondary">{{ $cheque->bill->user->name ?? 'N/A' }}</span></td>
                             <td>
                                 <a href="{{ route('bills.show', $cheque->bill) }}" class="btn btn-sm btn-success py-0 px-2">
-                                    <i class="bi bi-credit-card"></i> Encash
+                                    <i class="bi bi-credit-card"></i> {{ __('Encash') }}
                                 </a>
                             </td>
                         </tr>
                         @empty
-                        <tr><td colspan="8" class="text-center py-3 text-muted">No pending cheques</td></tr>
+                        <tr><td colspan="8" class="text-center py-3 text-muted">{{ __('No pending cheques') }}</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -351,7 +351,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Make Payment</h5>
+                <h5 class="modal-title">{{ __('Make Payment') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{{ route('dues.add-payment') }}">
@@ -359,10 +359,10 @@
                 <input type="hidden" name="due_id" value="{{ $due->id }}">
                 <div class="modal-body">
                     <div class="mb-3 alert alert-warning">
-                        <strong>Remaining:</strong> <span class="text-danger fw-bold">৳{{ number_format($due->remaining_amount, 2) }}</span>
+                        <strong>{{ __('Remaining:') }}</strong> <span class="text-danger fw-bold">{{ format_currency($due->remaining_amount) }}</span>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Payment Amount <span class="text-danger">*</span></label>
+                        <label class="form-label">{{ __('Payment Amount') }} <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text">৳</span>
                             <input type="number" step="0.01" name="payment_amount" class="form-control" 
@@ -370,30 +370,30 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Payment Type <span class="text-danger">*</span></label>
+                        <label class="form-label">{{ __('Payment Type') }} <span class="text-danger">*</span></label>
                         <select name="payment_type" class="form-select" required>
-                            <option value="cash">Cash</option>
-                            <option value="check">Cheque</option>
-                            <option value="mobile_banking">Mobile Banking</option>
+                            <option value="cash">{{ __('Cash') }}</option>
+                            <option value="check">{{ __('Cheque') }}</option>
+                            <option value="mobile_banking">{{ __('Mobile Banking') }}</option>
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Next Due Date <small class="text-muted">(if remaining balance)</small></label>
+                        <label class="form-label">{{ __('Next Due Date') }} <small class="text-muted">({{ __('if remaining balance') }})</small></label>
                         <input type="date" name="next_due_date" class="form-control">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Transaction ID <small class="text-muted">(for reference)</small></label>
-                        <input type="text" name="transaction_id" class="form-control" placeholder="e.g. TXN12345">
+                        <label class="form-label">{{ __('Transaction ID') }} <small class="text-muted">({{ __('for reference') }})</small></label>
+                        <input type="text" name="transaction_id" class="form-control" placeholder="{{ __('e.g. TXN12345') }}">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Note</label>
-                        <textarea name="note" class="form-control" rows="2" placeholder="Optional note..."></textarea>
+                        <label class="form-label">{{ __('Note') }}</label>
+                        <textarea name="note" class="form-control" rows="2" placeholder="{{ __('Optional note...') }}"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
                     <button type="submit" class="btn btn-success">
-                        <i class="bi bi-check-circle"></i> Record Payment
+                        <i class="bi bi-check-circle"></i> {{ __('Record Payment') }}
                     </button>
                 </div>
             </form>

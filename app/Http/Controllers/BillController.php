@@ -46,7 +46,11 @@ class BillController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('bill_no', 'like', "%{$search}%")
                   ->orWhere('shop_name', 'like', "%{$search}%")
-                  ->orWhere('bill_man', 'like', "%{$search}%");
+                  ->orWhere('bill_man', 'like', "%{$search}%")
+                  ->orWhereHas('customer', function ($cq) use ($search) {
+                      $cq->where('name', 'like', "%{$search}%")
+                         ->orWhere('mobile', 'like', "%{$search}%");
+                  });
             });
         }
 
@@ -86,7 +90,11 @@ class BillController extends Controller
             $totalBills->where(function ($q) use ($search) {
                 $q->where('bill_no', 'like', "%{$search}%")
                   ->orWhere('shop_name', 'like', "%{$search}%")
-                  ->orWhere('bill_man', 'like', "%{$search}%");
+                  ->orWhere('bill_man', 'like', "%{$search}%")
+                  ->orWhereHas('customer', function ($cq) use ($search) {
+                      $cq->where('name', 'like', "%{$search}%")
+                         ->orWhere('mobile', 'like', "%{$search}%");
+                  });
             });
         }
         if ($request->filled('bill_man')) {
@@ -322,7 +330,7 @@ class BillController extends Controller
             ->with('success', 'Bill created successfully');
     }
 
-    public function show(Bill $bill): View
+    public function show(Request $request, Bill $bill): View
     {
         if (!Auth::user()->isAdmin() && $bill->user_id !== Auth::id()) {
             abort(403, 'Unauthorized action.');
@@ -684,7 +692,14 @@ class BillController extends Controller
 
             $page = $request->input('page', 1);
 
-            return redirect()->route('bills.index', ['page' => $page])
+            return redirect()->route('bills.index', array_filter([
+                'page' => $page,
+                'search' => $request->input('search'),
+                'user_id' => $request->input('user_id'),
+                'date_from' => $request->input('date_from'),
+                'date_to' => $request->input('date_to'),
+                'bill_man' => $request->input('bill_man'),
+            ]))
                 ->with('success', 'Bill updated successfully');
         } catch (\Exception $e) {
             DB::rollBack();

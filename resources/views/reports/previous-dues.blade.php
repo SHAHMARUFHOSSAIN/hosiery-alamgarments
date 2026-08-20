@@ -1,15 +1,15 @@
 @extends('layouts.admin')
 
-@section('title', 'Previous Due Report')
+@section('title', __('Previous Due Report'))
 
-@section('header', 'Previous Due Report')
+@section('header', __('Previous Due Report'))
 
 @section('breadcrumb')
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-        <li class="breadcrumb-item"><a href="{{ route('reports.index') }}">Reports</a></li>
-        <li class="breadcrumb-item active">Previous Dues</li>
+        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">{{ __('Dashboard') }}</a></li>
+        <li class="breadcrumb-item"><a href="{{ route('reports.index') }}">{{ __('Reports') }}</a></li>
+        <li class="breadcrumb-item active">{{ __('Previous Dues') }}</li>
     </ol>
 </nav>
 @endsection
@@ -19,14 +19,14 @@
     <div class="card-header bg-white py-3">
         <form method="GET" class="row g-3 align-items-end">
             <div class="col-md-3">
-                <label class="form-label small">Search</label>
+                <label class="form-label small">{{ __('Search') }}</label>
                 <input type="text" name="search" class="form-control"
-                       placeholder="Customer..." value="{{ request('search') }}">
+                       placeholder="{{ __('Customer...') }}" value="{{ request('search') }}">
             </div>
             <div class="col-md-2">
-                <label class="form-label small">User</label>
+                <label class="form-label small">{{ __('User') }}</label>
                 <select name="user_id" class="form-select">
-                    <option value="">All Users</option>
+                    <option value="">{{ __('All Users') }}</option>
                     @foreach($users as $user)
                     <option value="{{ $user->id }}" {{ request('user_id') == $user->id ? 'selected' : '' }}>
                         {{ $user->name }}
@@ -35,31 +35,31 @@
                 </select>
             </div>
             <div class="col-md-2">
-                <label class="form-label small">Status</label>
+                <label class="form-label small">{{ __('Status') }}</label>
                 <select name="status" class="form-select">
-                    <option value="">All Status</option>
-                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
-                    <option value="partial" {{ request('status') == 'partial' ? 'selected' : '' }}>Partial</option>
-                    <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>Paid</option>
+                    <option value="">{{ __('All Status') }}</option>
+                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>{{ __('Pending') }}</option>
+                    <option value="partial" {{ request('status') == 'partial' ? 'selected' : '' }}>{{ __('Partial') }}</option>
+                    <option value="paid" {{ request('status') == 'paid' ? 'selected' : '' }}>{{ __('Paid') }}</option>
                 </select>
             </div>
             <div class="col-md-2">
-                <label class="form-label small">Date From</label>
+                <label class="form-label small">{{ __('Date From') }}</label>
                 <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
             </div>
             <div class="col-md-2">
-                <label class="form-label small">Date To</label>
+                <label class="form-label small">{{ __('Date To') }}</label>
                 <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
             </div>
             <div class="col-md-1">
-                <button type="submit" class="btn btn-secondary"><i class="bi bi-search"></i> Filter</button>
+                <button type="submit" class="btn btn-secondary"><i class="bi bi-search"></i> {{ __('Filter') }}</button>
             </div>
         </form>
     </div>
 </div>
 
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-    <h5 class="mb-0">Previous Due Report ({{ $previousDues->total() }})</h5>
+    <h5 class="mb-0">{{ __('Previous Due Report') }} ({{ $previousDues->total() }})</h5>
     <a href="{{ route('export.previous-dues', request()->only('user_id', 'status', 'date_from', 'date_to', 'search')) }}" class="btn btn-success">
         <i class="bi bi-download"></i> Excel
     </a>
@@ -68,14 +68,14 @@
 <div class="row g-4 mb-4">
     <div class="col-md-6">
         <div class="bg-dark bg-opacity-10 p-3 rounded">
-            <small class="text-muted">Total Original Amount</small>
-            <h3 class="mb-0">৳{{ number_format($totalAmount, 2) }}</h3>
+            <small class="text-muted">{{ __('Total Original Amount') }}</small>
+            <h3 class="mb-0">{{ format_currency($totalAmount) }}</h3>
         </div>
     </div>
     <div class="col-md-6">
         <div class="bg-danger bg-opacity-10 p-3 rounded">
-            <small class="text-muted">Total Remaining Pending</small>
-            <h3 class="mb-0 text-danger">৳{{ number_format($totalPending, 2) }}</h3>
+            <small class="text-muted">{{ __('Total Remaining Pending') }}</small>
+            <h3 class="mb-0 text-danger">{{ format_currency($totalPending) }}</h3>
         </div>
     </div>
 </div>
@@ -86,16 +86,16 @@
             <thead class="table-light">
                 <tr>
                     <th>ID</th>
-                    <th>Customer</th>
-                    <th>Location</th>
-                    <th>Mobile</th>
-                    <th>Original</th>
-                    <th>Paid</th>
-                    <th>Remaining</th>
-                    <th>Status</th>
-                    <th>Created By</th>
-                    <th>Date</th>
-                    <th>Action</th>
+                    <th>{{ __('Customer') }}</th>
+                    <th>{{ __('Location') }}</th>
+                    <th>{{ __('Mobile') }}</th>
+                    <th>{{ __('Original') }}</th>
+                    <th>{{ __('Paid') }}</th>
+                    <th>{{ __('Remaining') }}</th>
+                    <th>{{ __('Status') }}</th>
+                    <th>{{ __('Created By') }}</th>
+                    <th>{{ __('Date') }}</th>
+                    <th>{{ __('Action') }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -105,16 +105,16 @@
                     <td>{{ $pd->customer->name ?? 'N/A' }}</td>
                     <td>{{ $pd->customer->location ?? 'N/A' }}</td>
                     <td>{{ $pd->customer->mobile ?? 'N/A' }}</td>
-                    <td>৳{{ number_format($pd->original_amount, 2) }}</td>
-                    <td class="text-success fw-bold">৳{{ number_format($pd->total_paid, 2) }}</td>
-                    <td class="text-danger fw-bold">৳{{ number_format($pd->remaining_amount, 2) }}</td>
+                    <td>{{ format_currency($pd->original_amount) }}</td>
+                    <td class="text-success fw-bold">{{ format_currency($pd->total_paid) }}</td>
+                    <td class="text-danger fw-bold">{{ format_currency($pd->remaining_amount) }}</td>
                     <td>
                         @if($pd->status == 'paid')
-                        <span class="badge bg-success">Paid</span>
+                        <span class="badge bg-success">{{ __('Paid') }}</span>
                         @elseif($pd->hasPartialPayments())
-                        <span class="badge bg-info text-dark">Partial</span>
+                        <span class="badge bg-info text-dark">{{ __('Partial') }}</span>
                         @else
-                        <span class="badge bg-warning text-dark">Pending</span>
+                        <span class="badge bg-warning text-dark">{{ __('Pending') }}</span>
                         @endif
                     </td>
                     <td><span class="badge bg-secondary">{{ $pd->creator->name ?? 'N/A' }}</span></td>
@@ -126,7 +126,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="11" class="text-center py-3">No previous dues found</td></tr>
+                <tr><td colspan="11" class="text-center py-3">{{ __('No previous dues found') }}</td></tr>
                 @endforelse
             </tbody>
         </table>

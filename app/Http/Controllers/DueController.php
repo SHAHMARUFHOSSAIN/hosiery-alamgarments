@@ -102,7 +102,11 @@ class DueController extends Controller
             $query->whereHas('bill', function ($q) use ($search) {
                 $q->where('bill_no', 'like', "%{$search}%")
                   ->orWhere('shop_name', 'like', "%{$search}%")
-                  ->orWhere('bill_man', 'like', "%{$search}%");
+                  ->orWhere('bill_man', 'like', "%{$search}%")
+                  ->orWhereHas('customer', function ($cq) use ($search) {
+                      $cq->where('name', 'like', "%{$search}%")
+                         ->orWhere('mobile', 'like', "%{$search}%");
+                  });
             });
         }
         
@@ -150,7 +154,11 @@ class DueController extends Controller
             $allChecksQuery->whereHas('bill', function ($q) use ($search) {
                 $q->where('bill_no', 'like', "%{$search}%")
                   ->orWhere('shop_name', 'like', "%{$search}%")
-                  ->orWhere('bill_man', 'like', "%{$search}%");
+                  ->orWhere('bill_man', 'like', "%{$search}%")
+                  ->orWhereHas('customer', function ($cq) use ($search) {
+                      $cq->where('name', 'like', "%{$search}%")
+                         ->orWhere('mobile', 'like', "%{$search}%");
+                  });
             });
         }
         if ($request->filled('bank')) {
@@ -253,7 +261,11 @@ class DueController extends Controller
             $query->whereHas('bill', function ($q) use ($search) {
                 $q->where('bill_no', 'like', "%{$search}%")
                   ->orWhere('shop_name', 'like', "%{$search}%")
-                  ->orWhere('bill_man', 'like', "%{$search}%");
+                  ->orWhere('bill_man', 'like', "%{$search}%")
+                  ->orWhereHas('customer', function ($cq) use ($search) {
+                      $cq->where('name', 'like', "%{$search}%")
+                         ->orWhere('mobile', 'like', "%{$search}%");
+                  });
             });
         }
 
@@ -297,7 +309,11 @@ class DueController extends Controller
             $allTtQuery->whereHas('bill', function ($q) use ($search) {
                 $q->where('bill_no', 'like', "%{$search}%")
                   ->orWhere('shop_name', 'like', "%{$search}%")
-                  ->orWhere('bill_man', 'like', "%{$search}%");
+                  ->orWhere('bill_man', 'like', "%{$search}%")
+                  ->orWhereHas('customer', function ($cq) use ($search) {
+                      $cq->where('name', 'like', "%{$search}%")
+                         ->orWhere('mobile', 'like', "%{$search}%");
+                  });
             });
         }
         if ($request->filled('bank')) {
@@ -340,7 +356,11 @@ class DueController extends Controller
             $query->whereHas('bill', function ($q) use ($search) {
                 $q->where('bill_no', 'like', "%{$search}%")
                   ->orWhere('shop_name', 'like', "%{$search}%")
-                  ->orWhere('bill_man', 'like', "%{$search}%");
+                  ->orWhere('bill_man', 'like', "%{$search}%")
+                  ->orWhereHas('customer', function ($cq) use ($search) {
+                      $cq->where('name', 'like', "%{$search}%")
+                         ->orWhere('mobile', 'like', "%{$search}%");
+                  });
             });
         }
 
@@ -380,7 +400,11 @@ class DueController extends Controller
             $allCashQuery->whereHas('bill', function ($q) use ($search) {
                 $q->where('bill_no', 'like', "%{$search}%")
                   ->orWhere('shop_name', 'like', "%{$search}%")
-                  ->orWhere('bill_man', 'like', "%{$search}%");
+                  ->orWhere('bill_man', 'like', "%{$search}%")
+                  ->orWhereHas('customer', function ($cq) use ($search) {
+                      $cq->where('name', 'like', "%{$search}%")
+                         ->orWhere('mobile', 'like', "%{$search}%");
+                  });
             });
         }
         if ($request->filled('date_from')) {

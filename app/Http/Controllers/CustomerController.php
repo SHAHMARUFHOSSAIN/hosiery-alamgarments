@@ -178,7 +178,12 @@ class CustomerController extends Controller
 
         $this->syncPreviousDue($customer, $validated['opening_balance'] ?? 0);
 
-        return redirect()->route('customers.index')
+        return redirect()->route('customers.index', array_filter([
+            'page' => $request->input('page', 1),
+            'search' => $request->input('search'),
+            'user_id' => $request->input('user_id'),
+            'location' => $request->input('location'),
+        ]))
             ->with('success', 'Customer updated successfully');
     }
 

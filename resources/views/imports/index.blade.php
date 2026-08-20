@@ -1,18 +1,18 @@
 @extends('layouts.admin')
 
-@section('title', 'Import Data')
-@section('header', 'Import Management')
+@section('title', __('Import Data'))
+@section('header', __('Import Management'))
 
 @section('content')
 <ul class="nav nav-tabs mb-4" role="tablist">
     <li class="nav-item" role="presentation">
         <button class="nav-link active" id="new-import-tab" data-bs-toggle="tab" data-bs-target="#new-import" type="button" role="tab">
-            <i class="bi bi-upload"></i> New Import
+            <i class="bi bi-upload"></i> {{ __('New Import') }}
         </button>
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="previous-data-tab" data-bs-toggle="tab" data-bs-target="#previous-data" type="button" role="tab">
-            <i class="bi bi-clock-history"></i> Previous Data
+            <i class="bi bi-clock-history"></i> {{ __('Previous Data') }}
         </button>
     </li>
 </ul>
@@ -23,46 +23,46 @@
             <div class="col-md-5">
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white py-3">
-                        <h6 class="mb-0"><i class="bi bi-upload"></i> Upload Excel File</h6>
+                        <h6 class="mb-0"><i class="bi bi-upload"></i> {{ __('Upload Excel File') }}</h6>
                     </div>
                     <div class="card-body">
                         <form id="importForm" enctype="multipart/form-data">
                             @csrf
                             <div class="mb-3">
-                                <label class="form-label">Import Type <span class="text-danger">*</span></label>
+                                <label class="form-label">{{ __('Import Type') }} <span class="text-danger">*</span></label>
                                 <select name="import_type" id="importType" class="form-select" required>
-                                    <option value="">Select Type...</option>
-                                    <option value="customers">Customers</option>
-                                    <option value="bills">Bills</option>
+                                    <option value="">{{ __('Select Type...') }}</option>
+                                    <option value="customers">{{ __('Customers') }}</option>
+                                    <option value="bills">{{ __('Bills') }}</option>
                                 </select>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Import Date</label>
+                                <label class="form-label">{{ __('Import Date') }}</label>
                                 <input type="date" name="import_date" id="importDate" class="form-control"
                                        value="{{ date('Y-m-d') }}">
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Excel File <span class="text-danger">*</span></label>
+                                <label class="form-label">{{ __('Excel File') }} <span class="text-danger">*</span></label>
                                 <input type="file" name="file" id="fileInput" class="form-control"
                                        accept=".xlsx,.xls,.csv" required>
-                                <div class="form-text">Supported: .xlsx, .xls, .csv (Max 10MB)</div>
+                                <div class="form-text">{{ __('Supported: .xlsx, .xls, .csv (Max 10MB)') }}</div>
                             </div>
                             <div class="d-grid gap-2">
                                 <button type="submit" id="previewBtn" class="btn btn-primary">
-                                    <i class="bi bi-eye"></i> Preview Data
+                                    <i class="bi bi-eye"></i> {{ __('Preview Data') }}
                                 </button>
                             </div>
                         </form>
 
                         <hr class="my-4">
 
-                        <h6>Sample Files</h6>
+                        <h6>{{ __('Sample Files') }}</h6>
                         <div class="d-flex gap-2">
                             <a href="{{ route('imports.sample', 'customers') }}" class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-download"></i> Customer Sample
+                                <i class="bi bi-download"></i> {{ __('Customer Sample') }}
                             </a>
                             <a href="{{ route('imports.sample', 'bills') }}" class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-download"></i> Bill Sample
+                                <i class="bi bi-download"></i> {{ __('Bill Sample') }}
                             </a>
                         </div>
                     </div>
@@ -70,15 +70,15 @@
 
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white py-3">
-                        <h6 class="mb-0"><i class="bi bi-info-circle"></i> Import Rules</h6>
+                        <h6 class="mb-0"><i class="bi bi-info-circle"></i> {{ __('Import Rules') }}</h6>
                     </div>
                     <div class="card-body small">
                         <ul class="mb-0 ps-3">
-                            <li class="mb-1">First row must contain column headings.</li>
-                            <li class="mb-1"><strong>Customers:</strong> Name and Mobile are required. Existing customers are matched by <strong>Mobile</strong> and updated.</li>
-                            <li class="mb-1"><strong>Bills:</strong> Bill No, Customer Name/Mobile, Bill Amount, and Payment Type are required. Existing bills are matched by <strong>Bill No</strong> and updated.</li>
-                            <li class="mb-1">New customers are auto-created from Bill imports if not found.</li>
-                            <li class="mb-1">All imports are logged for audit purposes.</li>
+                            <li class="mb-1">{{ __('First row must contain column headings.') }}</li>
+                            <li class="mb-1"><strong>{{ __('Customers:') }}</strong> {{ __('Name and Mobile are required. Existing customers are matched by') }} <strong>{{ __('Mobile') }}</strong> {{ __('and updated.') }}</li>
+                            <li class="mb-1"><strong>{{ __('Bills:') }}</strong> {{ __('Bill No, Customer Name/Mobile, Bill Amount, and Payment Type are required. Existing bills are matched by') }} <strong>{{ __('Bill No') }}</strong> {{ __('and updated.') }}</li>
+                            <li class="mb-1">{{ __('New customers are auto-created from Bill imports if not found.') }}</li>
+                            <li class="mb-1">{{ __('All imports are logged for audit purposes.') }}</li>
                         </ul>
                     </div>
                 </div>
@@ -88,7 +88,7 @@
                 <div id="previewArea" style="display: none;">
                     <div class="card border-0 shadow-sm mb-3">
                         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0"><i class="bi bi-table"></i> Preview</h6>
+                            <h6 class="mb-0"><i class="bi bi-table"></i> {{ __('Preview') }}</h6>
                             <div id="previewStats" class="d-flex gap-3"></div>
                         </div>
                         <div class="card-body p-0">
@@ -103,10 +103,10 @@
                         </div>
                         <div class="card-footer bg-white text-center" id="previewFooter" style="display: none;">
                             <button type="button" id="confirmBtn" class="btn btn-success btn-lg">
-                                <i class="bi bi-check-circle"></i> Confirm Import
+                                <i class="bi bi-check-circle"></i> {{ __('Confirm Import') }}
                             </button>
                             <button type="button" id="cancelBtn" class="btn btn-outline-secondary btn-lg">
-                                <i class="bi bi-x-circle"></i> Cancel
+                                <i class="bi bi-x-circle"></i> {{ __('Cancel') }}
                             </button>
                         </div>
                     </div>
@@ -114,16 +114,16 @@
                     <div id="errorArea" style="display: none;">
                         <div class="card border-0 shadow-sm">
                             <div class="card-header bg-danger text-white py-2">
-                                <h6 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Rows with Errors</h6>
+                                <h6 class="mb-0"><i class="bi bi-exclamation-triangle"></i> {{ __('Rows with Errors') }}</h6>
                             </div>
                             <div class="card-body p-0">
                                 <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
                                     <table class="table table-sm table-hover mb-0">
                                         <thead class="table-light position-sticky top-0">
                                             <tr>
-                                                <th>Row</th>
-                                                <th>Errors</th>
-                                                <th>Data</th>
+                                                <th>{{ __('Row') }}</th>
+                                                <th>{{ __('Errors') }}</th>
+                                                <th>{{ __('Data') }}</th>
                                             </tr>
                                         </thead>
                                         <tbody id="errorBody"></tbody>
@@ -136,23 +136,23 @@
 
                 <div id="loadingArea" style="display: none;" class="text-center py-5">
                     <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
-                        <span class="visually-hidden">Processing...</span>
+                        <span class="visually-hidden">{{ __('Processing...') }}</span>
                     </div>
-                    <h5 id="loadingText">Processing...</h5>
+                    <h5 id="loadingText">{{ __('Processing...') }}</h5>
                 </div>
 
                 <div id="resultArea" style="display: none;">
                     <div class="card border-0 shadow-sm">
                         <div class="card-header bg-white py-3">
-                            <h6 class="mb-0"><i class="bi bi-check-circle text-success"></i> Import Result</h6>
+                            <h6 class="mb-0"><i class="bi bi-check-circle text-success"></i> {{ __('Import Result') }}</h6>
                         </div>
                         <div class="card-body text-center py-4" id="resultBody"></div>
                         <div class="card-footer bg-white text-center">
                             <a href="{{ route('imports.history') }}" class="btn btn-outline-primary">
-                                <i class="bi bi-clock-history"></i> View Import History
+                                <i class="bi bi-clock-history"></i> {{ __('View Import History') }}
                             </a>
                             <button type="button" id="importAnotherBtn" class="btn btn-outline-secondary">
-                                <i class="bi bi-plus"></i> Import Another
+                                <i class="bi bi-plus"></i> {{ __('Import Another') }}
                             </button>
                         </div>
                     </div>
@@ -167,31 +167,31 @@
                 <div class="card border-0 shadow-sm bg-primary text-white">
                     <div class="card-body text-center py-3">
                         <h3 class="mb-0 fw-bold">{{ $stats['total_imports'] }}</h3>
-                        <small>Total Imports</small>
+                        <small>{{ __('Total Imports') }}</small>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card border-0 shadow-sm bg-success text-white">
                     <div class="card-body text-center py-3">
-                        <h3 class="mb-0 fw-bold">{{ number_format($stats['total_records']) }}</h3>
-                        <small>Total Records</small>
+                        <h3 class="mb-0 fw-bold">{{ format_number($stats['total_records']) }}</h3>
+                        <small>{{ __('Total Records') }}</small>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card border-0 shadow-sm bg-info text-white">
                     <div class="card-body text-center py-3">
-                        <h3 class="mb-0 fw-bold">{{ number_format($stats['total_inserted']) }}</h3>
-                        <small>Records Inserted</small>
+                        <h3 class="mb-0 fw-bold">{{ format_number($stats['total_inserted']) }}</h3>
+                        <small>{{ __('Records Inserted') }}</small>
                     </div>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="card border-0 shadow-sm bg-warning text-white">
                     <div class="card-body text-center py-3">
-                        <h3 class="mb-0 fw-bold">{{ number_format($stats['total_updated']) }}</h3>
-                        <small>Records Updated</small>
+                        <h3 class="mb-0 fw-bold">{{ format_number($stats['total_updated']) }}</h3>
+                        <small>{{ __('Records Updated') }}</small>
                     </div>
                 </div>
             </div>
@@ -202,12 +202,12 @@
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-header bg-white py-3 d-flex align-items-center">
                         <i class="bi bi-people fs-5 me-2 text-primary"></i>
-                        <h6 class="mb-0">Customer Imports</h6>
+                        <h6 class="mb-0">{{ __('Customer Imports') }}</h6>
                         <span class="ms-auto badge bg-primary rounded-pill">{{ $stats['customer_imports'] }}</span>
                     </div>
                     <div class="card-body text-center py-4">
                         <div class="display-3 fw-bold text-primary">{{ $stats['customer_imports'] }}</div>
-                        <p class="text-muted mb-0">import operations</p>
+                        <p class="text-muted mb-0">{{ __('import operations') }}</p>
                     </div>
                 </div>
             </div>
@@ -215,12 +215,12 @@
                 <div class="card border-0 shadow-sm h-100">
                     <div class="card-header bg-white py-3 d-flex align-items-center">
                         <i class="bi bi-receipt fs-5 me-2 text-secondary"></i>
-                        <h6 class="mb-0">Bill Imports</h6>
+                        <h6 class="mb-0">{{ __('Bill Imports') }}</h6>
                         <span class="ms-auto badge bg-secondary rounded-pill">{{ $stats['bill_imports'] }}</span>
                     </div>
                     <div class="card-body text-center py-4">
                         <div class="display-3 fw-bold text-secondary">{{ $stats['bill_imports'] }}</div>
-                        <p class="text-muted mb-0">import operations</p>
+                        <p class="text-muted mb-0">{{ __('import operations') }}</p>
                     </div>
                 </div>
             </div>
@@ -232,27 +232,27 @@
                 <form method="GET" action="{{ route('imports.index') }}" id="dateFilterForm" class="d-flex align-items-center gap-2 flex-wrap">
                     @auth
                     @if(auth()->user()->isAdmin())
-                    <label class="form-label mb-0 small text-nowrap">User:</label>
+                    <label class="form-label mb-0 small text-nowrap">{{ __('User:') }}</label>
                     <select name="user_id" class="form-select form-select-sm" style="width: 150px">
-                        <option value="">All Users</option>
+                        <option value="">{{ __('All Users') }}</option>
                         @foreach($users as $u)
                         <option value="{{ $u->id }}" {{ request('user_id') == $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
                         @endforeach
                     </select>
                     @endif
                     @endauth
-                    <label class="form-label mb-0 small text-nowrap">Date:</label>
+                    <label class="form-label mb-0 small text-nowrap">{{ __('Date:') }}</label>
                     <input type="date" name="date" class="form-control form-control-sm" style="width: 150px"
                            value="{{ request('date') }}">
-                    <label class="form-label mb-0 small text-nowrap">Type:</label>
+                    <label class="form-label mb-0 small text-nowrap">{{ __('Type:') }}</label>
                     <select name="type" class="form-select form-select-sm" style="width: 120px">
-                        <option value="">All</option>
-                        <option value="customers" {{ request('type') === 'customers' ? 'selected' : '' }}>Customers</option>
-                        <option value="bills" {{ request('type') === 'bills' ? 'selected' : '' }}>Bills</option>
+                        <option value="">{{ __('All') }}</option>
+                        <option value="customers" {{ request('type') === 'customers' ? 'selected' : '' }}>{{ __('Customers') }}</option>
+                        <option value="bills" {{ request('type') === 'bills' ? 'selected' : '' }}>{{ __('Bills') }}</option>
                     </select>
                     <button type="submit" class="btn btn-sm btn-outline-primary"><i class="bi bi-search"></i></button>
                     @if(request('date') || request('type') || request('user_id'))
-                    <a href="{{ route('imports.index') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-x"></i> Clear</a>
+                    <a href="{{ route('imports.index') }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-x"></i> {{ __('Clear') }}</a>
                     @endif
                 </form>
             </div>
@@ -260,27 +260,27 @@
 
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                <h6 class="mb-0"><i class="bi bi-clock-history"></i> Recent Imports</h6>
+                <h6 class="mb-0"><i class="bi bi-clock-history"></i> {{ __('Recent Imports') }}</h6>
                 <a href="{{ route('imports.history', array_filter(['date' => request('date'), 'type' => request('type'), 'user_id' => request('user_id')])) }}" class="btn btn-outline-primary btn-sm">
-                    <i class="bi bi-arrow-right"></i> View All
+                    <i class="bi bi-arrow-right"></i> {{ __('View All') }}
                 </a>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>Date</th>
-                            <th>File</th>
-                            <th>Type</th>
-                            <th>Total</th>
-                            <th>Inserted</th>
-                            <th>Updated</th>
-                            <th>Skipped</th>
-                            <th>User</th>
-                            <th>Status</th>
-                            <th>Data</th>
+                            <th>{{ __('Date') }}</th>
+                            <th>{{ __('File') }}</th>
+                            <th>{{ __('Type') }}</th>
+                            <th>{{ __('Total') }}</th>
+                            <th>{{ __('Inserted') }}</th>
+                            <th>{{ __('Updated') }}</th>
+                            <th>{{ __('Skipped') }}</th>
+                            <th>{{ __('User') }}</th>
+                            <th>{{ __('Status') }}</th>
+                            <th>{{ __('Data') }}</th>
                             @if(auth()->user()->isAdmin())
-                            <th>Actions</th>
+                            <th>{{ __('Actions') }}</th>
                             @endif
                         </tr>
                     </thead>
@@ -308,11 +308,11 @@
                             <td class="small">{{ $log->user->name ?? 'N/A' }}</td>
                             <td>
                                 @if($log->status === 'completed')
-                                <span class="badge bg-success">Completed</span>
+                                <span class="badge bg-success">{{ __('Completed') }}</span>
                                 @elseif($log->status === 'processing')
-                                <span class="badge bg-warning text-dark">Processing</span>
+                                <span class="badge bg-warning text-dark">{{ __('Processing') }}</span>
                                 @elseif($log->status === 'failed')
-                                <span class="badge bg-danger">Failed</span>
+                                <span class="badge bg-danger">{{ __('Failed') }}</span>
                                 @else
                                 <span class="badge bg-secondary">{{ ucfirst($log->status) }}</span>
                                 @endif
@@ -320,7 +320,7 @@
                             <td>
                                 @if($log->imported_data && count($log->imported_data['rows']) > 0)
                                 <button type="button" class="btn btn-sm btn-outline-info py-0 px-2" data-bs-toggle="modal" data-bs-target="#dataModal{{ $log->id }}">
-                                    <i class="bi bi-table"></i> View
+                                    <i class="bi bi-table"></i> {{ __('View') }}
                                 </button>
                                 @else
                                 <span class="text-muted small">N/A</span>
@@ -329,7 +329,7 @@
                             @if(auth()->user()->isAdmin())
                             <td>
                                 <form action="{{ route('imports.destroy', $log) }}" method="POST"
-                                      onsubmit="return confirm('Delete this import log? This cannot be undone.')">
+                                      onsubmit="return confirm('{{ __("Delete this import log? This cannot be undone.") }}')">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2">
@@ -340,7 +340,7 @@
                             @endif
                         </tr>
                         @empty
-                        <tr><td colspan="{{ auth()->user()->isAdmin() ? 11 : 10 }}" class="text-center py-4 text-muted">No imports found. Start by importing data in the <a href="#" onclick="document.getElementById('new-import-tab').click(); return false;">New Import</a> tab.</td></tr>
+                        <tr><td colspan="{{ auth()->user()->isAdmin() ? 11 : 10 }}" class="text-center py-4 text-muted">{!! __('No imports found. Start by importing data in the') !!} <a href="#" onclick="document.getElementById('new-import-tab').click(); return false;">{{ __('New Import') }}</a> {{ __('tab.') }}</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -348,7 +348,7 @@
             @if($recentLogs->isEmpty())
             <div class="card-body text-center py-5">
                 <i class="bi bi-inbox display-1 text-muted"></i>
-                <p class="text-muted mt-3 mb-0">No imported data yet</p>
+                <p class="text-muted mt-3 mb-0">{{ __('No imported data yet') }}</p>
             </div>
             @endif
 
@@ -360,7 +360,7 @@
                         <div class="modal-header">
                             <h5 class="modal-title">
                                 <i class="bi bi-table"></i>
-                                {{ ucfirst($log->import_type) }} Data - {{ $log->file_name }}
+                                {{ ucfirst($log->import_type) }} {{ __('Data') }} - {{ $log->file_name }}
                             </h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                         </div>
@@ -390,14 +390,14 @@
                         </div>
                         @if($log->imported_data['total_valid'] > 50)
                         <div class="card-footer bg-white text-center text-muted small">
-                            Showing 50 of {{ $log->imported_data['total_valid'] }} valid rows
+                            {{ __('Showing 50 of') }} {{ $log->imported_data['total_valid'] }} {{ __('valid rows') }}
                         </div>
                         @endif
                         <div class="modal-footer">
                             <span class="text-muted small me-auto">
-                                {{ $log->imported_data['total_valid'] }} valid row(s) imported on {{ $log->created_at->format('M d, Y h:i A') }}
+                                {{ $log->imported_data['total_valid'] }} {{ __('valid row(s) imported on') }} {{ $log->created_at->format('M d, Y h:i A') }}
                             </span>
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('Close') }}</button>
                         </div>
                     </div>
                 </div>
