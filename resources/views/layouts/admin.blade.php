@@ -25,6 +25,18 @@
             .sidebar-mobile-toggle { display: none !important; }
             .sidebar-desktop { width: 250px; min-height: 100vh; }
         }
+        .table td, .table th { white-space: nowrap; vertical-align: middle; }
+        .table .text-wrap { white-space: normal; }
+        @media (max-width: 575.98px) {
+            .table { font-size: 0.75rem; }
+            .table td, .table th { padding: 0.35rem 0.4rem !important; }
+            .table .badge { font-size: 0.6rem; padding: 0.2em 0.45em; }
+            .table .btn-sm { padding: 0.15rem 0.35rem; font-size: 0.65rem; }
+        }
+        @media (min-width: 576px) and (max-width: 767.98px) {
+            .table { font-size: 0.82rem; }
+            .table td, .table th { padding: 0.4rem 0.5rem !important; }
+        }
     </style>
     @stack('styles')
 </head>

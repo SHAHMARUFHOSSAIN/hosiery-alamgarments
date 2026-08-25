@@ -222,37 +222,37 @@
 <div class="row g-3 mb-4">
     <div class="col-12">
         <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white py-3">
-                <h6 class="mb-0 fw-bold">{{ __('Team Performance') }}</h6>
+            <div class="card-header bg-white py-2 py-md-3 px-3 px-md-4">
+                <h6 class="mb-0 fw-bold fs-6 fs-md-5">{{ __('Team Performance') }}</h6>
             </div>
-            <div class="card-body">
+            <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover mb-0">
+                    <table class="table table-hover mb-0 align-middle">
                         <thead class="table-light">
                             <tr>
                                 <th>{{ __('Rank') }}</th>
                                 <th>{{ __('User') }}</th>
                                 <th class="text-end">{{ __('Total Sales') }}</th>
                                 <th class="text-end">{{ __('Bills') }}</th>
-                                <th class="text-end">{{ __('Discount') }}</th>
-                                <th class="text-end">{{ __('Rep Disc') }}</th>
-                                <th class="text-end">{{ __('Total Disc') }}</th>
+                                <th class="text-end d-none d-sm-table-cell">{{ __('Discount') }}</th>
+                                <th class="text-end d-none d-md-table-cell">{{ __('Rep Disc') }}</th>
+                                <th class="text-end d-none d-md-table-cell">{{ __('Total Disc') }}</th>
                                 <th class="text-end">{{ __('Avg Bill') }}</th>
-                                <th>{{ __('Performance') }}</th>
+                                <th class="d-none d-lg-table-cell" style="width: 150px;">{{ __('Performance') }}</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($userPerformance as $index => $user)
                             <tr>
-                                <td><span class="badge bg-{{ $index === 0 ? 'warning text-dark' : ($index === 1 ? 'secondary' : 'secondary') }}">#{{ $index + 1 }}</span></td>
+                                <td><span class="badge bg-{{ $index === 0 ? 'warning text-dark' : 'secondary' }}">#{{ $index + 1 }}</span></td>
                                 <td class="fw-semibold">{{ $user['name'] }}</td>
                                 <td class="text-end fw-bold">{{ format_currency($user['sales']) }}</td>
                                 <td class="text-end">{{ $user['bills'] }}</td>
-                                <td class="text-end text-danger">{{ format_currency($user['discount']) }}</td>
-                                <td class="text-end text-danger">{{ format_currency($user['report_discount'] ?? 0) }}</td>
-                                <td class="text-end fw-bold text-danger">{{ format_currency($user['discount'] + ($user['report_discount'] ?? 0)) }}</td>
+                                <td class="text-end text-danger d-none d-sm-table-cell">{{ format_currency($user['discount']) }}</td>
+                                <td class="text-end text-danger d-none d-md-table-cell">{{ format_currency($user['report_discount'] ?? 0) }}</td>
+                                <td class="text-end fw-bold text-danger d-none d-md-table-cell">{{ format_currency($user['discount'] + ($user['report_discount'] ?? 0)) }}</td>
                                 <td class="text-end">{{ format_currency($user['bills'] > 0 ? $user['sales'] / $user['bills'] : 0) }}</td>
-                                <td style="width: 200px;">
+                                <td class="d-none d-lg-table-cell">
                                     @php
                                         $maxSales = max(array_column($userPerformance, 'sales'));
                                         $perf = $maxSales > 0 ? ($user['sales'] / $maxSales) * 100 : 0;
