@@ -121,7 +121,7 @@
             @if($userReports->count() > 0)
             <tfoot class="table-light fw-bold">
                 <tr>
-                    <td class="ps-3">{{ __('TOTAL') }}</td>
+                    <td class="ps-3">{{ __('Total') }}</td>
                     <td class="text-end">{{ format_number($totals['total_bills']) }}</td>
                     <td class="text-end">{{ format_currency($totals['gross_amount']) }}</td>
                     <td class="text-end text-danger">{{ format_currency($totals['bill_discount']) }}</td>
