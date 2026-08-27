@@ -8,13 +8,14 @@ use App\Models\Due;
 use App\Models\Payment;
 use App\Models\TodaySalesReport;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class TodayReportController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $today = now()->subDay()->toDateString();
+        $today = $request->input('date', now()->subDay()->toDateString());
 
         $users = User::where('role', 'user')->get();
 

@@ -14,6 +14,15 @@
 @endsection
 
 @section('content')
+<div class="row mb-3">
+    <div class="col-12">
+        <form method="GET" action="{{ route('admin.today-report') }}" class="d-flex align-items-center gap-2">
+            <label for="date" class="form-label mb-0 fw-semibold">{{ __('Select Date') }}:</label>
+            <input type="date" name="date" id="date" class="form-control form-control-sm w-auto" value="{{ $today }}">
+            <button type="submit" class="btn btn-primary btn-sm">{{ __('View Report') }}</button>
+        </form>
+    </div>
+</div>
 <div class="row g-2 g-sm-3 mb-4">
     <div class="col-6 col-lg-3">
         <div class="card border-0 shadow-sm h-100">
