@@ -96,7 +96,12 @@
                 @forelse($userReports as $report)
                 <tr>
                     <td class="ps-3">
-                        <span class="fw-semibold">{{ $report['user']->name }}</span>
+                        <a href="{{ route('admin.today-report.user-bills', ['user' => $report['user']->id, 'date' => $today]) }}"
+                           class="fw-semibold text-decoration-none text-primary"
+                           title="{{ __('View all bills for') }} {{ $report['user']->name }}">
+                            <i class="bi bi-person-badge me-1"></i>{{ $report['user']->name }}
+                            <i class="bi bi-chevron-right small"></i>
+                        </a>
                     </td>
                     <td class="text-end">{{ format_number($report['total_bills']) }}</td>
                     <td class="text-end fw-bold">{{ format_currency($report['gross_amount']) }}</td>

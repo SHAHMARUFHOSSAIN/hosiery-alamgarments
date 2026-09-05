@@ -17,6 +17,17 @@
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-header bg-white py-3">
         <form method="GET" class="row g-3 align-items-end">
+            @if(auth()->user()->isAdmin())
+            <div class="col-md-2">
+                <label class="form-label small">{{ __('Branch / User') }}</label>
+                <select name="user_id" class="form-select" onchange="this.form.submit()">
+                    <option value="">{{ __('All Users') }}</option>
+                    @foreach($users ?? [] as $user)
+                    <option value="{{ $user->id }}" {{ request('user_id') == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            @endif
             <div class="col-md-2">
                 <label class="form-label small">{{ __('Search') }}</label>
                 <input type="text" name="search" class="form-control"
@@ -89,23 +100,23 @@
                     <th>{{ __('Customer') }}</th>
                     <th>{{ __('Location') }}</th>
                     <th>
-                        <a href="{{ route('dues.tt-report', ['sort' => 'tt_bank_name', 'direction' => request('sort') == 'tt_bank_name' && request('direction') == 'asc' ? 'desc' : 'asc'] + request()->only('status', 'bank', 'date_from', 'date_to', 'search')) }}" class="text-decoration-none">
+                        <a href="{{ route('dues.tt-report', ['sort' => 'tt_bank_name', 'direction' => request('sort') == 'tt_bank_name' && request('direction') == 'asc' ? 'desc' : 'asc'] + request()->only('status', 'bank', 'date_from', 'date_to', 'user_id', 'search')) }}" class="text-decoration-none">
                             {{ __('Bank') }} @if(request('sort') == 'tt_bank_name'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif
                         </a>
                     </th>
                     <th>{{ __('A/C No') }}</th>
                     <th>
-                        <a href="{{ route('dues.tt-report', ['sort' => 'tt_amount', 'direction' => request('sort') == 'tt_amount' && request('direction') == 'asc' ? 'desc' : 'asc'] + request()->only('status', 'bank', 'date_from', 'date_to', 'search')) }}" class="text-decoration-none">
+                        <a href="{{ route('dues.tt-report', ['sort' => 'tt_amount', 'direction' => request('sort') == 'tt_amount' && request('direction') == 'asc' ? 'desc' : 'asc'] + request()->only('status', 'bank', 'date_from', 'date_to', 'user_id', 'search')) }}" class="text-decoration-none">
                             {{ __('Amount') }} @if(request('sort') == 'tt_amount'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif
                         </a>
                     </th>
                     <th>
-                        <a href="{{ route('dues.tt-report', ['sort' => 'tt_date', 'direction' => request('sort') == 'tt_date' && request('direction') == 'asc' ? 'desc' : 'asc'] + request()->only('status', 'bank', 'date_from', 'date_to', 'search')) }}" class="text-decoration-none">
+                        <a href="{{ route('dues.tt-report', ['sort' => 'tt_date', 'direction' => request('sort') == 'tt_date' && request('direction') == 'asc' ? 'desc' : 'asc'] + request()->only('status', 'bank', 'date_from', 'date_to', 'user_id', 'search')) }}" class="text-decoration-none">
                             {{ __('TT Date') }} @if(request('sort') == 'tt_date'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif
                         </a>
                     </th>
                     <th>
-                        <a href="{{ route('dues.tt-report', ['sort' => 'status', 'direction' => request('sort') == 'status' && request('direction') == 'asc' ? 'desc' : 'asc'] + request()->only('status', 'bank', 'date_from', 'date_to', 'search')) }}" class="text-decoration-none">
+                        <a href="{{ route('dues.tt-report', ['sort' => 'status', 'direction' => request('sort') == 'status' && request('direction') == 'asc' ? 'desc' : 'asc'] + request()->only('status', 'bank', 'date_from', 'date_to', 'user_id', 'search')) }}" class="text-decoration-none">
                             {{ __('Status') }} @if(request('sort') == 'status'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif
                         </a>
                     </th>

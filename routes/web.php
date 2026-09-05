@@ -106,6 +106,7 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware(['admin'])->group(function () {
         Route::get('/today-report', [TodayReportController::class, 'index'])->name('admin.today-report');
+        Route::get('/today-report/users/{user}/bills', [TodayReportController::class, 'userBills'])->name('admin.today-report.user-bills');
 
         Route::delete('/imports/{importLog}', [ImportController::class, 'destroy'])->name('imports.destroy');
         Route::prefix('users')->group(function () {

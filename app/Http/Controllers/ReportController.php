@@ -13,6 +13,7 @@ use App\Models\PreviousDuePayment;
 use App\Models\TodaySalesReport;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
@@ -232,69 +233,159 @@ class ReportController extends Controller
 
     public function dues(Request $request): View
     {
-        $query = Due::with(['customer', 'bill', 'creator', 'duePayments.user']);
-
-        if (Auth::user()->isAdmin()) {
-            if ($request->filled('user_id')) {
-                $query->where('created_by', $request->user_id);
-            }
-            if ($request->filled('status')) {
-                if ($request->status === 'partial') {
-                    $query->where('status', 'pending')->whereHas('duePayments');
-                } else {
-                    $query->where('status', $request->status);
-                }
-            }
-        } else {
-            $query->where('created_by', Auth::id());
-        }
-
-        if ($request->filled('date_from')) {
-            $query->whereDate('due_date', '>=', $request->date_from);
-        }
-        if ($request->filled('date_to')) {
-            $query->whereDate('due_date', '<=', $request->date_to);
-        }
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->whereHas('customer', function ($cq) use ($search) {
-                    $cq->where('name', 'like', "%{$search}%")
-                       ->orWhere('mobile', 'like', "%{$search}%");
-                })->orWhereHas('bill', function ($bq) use ($search) {
-                    $bq->where('bill_no', 'like', "%{$search}%");
-                });
-            });
-        }
-
-        $sortField = $request->get('sort', 'due_date');
-        $sortDirection = $request->get('direction', 'asc');
-        $allowedSorts = ['id', 'original_amount', 'due_date', 'status', 'remaining_amount'];
-
-        if ($sortField === 'remaining_amount') {
-            $query->orderBy('amount', $sortDirection);
-        } elseif (in_array($sortField, $allowedSorts)) {
-            $query->orderBy($sortField, $sortDirection);
-        } else {
-            $query->orderBy('due_date', 'asc');
-        }
-
-        $dues = $query->paginate(20);
-
-        $totalQuery = Due::where('status', 'pending');
-        if (Auth::user()->isAdmin()) {
-            if ($request->filled('user_id')) {
-                $totalQuery->where('created_by', $request->user_id);
-            }
-        } else {
-            $totalQuery->where('created_by', Auth::id());
-        }
-        $totalAmount = $totalQuery->sum('amount');
-
         $users = User::where('role', 'user')->get(['id', 'name']);
 
-        return view('reports.dues', compact('dues', 'totalAmount', 'users'));
+        $type = in_array($request->get('type', 'all'), ['all', 'due', 'cheque'])
+            ? $request->get('type', 'all')
+            : 'all';
+
+        $applyUserScope = function ($q) use ($request) {
+            if (Auth::user()->isAdmin()) {
+                if ($request->filled('user_id')) {
+                    $q->where('bills.user_id', $request->user_id);
+                }
+            } else {
+                $q->where('bills.user_id', Auth::id());
+            }
+        };
+
+        $applyScope = function ($q) use ($request, $applyUserScope) {
+            $applyUserScope($q);
+            if ($request->filled('date_from')) {
+                $q->whereDate('bills.report_date', '>=', $request->date_from);
+            }
+            if ($request->filled('date_to')) {
+                $q->whereDate('bills.report_date', '<=', $request->date_to);
+            }
+        };
+
+        // Single date / last date => bill-level detail view.
+        // A range with distinct dates, or ?all=1 => aggregated date-wise list.
+        $dateFrom = $request->filled('date_from') ? $request->date_from : null;
+        $dateTo = $request->filled('date_to') ? $request->date_to : null;
+
+        $detailMode = !$request->boolean('all')
+            && ($dateTo === null || $dateFrom === null || $dateFrom === $dateTo);
+
+        if ($detailMode) {
+            $latestQuery = Bill::query();
+            $applyUserScope($latestQuery);
+            $detailDate = $dateTo ?: $dateFrom ?: $latestQuery->max('report_date');
+
+            $bills = collect();
+            $duePerBill = collect();
+            $chequePerBill = collect();
+
+            if ($detailDate) {
+                $billsQuery = Bill::with(['customer', 'user'])
+                    ->whereDate('report_date', $detailDate);
+                $applyUserScope($billsQuery);
+                $bills = $billsQuery->orderBy('id')->get();
+
+                $billIds = $bills->pluck('id');
+
+                $duePerBill = Due::whereIn('bill_id', $billIds)
+                    ->selectRaw('bill_id, COALESCE(SUM(original_amount), 0) as total')
+                    ->groupBy('bill_id')
+                    ->pluck('total', 'bill_id');
+
+                $chequePerBill = Payment::whereIn('bill_id', $billIds)
+                    ->where('payment_type', 'check')
+                    ->selectRaw('bill_id, COALESCE(SUM(check_amount), 0) as total')
+                    ->groupBy('bill_id')
+                    ->pluck('total', 'bill_id');
+
+                $bills = $bills->filter(function ($bill) use ($duePerBill, $chequePerBill) {
+                    return (float) ($duePerBill->get($bill->id, 0)) > 0
+                        || (float) ($chequePerBill->get($bill->id, 0)) > 0;
+                })->values();
+            }
+
+            $totalDue = $bills->sum(fn($b) => (float) $duePerBill->get($b->id, 0));
+            $totalDueBills = $bills->filter(fn($b) => (float) $duePerBill->get($b->id, 0) > 0)->count();
+            $totalCheque = $bills->sum(fn($b) => (float) $chequePerBill->get($b->id, 0));
+            $totalChequeBills = $bills->filter(fn($b) => (float) $chequePerBill->get($b->id, 0) > 0)->count();
+            $totalBills = $bills->count();
+            $totalBillAmount = $bills->sum(fn($b) => (float) $b->bill_amount);
+
+            return view('reports.dues', compact(
+                'detailMode', 'detailDate', 'bills', 'duePerBill', 'chequePerBill',
+                'users', 'type', 'totalBills', 'totalBillAmount',
+                'totalDue', 'totalDueBills', 'totalCheque', 'totalChequeBills', 'dateFrom', 'dateTo'
+            ));
+        }
+
+        $billsQuery = Bill::query();
+        $applyScope($billsQuery);
+        $billsPerDate = (clone $billsQuery)
+            ->selectRaw('DATE(report_date) as bill_date')
+            ->selectRaw('COUNT(id) as bill_count')
+            ->groupBy('bill_date')
+            ->get()
+            ->keyBy('bill_date');
+
+        $duesQuery = Due::query()->join('bills', 'bills.id', '=', 'dues.bill_id');
+        $applyScope($duesQuery);
+        $duesPerDate = (clone $duesQuery)
+            ->selectRaw('DATE(bills.report_date) as bill_date')
+            ->selectRaw('COUNT(dues.id) as due_bills')
+            ->selectRaw('COALESCE(SUM(dues.original_amount), 0) as due_total')
+            ->groupBy('bill_date')
+            ->get()
+            ->keyBy('bill_date');
+
+        $chequeQuery = Payment::query()
+            ->join('bills', 'bills.id', '=', 'payments.bill_id')
+            ->where('payments.payment_type', 'check');
+        $applyScope($chequeQuery);
+        $chequesPerDate = (clone $chequeQuery)
+            ->selectRaw('DATE(bills.report_date) as bill_date')
+            ->selectRaw('COUNT(payments.id) as cheque_bills')
+            ->selectRaw('COALESCE(SUM(payments.check_amount), 0) as cheque_total')
+            ->groupBy('bill_date')
+            ->get()
+            ->keyBy('bill_date');
+
+        $dates = $billsPerDate->keys()
+            ->merge($duesPerDate->keys())
+            ->merge($chequesPerDate->keys())
+            ->unique()
+            ->sortByDesc(fn($d) => $d);
+
+        $rows = collect();
+        foreach ($dates as $date) {
+            $rows->push((object) [
+                'bill_date' => $date,
+                'bill_count' => (int) ($billsPerDate[$date]->bill_count ?? 0),
+                'due_bills' => (int) ($duesPerDate[$date]->due_bills ?? 0),
+                'due_total' => (float) ($duesPerDate[$date]->due_total ?? 0),
+                'cheque_bills' => (int) ($chequesPerDate[$date]->cheque_bills ?? 0),
+                'cheque_total' => (float) ($chequesPerDate[$date]->cheque_total ?? 0),
+            ]);
+        }
+
+        $totalBills = $rows->sum('bill_count');
+        $totalDue = $rows->sum('due_total');
+        $totalDueBills = $rows->sum('due_bills');
+        $totalCheque = $rows->sum('cheque_total');
+        $totalChequeBills = $rows->sum('cheque_bills');
+
+        $page = LengthAwarePaginator::resolveCurrentPage();
+        $perPage = 20;
+        $rows = new LengthAwarePaginator(
+            $rows->forPage($page, $perPage),
+            $rows->count(),
+            $perPage,
+            $page,
+            ['path' => LengthAwarePaginator::resolveCurrentPath(), 'query' => $request->query()]
+        );
+
+        $detailMode = false;
+
+        return view('reports.dues', compact(
+            'detailMode', 'rows', 'users', 'type',
+            'totalBills', 'totalDue', 'totalDueBills', 'totalCheque', 'totalChequeBills', 'dateFrom', 'dateTo'
+        ));
     }
 
     public function inactiveCustomers(Request $request): View

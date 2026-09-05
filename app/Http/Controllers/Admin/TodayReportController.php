@@ -77,4 +77,55 @@ class TodayReportController extends Controller
 
         return view('admin.today-report', compact('userReports', 'totals', 'today'));
     }
+
+    public function userBills(Request $request, User $user): View
+    {
+        $date = $request->input('date', now()->subDay()->toDateString());
+
+        // Drill-down detail view: every bill for this user on the selected date,
+        // intentionally fetched in full (no pagination) per business requirement.
+        $bills = Bill::with(['customer', 'payments', 'dues'])
+            ->where('user_id', $user->id)
+            ->whereDate('report_date', $date)
+            ->orderBy('id', 'desc')
+            ->get();
+
+        $totalBills = $bills->count();
+        $grossAmount = $bills->sum('bill_amount');
+        $billDiscount = $bills->sum('discount');
+        $netAmount = $grossAmount - $billDiscount;
+
+        $allPayments = Payment::whereIn('bill_id', $bills->pluck('id'))->get();
+        $cashAmt = $allPayments->where('payment_type', 'cash')->sum('amount');
+        $chequeAmt = $allPayments->where('payment_type', 'check')->sum('amount');
+        $ttAmt = $allPayments->where('payment_type', 'tt')->sum('amount');
+        $refCardAmt = $allPayments->where('payment_type', 'card')->sum('amount');
+        $totalReceived = $allPayments->sum('amount');
+
+        $dueAmt = Due::whereIn('bill_id', $bills->pluck('id'))
+            ->where('status', 'pending')
+            ->sum('original_amount');
+
+        $closedReport = TodaySalesReport::where('user_id', $user->id)
+            ->where('report_date', $date)
+            ->where('status', 'closed')
+            ->first();
+
+        return view('admin.today-report-user-bills', compact(
+            'user',
+            'date',
+            'bills',
+            'totalBills',
+            'grossAmount',
+            'billDiscount',
+            'netAmount',
+            'cashAmt',
+            'chequeAmt',
+            'ttAmt',
+            'refCardAmt',
+            'totalReceived',
+            'dueAmt',
+            'closedReport'
+        ));
+    }
 }

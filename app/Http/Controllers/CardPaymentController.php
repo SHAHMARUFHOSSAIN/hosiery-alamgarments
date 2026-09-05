@@ -7,6 +7,7 @@ use App\Models\Bill;
 use App\Models\Due;
 use App\Models\MainBalance;
 use App\Models\Payment;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,6 +24,15 @@ class CardPaymentController extends Controller
         if (!Auth::user()->isAdmin()) {
             $billIds = Bill::where('user_id', Auth::id())->pluck('id');
             $query->whereIn('bill_id', $billIds);
+        }
+
+        $users = collect();
+        if (Auth::user()->isAdmin()) {
+            $users = User::where('role', 'user')->orderBy('name')->get(['id', 'name']);
+
+            if ($request->filled('user_id')) {
+                $query->whereHas('bill', fn($q) => $q->where('user_id', $request->user_id));
+            }
         }
 
         if ($request->filled('search')) {
@@ -54,21 +64,22 @@ class CardPaymentController extends Controller
         }
 
         $cardPayments = $query->paginate(20);
-        $cardPayments->appends($request->only('search', 'date_from', 'date_to', 'sort', 'direction'));
+        $cardPayments->appends($request->only('user_id', 'search', 'date_from', 'date_to', 'sort', 'direction'));
 
-        $totalPending = Payment::where('payment_type', 'card')
-            ->where('status', 'pending')
-            ->sum('amount');
+        $totalPendingQuery = Payment::where('payment_type', 'card')->where('status', 'pending');
+
+        if (Auth::user()->isAdmin() && $request->filled('user_id')) {
+            $totalPendingQuery->whereHas('bill', fn($q) => $q->where('user_id', $request->user_id));
+        }
 
         if (!Auth::user()->isAdmin()) {
             $billIds = Bill::where('user_id', Auth::id())->pluck('id');
-            $totalPending = Payment::whereIn('bill_id', $billIds)
-                ->where('payment_type', 'card')
-                ->where('status', 'pending')
-                ->sum('amount');
+            $totalPendingQuery->whereIn('bill_id', $billIds);
         }
 
-        return view('card-payments.index', compact('cardPayments', 'totalPending'));
+        $totalPending = $totalPendingQuery->sum('amount');
+
+        return view('card-payments.index', compact('cardPayments', 'totalPending', 'users'));
     }
 
     public function encash($id): \Illuminate\Http\RedirectResponse

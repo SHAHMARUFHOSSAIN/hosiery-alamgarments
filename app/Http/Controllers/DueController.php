@@ -10,6 +10,7 @@ use App\Models\MainBalance;
 use App\Models\CheckEncashment;
 use App\Models\Payment;
 use App\Models\PreviousDuePayment;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,10 +20,20 @@ class DueController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = Due::with(['customer', 'bill', 'duePayments.user']);
-        
+        $query = Due::with(['customer', 'bill.user', 'duePayments.user']);
+
+        $users = collect();
+
         if (!Auth::user()->isAdmin()) {
             $query->where('created_by', Auth::id());
+        } else {
+            $users = User::where('role', 'user')->orderBy('name')->get(['id', 'name']);
+
+            // Branch/user-wise filter: match due via its bill's owner (branch),
+            // since created_by may be the admin for admin-entered bills.
+            if ($request->filled('user_id')) {
+                $query->whereHas('bill', fn($q) => $q->where('user_id', $request->user_id));
+            }
         }
         
         if ($request->filled('status')) {
@@ -64,8 +75,9 @@ class DueController extends Controller
         });
 
         $dues = $query->paginate(20);
+        $dues->appends($request->only('user_id', 'status', 'search', 'sort', 'direction'));
 
-        return view('dues.index', compact('dues', 'totalPendingAmount'));
+        return view('dues.index', compact('dues', 'totalPendingAmount', 'users'));
     }
 
     public function dailyReport(): View
@@ -125,6 +137,15 @@ class DueController extends Controller
             $billIds = Bill::where('user_id', Auth::id())->pluck('id');
             $query->whereIn('bill_id', $billIds);
         }
+
+        $users = collect();
+        if (Auth::user()->isAdmin()) {
+            $users = User::where('role', 'user')->orderBy('name')->get(['id', 'name']);
+
+            if ($request->filled('user_id')) {
+                $query->whereHas('bill', fn($q) => $q->where('user_id', $request->user_id));
+            }
+        }
         
         $sortField = $request->get('sort', 'check_date');
         $sortDirection = $request->get('direction', 'asc');
@@ -137,10 +158,14 @@ class DueController extends Controller
         }
         
         $allChecks = $query->paginate(20);
-        $allChecks->appends($request->only('status', 'search', 'bank', 'date_from', 'date_to', 'sort', 'direction'));
+        $allChecks->appends($request->only('status', 'search', 'bank', 'date_from', 'date_to', 'user_id', 'sort', 'direction'));
 
         $allChecksQuery = Payment::with(['bill.customer', 'bill.user', 'checkEncashments.user'])
             ->where('payment_type', 'check');
+
+        if (Auth::user()->isAdmin() && $request->filled('user_id')) {
+            $allChecksQuery->whereHas('bill', fn($q) => $q->where('user_id', $request->user_id));
+        }
 
         if ($request->filled('status')) {
             if ($request->status === 'partial') {
@@ -211,7 +236,12 @@ class DueController extends Controller
             $dueCheckQuery->whereHas('due', fn($q) => $q->where('created_by', Auth::id()));
         }
 
+        if (Auth::user()->isAdmin() && $request->filled('user_id')) {
+            $dueCheckQuery->whereHas('due.bill', fn($q) => $q->where('user_id', $request->user_id));
+        }
+
         $dueChecks = $dueCheckQuery->orderBy('check_date', 'asc')->paginate(20, ['*'], 'due_page');
+        $dueChecks->appends($request->only('user_id', 'status', 'search', 'bank', 'date_from', 'date_to'));
 
         $prevDueCheckQuery = PreviousDuePayment::with(['previousDue.customer', 'user'])
             ->where('payment_type', 'check');
@@ -239,11 +269,16 @@ class DueController extends Controller
             $prevDueCheckQuery->whereHas('previousDue', fn($q) => $q->where('created_by', Auth::id()));
         }
 
+        if (Auth::user()->isAdmin() && $request->filled('user_id')) {
+            $prevDueCheckQuery->whereHas('previousDue', fn($q) => $q->where('created_by', $request->user_id));
+        }
+
         $prevDueChecks = $prevDueCheckQuery->orderBy('check_date', 'asc')->paginate(20, ['*'], 'prev_due_page');
+        $prevDueChecks->appends($request->only('user_id', 'status', 'search', 'bank', 'date_from', 'date_to'));
 
         return view('dues.checks-report', compact(
             'allChecks', 'banks', 'totalCheckAmount', 'totalEncashedAmount', 'totalRemainingAmount',
-            'dueChecks', 'prevDueChecks'
+            'dueChecks', 'prevDueChecks', 'users'
         ));
     }
 
@@ -285,6 +320,15 @@ class DueController extends Controller
             $query->whereIn('bill_id', $billIds);
         }
 
+        $users = collect();
+        if (Auth::user()->isAdmin()) {
+            $users = User::where('role', 'user')->orderBy('name')->get(['id', 'name']);
+
+            if ($request->filled('user_id')) {
+                $query->whereHas('bill', fn($q) => $q->where('user_id', $request->user_id));
+            }
+        }
+
         $sortField = $request->get('sort', 'tt_date');
         $sortDirection = $request->get('direction', 'asc');
         $allowedSorts = ['tt_bank_name', 'tt_amount', 'tt_date', 'status'];
@@ -296,10 +340,14 @@ class DueController extends Controller
         }
 
         $ttPayments = $query->paginate(20);
-        $ttPayments->appends($request->only('status', 'search', 'bank', 'date_from', 'date_to', 'sort', 'direction'));
+        $ttPayments->appends($request->only('status', 'search', 'bank', 'date_from', 'date_to', 'user_id', 'sort', 'direction'));
 
         $allTtQuery = Payment::with(['bill.customer', 'bill.user'])
             ->where('payment_type', 'tt');
+
+        if (Auth::user()->isAdmin() && $request->filled('user_id')) {
+            $allTtQuery->whereHas('bill', fn($q) => $q->where('user_id', $request->user_id));
+        }
 
         if ($request->filled('status')) {
             $allTtQuery->where('status', $request->status);
@@ -339,7 +387,7 @@ class DueController extends Controller
             ->distinct()
             ->pluck('tt_bank_name');
 
-        return view('dues.tt-report', compact('ttPayments', 'banks', 'totalTtAmount', 'totalPayments'));
+        return view('dues.tt-report', compact('ttPayments', 'banks', 'totalTtAmount', 'totalPayments', 'users'));
     }
 
     public function cashReport(Request $request): View
@@ -376,6 +424,15 @@ class DueController extends Controller
             $query->whereIn('bill_id', $billIds);
         }
 
+        $users = collect();
+        if (Auth::user()->isAdmin()) {
+            $users = User::where('role', 'user')->orderBy('name')->get(['id', 'name']);
+
+            if ($request->filled('user_id')) {
+                $query->whereHas('bill', fn($q) => $q->where('user_id', $request->user_id));
+            }
+        }
+
         $sortField = $request->get('sort', 'created_at');
         $sortDirection = $request->get('direction', 'desc');
         $allowedSorts = ['amount', 'created_at', 'status'];
@@ -387,10 +444,14 @@ class DueController extends Controller
         }
 
         $cashPayments = $query->paginate(20);
-        $cashPayments->appends($request->only('status', 'search', 'date_from', 'date_to', 'sort', 'direction'));
+        $cashPayments->appends($request->only('status', 'search', 'date_from', 'date_to', 'user_id', 'sort', 'direction'));
 
         $allCashQuery = Payment::with(['bill.customer', 'bill.user'])
             ->where('payment_type', 'cash');
+
+        if (Auth::user()->isAdmin() && $request->filled('user_id')) {
+            $allCashQuery->whereHas('bill', fn($q) => $q->where('user_id', $request->user_id));
+        }
 
         if ($request->filled('status')) {
             $allCashQuery->where('status', $request->status);
@@ -422,7 +483,7 @@ class DueController extends Controller
         $totalCashAmount = $allCashResult->sum('amount');
         $totalPayments = $allCashResult->count();
 
-        return view('dues.cash-report', compact('cashPayments', 'totalCashAmount', 'totalPayments'));
+        return view('dues.cash-report', compact('cashPayments', 'totalCashAmount', 'totalPayments', 'users'));
     }
 
     public function encashCheck(Request $request, $id): \Illuminate\Http\RedirectResponse

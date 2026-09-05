@@ -61,8 +61,13 @@
                 </li>
                 @if(auth()->user()->isAdmin())
                 <li class="nav-item">
-                    <a href="{{ route('admin.today-report') }}" class="nav-link text-white {{ request()->routeIs('admin.today-report') ? 'active bg-primary rounded' : '' }}">
+                    <a href="{{ route('admin.today-report') }}" class="nav-link text-white {{ request()->routeIs('admin.today-report*') ? 'active bg-primary rounded' : '' }}">
                         <i class="bi bi-calendar-check"></i> {{ __('Today Report') }}
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ route('reports.dues') }}" class="nav-link text-white {{ request()->routeIs('reports.dues') ? 'active bg-primary rounded' : '' }}">
+                        <i class="bi bi-clock-history"></i> {{ __('Total Dues') }}
                     </a>
                 </li>
                 @endif
@@ -152,7 +157,7 @@
                 </li>
                 @if(auth()->user()->isAdmin())
                 <li class="nav-item">
-                    <a href="{{ route('reports.index') }}" class="nav-link text-white {{ request()->routeIs('reports.*') && !request()->routeIs('reports.resources') ? 'active bg-primary rounded' : '' }}">
+                    <a href="{{ route('reports.index') }}" class="nav-link text-white {{ request()->routeIs('reports.*') && !request()->routeIs('reports.resources') && !request()->routeIs('reports.dues') ? 'active bg-primary rounded' : '' }}">
                         <i class="bi bi-graph-up"></i> {{ __('Reports') }}
                     </a>
                 </li>
@@ -164,11 +169,6 @@
                 <li class="nav-item">
                     <a href="{{ route('reports.sales') }}" class="nav-link text-white {{ request()->routeIs('reports.sales') ? 'active bg-primary rounded' : '' }}">
                         <i class="bi bi-receipt"></i> {{ __('Sales Report') }}
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="{{ route('reports.dues') }}" class="nav-link text-white {{ request()->routeIs('reports.dues') ? 'active bg-primary rounded' : '' }}">
-                        <i class="bi bi-clock-history"></i> {{ __('Dues Report') }}
                     </a>
                 </li>
                 <li class="nav-item">
@@ -222,8 +222,13 @@
                     </li>
                     @if(auth()->user()->isAdmin())
                     <li class="nav-item">
-                        <a href="{{ route('admin.today-report') }}" class="nav-link text-white {{ request()->routeIs('admin.today-report') ? 'active bg-primary rounded' : '' }}">
+                        <a href="{{ route('admin.today-report') }}" class="nav-link text-white {{ request()->routeIs('admin.today-report*') ? 'active bg-primary rounded' : '' }}">
                             <i class="bi bi-calendar-check"></i> {{ __('Today Report') }}
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('reports.dues') }}" class="nav-link text-white {{ request()->routeIs('reports.dues') ? 'active bg-primary rounded' : '' }}">
+                            <i class="bi bi-clock-history"></i> {{ __('Total Dues') }}
                         </a>
                     </li>
                     @endif
@@ -271,7 +276,6 @@
                     <li class="nav-item"><a href="{{ route('reports.index') }}" class="nav-link text-white">{{ __('Reports') }}</a></li>
                     <li class="nav-item"><a href="{{ route('reports.resources') }}" class="nav-link text-white">{{ __('Resources') }}</a></li>
                     <li class="nav-item"><a href="{{ route('reports.sales') }}" class="nav-link text-white">{{ __('Sales Report') }}</a></li>
-                    <li class="nav-item"><a href="{{ route('reports.dues') }}" class="nav-link text-white">{{ __('Dues Report') }}</a></li>
                     <li class="nav-item"><a href="{{ route('reports.analytics') }}" class="nav-link text-white">{{ __('Analytics') }}</a></li>
                     <li class="nav-item"><a href="{{ route('settings.index') }}" class="nav-link text-white">{{ __('Settings') }}</a></li>
                     @endif

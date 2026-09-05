@@ -145,9 +145,9 @@
             <div class="bg-danger bg-opacity-10 p-3 rounded-circle d-inline-block mb-3">
                 <i class="bi bi-clock-history text-danger fs-2"></i>
             </div>
-            <h5>{{ __('Dues Report') }}</h5>
-            <p class="text-muted">{{ __('Track all dues with status and date filters') }}</p>
-            <a href="{{ route('reports.dues') }}" class="btn btn-danger">{{ __('View Dues') }}</a>
+            <h5>{{ __('Total Dues') }}</h5>
+            <p class="text-muted">{{ __('Combined due + cheque totals by bill date') }}</p>
+            <a href="{{ route('reports.dues') }}" class="btn btn-danger">{{ __('View Total Dues') }}</a>
         </div>
     </div>
     <div class="col-md-4">

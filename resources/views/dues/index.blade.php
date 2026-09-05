@@ -7,6 +7,17 @@
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-header bg-white py-3">
         <form method="GET" class="row g-3 align-items-end">
+            @if(auth()->user()->isAdmin())
+            <div class="col-md-3">
+                <label class="form-label small">{{ __('Branch / User') }}</label>
+                <select name="user_id" class="form-select" onchange="this.form.submit()">
+                    <option value="">{{ __('All Users') }}</option>
+                    @foreach($users as $user)
+                    <option value="{{ $user->id }}" {{ request('user_id') == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            @endif
             <div class="col-md-3">
                 <label class="form-label small">{{ __('Search') }}</label>
                 <input type="text" name="search" class="form-control" 
@@ -56,24 +67,27 @@
         <table class="table table-hover mb-0">
             <thead class="table-light">
                 <tr>
+                    @if(auth()->user()->isAdmin())
+                    <th>{{ __('Branch') }}</th>
+                    @endif
                     <th>{{ __('Customer') }}</th>
                     <th>{{ __('Location') }}</th>
                     <th>{{ __('Bill') }}</th>
                     <th>{{ __('Bill Date') }}</th>
                     <th>
-                        <a href="{{ route('dues.index', ['sort' => 'original_amount', 'direction' => request('sort') == 'original_amount' && request('direction') == 'asc' ? 'desc' : 'asc'] + request()->only('status', 'search')) }}" class="text-decoration-none">
+                        <a href="{{ route('dues.index', ['sort' => 'original_amount', 'direction' => request('sort') == 'original_amount' && request('direction') == 'asc' ? 'desc' : 'asc'] + request()->only('user_id', 'status', 'search')) }}" class="text-decoration-none">
                             {{ __('Original') }} @if(request('sort') == 'original_amount'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif
                         </a>
                     </th>
                     <th>{{ __('Paid') }}</th>
                     <th>{{ __('Discount') }}</th>
                     <th>
-                        <a href="{{ route('dues.index', ['sort' => 'remaining_amount', 'direction' => request('sort') == 'remaining_amount' && request('direction') == 'asc' ? 'desc' : 'asc'] + request()->only('status', 'search')) }}" class="text-decoration-none">
+                        <a href="{{ route('dues.index', ['sort' => 'remaining_amount', 'direction' => request('sort') == 'remaining_amount' && request('direction') == 'asc' ? 'desc' : 'asc'] + request()->only('user_id', 'status', 'search')) }}" class="text-decoration-none">
                             {{ __('Remaining') }} @if(request('sort') == 'remaining_amount'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif
                         </a>
                     </th>
                     <th>
-                        <a href="{{ route('dues.index', ['sort' => 'due_date', 'direction' => request('sort') == 'due_date' && request('direction') == 'asc' ? 'desc' : 'asc'] + request()->only('status', 'search')) }}" class="text-decoration-none">
+                        <a href="{{ route('dues.index', ['sort' => 'due_date', 'direction' => request('sort') == 'due_date' && request('direction') == 'asc' ? 'desc' : 'asc'] + request()->only('user_id', 'status', 'search')) }}" class="text-decoration-none">
                             {{ __('Due Date') }} @if(request('sort') == 'due_date'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif
                         </a>
                     </th>
@@ -88,6 +102,9 @@
                     $isPartial = $due->hasPartialPayments() && !$isPaid;
                 @endphp
                 <tr class="{{ $isPaid ? '' : ($due->due_date->isPast() ? 'table-danger' : '') }}">
+                    @if(auth()->user()->isAdmin())
+                    <td><span class="badge bg-secondary">{{ $due->bill->user->name ?? __('N/A') }}</span></td>
+                    @endif
                     <td>
                         <strong>{{ $due->customer->name ?? __('Unknown') }}</strong>
                         @if($due->customer->mobile)
@@ -122,14 +139,14 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="11" class="text-center py-4"><strong>{{ __('No dues found') }}</strong></td></tr>
+                <tr><td colspan="{{ auth()->user()->isAdmin() ? 12 : 11 }}" class="text-center py-4"><strong>{{ __('No dues found') }}</strong></td></tr>
                 @endforelse
             </tbody>
         </table>
     </div>
     @if($dues->hasPages())
     <div class="card-footer bg-white text-center">
-        {!! $dues->appends(request()->only('status', 'search', 'sort', 'direction'))->links() !!}
+        {!! $dues->appends(request()->only('user_id', 'status', 'search', 'sort', 'direction'))->links() !!}
     </div>
     @endif
 </div>
