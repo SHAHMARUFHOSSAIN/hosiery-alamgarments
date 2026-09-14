@@ -31,7 +31,7 @@
             <div class="col-md-2">
                 <label class="form-label small">{{ __('Search') }}</label>
                 <input type="text" name="search" class="form-control" 
-                       placeholder="{{ __('Bill no/customer...') }}" 
+                       placeholder="{{ __('Bill no, customer, mobile, location...') }}" 
                        value="{{ request('search') }}">
             </div>
             <div class="col-md-2">

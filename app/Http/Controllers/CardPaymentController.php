@@ -41,7 +41,8 @@ class CardPaymentController extends Controller
                 $q->where('bill_no', 'like', "%{$search}%")
                   ->orWhereHas('customer', function ($cq) use ($search) {
                       $cq->where('name', 'like', "%{$search}%")
-                         ->orWhere('mobile', 'like', "%{$search}%");
+                         ->orWhere('mobile', 'like', "%{$search}%")
+                         ->orWhere('location', 'like', "%{$search}%");
                   });
             });
         }

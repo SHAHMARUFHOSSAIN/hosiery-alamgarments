@@ -85,12 +85,10 @@
                             <span class="fw-bold text-{{ $customer->opening_balance > 0 ? 'danger' : 'success' }}">
                                 {{ format_currency($customer->opening_balance) }}
                             </span>
-                            @if(auth()->user()->isAdmin())
                             <button type="button" class="btn btn-sm btn-outline-warning py-0 px-1 ms-1" 
                                     data-bs-toggle="modal" data-bs-target="#openingBalanceModal">
                                 <i class="bi bi-pencil"></i>
                             </button>
-                            @endif
                         </td>
                     </tr>
                     <tr>
@@ -188,7 +186,6 @@
     </div>
 </div>
 
-@if(auth()->user()->isAdmin())
 <div class="modal fade" id="openingBalanceModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -217,5 +214,4 @@
         </div>
     </div>
 </div>
-@endif
 @endsection

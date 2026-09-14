@@ -117,7 +117,8 @@ class DueController extends Controller
                   ->orWhere('bill_man', 'like', "%{$search}%")
                   ->orWhereHas('customer', function ($cq) use ($search) {
                       $cq->where('name', 'like', "%{$search}%")
-                         ->orWhere('mobile', 'like', "%{$search}%");
+                         ->orWhere('mobile', 'like', "%{$search}%")
+                         ->orWhere('location', 'like', "%{$search}%");
                   });
             });
         }
@@ -182,7 +183,8 @@ class DueController extends Controller
                   ->orWhere('bill_man', 'like', "%{$search}%")
                   ->orWhereHas('customer', function ($cq) use ($search) {
                       $cq->where('name', 'like', "%{$search}%")
-                         ->orWhere('mobile', 'like', "%{$search}%");
+                         ->orWhere('mobile', 'like', "%{$search}%")
+                         ->orWhere('location', 'like', "%{$search}%");
                   });
             });
         }
@@ -228,7 +230,9 @@ class DueController extends Controller
                 $q->where('bank_name', 'like', "%{$search}%")
                   ->orWhere('check_no', 'like', "%{$search}%")
                   ->orWhereHas('due.customer', function ($cq) use ($search) {
-                      $cq->where('name', 'like', "%{$search}%");
+                      $cq->where('name', 'like', "%{$search}%")
+                         ->orWhere('mobile', 'like', "%{$search}%")
+                         ->orWhere('location', 'like', "%{$search}%");
                   });
             });
         }
@@ -261,7 +265,9 @@ class DueController extends Controller
                 $q->where('bank_name', 'like', "%{$search}%")
                   ->orWhere('check_no', 'like', "%{$search}%")
                   ->orWhereHas('previousDue.customer', function ($cq) use ($search) {
-                      $cq->where('name', 'like', "%{$search}%");
+                      $cq->where('name', 'like', "%{$search}%")
+                         ->orWhere('mobile', 'like', "%{$search}%")
+                         ->orWhere('location', 'like', "%{$search}%");
                   });
             });
         }
@@ -299,7 +305,8 @@ class DueController extends Controller
                   ->orWhere('bill_man', 'like', "%{$search}%")
                   ->orWhereHas('customer', function ($cq) use ($search) {
                       $cq->where('name', 'like', "%{$search}%")
-                         ->orWhere('mobile', 'like', "%{$search}%");
+                         ->orWhere('mobile', 'like', "%{$search}%")
+                         ->orWhere('location', 'like', "%{$search}%");
                   });
             });
         }
@@ -360,7 +367,8 @@ class DueController extends Controller
                   ->orWhere('bill_man', 'like', "%{$search}%")
                   ->orWhereHas('customer', function ($cq) use ($search) {
                       $cq->where('name', 'like', "%{$search}%")
-                         ->orWhere('mobile', 'like', "%{$search}%");
+                         ->orWhere('mobile', 'like', "%{$search}%")
+                         ->orWhere('location', 'like', "%{$search}%");
                   });
             });
         }
@@ -407,7 +415,8 @@ class DueController extends Controller
                   ->orWhere('bill_man', 'like', "%{$search}%")
                   ->orWhereHas('customer', function ($cq) use ($search) {
                       $cq->where('name', 'like', "%{$search}%")
-                         ->orWhere('mobile', 'like', "%{$search}%");
+                         ->orWhere('mobile', 'like', "%{$search}%")
+                         ->orWhere('location', 'like', "%{$search}%");
                   });
             });
         }
@@ -464,7 +473,8 @@ class DueController extends Controller
                   ->orWhere('bill_man', 'like', "%{$search}%")
                   ->orWhereHas('customer', function ($cq) use ($search) {
                       $cq->where('name', 'like', "%{$search}%")
-                         ->orWhere('mobile', 'like', "%{$search}%");
+                         ->orWhere('mobile', 'like', "%{$search}%")
+                         ->orWhere('location', 'like', "%{$search}%");
                   });
             });
         }
@@ -726,12 +736,13 @@ class DueController extends Controller
 
         if ($request->payment_type === 'check') {
             $rules = array_merge($rules, [
-                'bank_name' => 'required|string|max:255',
-                'check_no' => 'required|string|max:255',
-                'check_date' => 'required|date',
-                'check_amount' => 'required|numeric|min:0.01',
-                'check_reminder_date' => 'nullable|date',
-                'check_photo' => 'nullable|image|max:5120',
+                'checks' => 'required|array|min:1',
+                'checks.*.bank_name' => 'required|string|max:255',
+                'checks.*.check_no' => 'required|string|max:255',
+                'checks.*.check_date' => 'required|date',
+                'checks.*.check_amount' => 'required|numeric|min:0.01',
+                'checks.*.check_reminder_date' => 'nullable|date',
+                'checks.*.check_photo' => 'nullable|image|max:5120',
             ]);
         }
 
@@ -760,25 +771,31 @@ class DueController extends Controller
         ];
 
         if ($request->payment_type === 'check') {
-            $checkPhotoPath = null;
-            if ($request->hasFile('check_photo')) {
-                $checkPhotoPath = $request->file('check_photo')->store('cheque', 'public');
+            $totalCheckAmount = array_sum(array_map(fn($c) => (float) $c['check_amount'], $validated['checks']));
+            if (abs($totalCheckAmount - (float) $validated['payment_amount']) > 0.005) {
+                return redirect()->back()->with('error', __('Total cheque amount must equal the payment amount'));
             }
-            $payData = array_merge($payData, [
-                'bank_name' => $validated['bank_name'],
-                'check_no' => $validated['check_no'],
-                'check_date' => $validated['check_date'],
-                'check_amount' => $validated['check_amount'],
-                'check_reminder_date' => $validated['check_reminder_date'] ?? null,
-                'check_photo' => $checkPhotoPath,
-                'encashed_amount' => 0,
-                'status' => 'pending',
-            ]);
-        }
+            foreach ($validated['checks'] as $index => $checkData) {
+                $checkPhotoPath = null;
+                if ($request->hasFile("checks.{$index}.check_photo")) {
+                    $checkPhotoPath = $request->file("checks.{$index}.check_photo")->store('cheque', 'public');
+                }
+                DuePayment::create(array_merge($payData, [
+                    'amount' => $checkData['check_amount'],
+                    'discount' => $index === 0 ? $discount : 0,
+                    'bank_name' => $checkData['bank_name'],
+                    'check_no' => $checkData['check_no'],
+                    'check_date' => $checkData['check_date'],
+                    'check_amount' => $checkData['check_amount'],
+                    'check_reminder_date' => $checkData['check_reminder_date'] ?? null,
+                    'check_photo' => $checkPhotoPath,
+                    'encashed_amount' => 0,
+                    'status' => 'pending',
+                ]));
+            }
+        } else {
+            DuePayment::create($payData);
 
-        DuePayment::create($payData);
-
-        if ($request->payment_type !== 'check') {
             $due->update([
                 'amount' => $newRemaining,
                 'status' => $newRemaining <= 0 ? 'paid' : 'pending',

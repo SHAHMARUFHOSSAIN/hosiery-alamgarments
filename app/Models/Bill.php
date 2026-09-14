@@ -54,6 +54,11 @@ class Bill extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function billProducts(): HasMany
+    {
+        return $this->hasMany(BillProduct::class);
+    }
+
     public function checkPayment()
     {
         return $this->hasOne(Payment::class)->where('payment_type', 'check');

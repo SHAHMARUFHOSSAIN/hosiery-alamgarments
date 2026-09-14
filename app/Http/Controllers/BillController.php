@@ -8,6 +8,7 @@ use App\Models\Customer;
 use App\Models\Due;
 use App\Models\MainBalance;
 use App\Models\Payment;
+use App\Models\Product;
 use App\Models\TodaySalesReport;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -336,9 +337,65 @@ class BillController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $bill->load(['customer', 'user', 'editor', 'payments.checkEncashments', 'dues.duePayments.user']);
+        $bill->load(['customer', 'user', 'editor', 'billProducts', 'payments.checkEncashments', 'dues.duePayments.user']);
 
-        return view('bills.show', compact('bill'));
+        $products = Product::where('is_active', true)->orderBy('name')->get(['id', 'name', 'rate', 'unit']);
+
+        return view('bills.show', compact('bill', 'products'));
+    }
+
+    public function updateProducts(Request $request, Bill $bill): RedirectResponse
+    {
+        if (!Auth::user()->isAdmin() && $bill->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $productsInput = array_values(array_filter($request->input('products', []), function ($product) {
+            return is_array($product) && isset($product['product_name']) && trim((string) $product['product_name']) !== '';
+        }));
+
+        $request->merge(['products' => $productsInput]);
+
+        $request->validate([
+            'products' => 'nullable|array',
+            'products.*.product_name' => 'required|string|max:255',
+            'products.*.rate' => 'required|numeric|min:0',
+            'products.*.quantity' => 'required|numeric|min:0',
+        ]);
+
+        if (!empty($productsInput)) {
+            $productsTotal = 0;
+            foreach ($productsInput as $productData) {
+                $productsTotal += round(((float) $productData['rate']) * ((float) $productData['quantity']), 2);
+            }
+            if (abs($productsTotal - (float) $bill->bill_amount) > 0.005) {
+                return back()->withInput()->withErrors([
+                    'products' => 'Product total (' . number_format($productsTotal, 2) . ') does not match the bill amount (' . number_format($bill->bill_amount, 2) . ').',
+                ]);
+            }
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $bill->billProducts()->delete();
+            foreach ($productsInput as $productData) {
+                $bill->billProducts()->create([
+                    'product_name' => $productData['product_name'],
+                    'rate' => (float) $productData['rate'],
+                    'quantity' => (float) $productData['quantity'],
+                    'price' => round(((float) $productData['rate']) * ((float) $productData['quantity']), 2),
+                ]);
+            }
+
+            DB::commit();
+
+            return redirect()->route('bills.show', $bill)
+                ->with('success', 'Products updated successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->withInput()->with('error', 'Failed to update products: ' . $e->getMessage());
+        }
     }
 
     public function edit(Bill $bill): View

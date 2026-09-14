@@ -9,6 +9,7 @@ use App\Http\Controllers\DueController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\PreviousDueController;
 use App\Http\Controllers\ImportController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\UserController;
@@ -53,11 +54,21 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{bank}', [BankController::class, 'destroy'])->name('banks.destroy');
     });
 
+    Route::prefix('products')->group(function () {
+        Route::get('/', [ProductController::class, 'index'])->name('products.index');
+        Route::get('/catalog', [ProductController::class, 'catalog'])->name('products.catalog');
+        Route::get('/search', [ProductController::class, 'search'])->name('products.search');
+        Route::post('/', [ProductController::class, 'store'])->name('products.store');
+        Route::put('/{product}', [ProductController::class, 'update'])->name('products.update');
+        Route::delete('/{product}', [ProductController::class, 'destroy'])->name('products.destroy');
+    });
+
     Route::prefix('bills')->group(function () {
         Route::get('/', [BillController::class, 'index'])->name('bills.index');
         Route::get('/create', [BillController::class, 'create'])->name('bills.create');
         Route::post('/', [BillController::class, 'store'])->name('bills.store');
         Route::get('/{bill}', [BillController::class, 'show'])->name('bills.show');
+        Route::put('/{bill}/products', [BillController::class, 'updateProducts'])->name('bills.products.update');
         Route::get('/{bill}/edit', [BillController::class, 'edit'])->name('bills.edit');
         Route::put('/{bill}', [BillController::class, 'update'])->name('bills.update');
         Route::delete('/{bill}', [BillController::class, 'destroy'])->name('bills.destroy');

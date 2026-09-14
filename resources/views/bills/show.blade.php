@@ -60,6 +60,82 @@
 
     <div class="col-lg-8">
         <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h5 class="mb-0"><i class="bi bi-box-seam"></i> {{ __('Product Details') }}</h5>
+                <button type="button" class="btn btn-sm btn-primary" id="addProductBtn">
+                    <i class="bi bi-plus"></i> {{ __('Add Product') }}
+                </button>
+            </div>
+            <form method="POST" action="{{ route('bills.products.update', $bill) }}" id="billProductsForm">
+                @csrf
+                @method('PUT')
+                <div class="card-body">
+                    @error('products')
+                    <div class="alert alert-danger py-1 mb-2"><small><i class="bi bi-exclamation-triangle"></i> {{ $message }}</small></div>
+                    @enderror
+                    <small class="text-muted d-block mb-3">{{ __('Add or update the items of this bill. The item total must match the bill amount.') }} <strong>{{ format_currency($bill->bill_amount) }}</strong></small>
+                    <datalist id="catalogProducts">
+                        @foreach($products as $product)
+                        <option value="{{ $product->name }}" data-rate="{{ $product->rate }}" data-unit="{{ $product->unit }}">{{ $product->unit ? __('Rate') . ': ' . format_number($product->rate, 2) . ' / ' . $product->unit : '' }}</option>
+                        @endforeach
+                    </datalist>
+                    <div class="table-responsive">
+                        <table class="table table-bordered align-middle mb-2 product-items-table">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 5%;">#</th>
+                                    <th style="width: 41%;">{{ __('Product Name') }}</th>
+                                    <th style="width: 14%;">{{ __('Rate (৳)') }}</th>
+                                    <th style="width: 14%;">{{ __('Quantity') }}</th>
+                                    <th style="width: 16%;" class="text-end">{{ __('Price (৳)') }}</th>
+                                    <th style="width: 10%;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="productsContainer">
+                                @php $productIndex = 0; @endphp
+                                @forelse($bill->billProducts as $bp)
+                                <tr class="product-item" data-index="{{ $productIndex }}">
+                                    <td class="product-sno"></td>
+                                    <td><input type="text" name="products[{{ $productIndex }}][product_name]" class="form-control form-control-sm product-name-input" placeholder="{{ __('e.g. Round Neck T-Shirt') }}" value="{{ old('products.' . $productIndex . '.product_name', $bp->product_name) }}" autocomplete="off" list="catalogProducts"></td>
+                                    <td><input type="number" step="0.01" min="0" name="products[{{ $productIndex }}][rate]" class="form-control form-control-sm product-rate-input" value="{{ old('products.' . $productIndex . '.rate', number_format($bp->rate, 2, '.', '')) }}" placeholder="0.00"></td>
+                                    <td><input type="number" step="0.01" min="0" name="products[{{ $productIndex }}][quantity]" class="form-control form-control-sm product-qty-input" value="{{ old('products.' . $productIndex . '.quantity', number_format($bp->quantity, 2, '.', '')) }}" placeholder="0"></td>
+                                    <td class="text-end product-price fw-semibold">{{ old('products.' . $productIndex . '.price', number_format($bp->price, 2, '.', '')) }}</td>
+                                    <td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm remove-product-btn" title="{{ __('Remove') }}"><i class="bi bi-trash"></i></button></td>
+                                </tr>
+                                @php $productIndex++; @endphp
+                                @empty
+                                <tr class="product-item" data-index="0">
+                                    <td class="product-sno"></td>
+                                    <td><input type="text" name="products[0][product_name]" class="form-control form-control-sm product-name-input" placeholder="{{ __('e.g. Round Neck T-Shirt') }}" autocomplete="off" list="catalogProducts"></td>
+                                    <td><input type="number" step="0.01" min="0" name="products[0][rate]" class="form-control form-control-sm product-rate-input" placeholder="0.00"></td>
+                                    <td><input type="number" step="0.01" min="0" name="products[0][quantity]" class="form-control form-control-sm product-qty-input" placeholder="0"></td>
+                                    <td class="text-end product-price fw-semibold">0.00</td>
+                                    <td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm remove-product-btn" style="display: none;" title="{{ __('Remove') }}"><i class="bi bi-trash"></i></button></td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr class="fw-bold">
+                                    <td colspan="4" class="text-end">{{ __('Total') }}:</td>
+                                    <td class="text-end" id="productsTotal">0.00</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div id="productsMatchAlert" class="alert alert-warning d-none py-2 mb-2">
+                        <i class="bi bi-exclamation-triangle"></i> <span id="productsMatchMessage"></span>
+                    </div>
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> {{ __('Save Products') }}
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-white py-3">
                 <h5 class="mb-0">{{ __('Payments') }}</h5>
             </div>
@@ -278,4 +354,125 @@
 </div>
 @endif
 @endforeach
+@endsection
+
+@section('scripts')
+<script>
+(function() {
+    'use strict';
+
+    var billAmount = parseFloat('{{ $bill->bill_amount }}') || 0;
+    var catalogProducts = JSON.parse('{!! json_encode($products) !!}'.replace(/&quot;/g, '"'));
+    var productIndex = {{ $bill->billProducts->count() > 0 ? $bill->billProducts->count() : 1 }};
+    var productsContainer = document.getElementById('productsContainer');
+    var addProductBtn = document.getElementById('addProductBtn');
+
+    function lookupCatalogProduct(name) {
+        name = (name || '').trim().toLowerCase();
+        if (!name) return null;
+        for (var i = 0; i < catalogProducts.length; i++) {
+            if ((catalogProducts[i].name || '').trim().toLowerCase() === name) {
+                return catalogProducts[i];
+            }
+        }
+        return null;
+    }
+
+    function updateProductRow(row) {
+        if (!row) return;
+        var rate = parseFloat(row.querySelector('.product-rate-input').value) || 0;
+        var qty = parseFloat(row.querySelector('.product-qty-input').value) || 0;
+        var priceEl = row.querySelector('.product-price');
+        if (priceEl) priceEl.textContent = (rate * qty).toFixed(2);
+        updateProductsSummary();
+    }
+
+    function updateProductNumbersAndButtons() {
+        var items = document.querySelectorAll('.product-item');
+        if (!items.length) return;
+        items.forEach(function(item, i) {
+            var sno = item.querySelector('.product-sno');
+            if (sno) sno.textContent = i + 1;
+            var btn = item.querySelector('.remove-product-btn');
+            if (btn) btn.style.display = items.length > 1 ? 'inline-block' : 'none';
+        });
+    }
+
+    function updateProductsSummary() {
+        var total = 0;
+        document.querySelectorAll('.product-price').forEach(function(el) {
+            total += parseFloat(el.textContent) || 0;
+        });
+        var totalEl = document.getElementById('productsTotal');
+        if (totalEl) totalEl.textContent = total.toFixed(2);
+
+        var alertEl = document.getElementById('productsMatchAlert');
+        var msgEl = document.getElementById('productsMatchMessage');
+        if (!alertEl || !msgEl) return;
+
+        var anyItem = Array.prototype.some.call(document.querySelectorAll('.product-name-input'), function(inp) {
+            return inp.value.trim() !== '';
+        });
+        if (!anyItem) { alertEl.classList.add('d-none'); return; }
+
+        var match = Math.abs(total - billAmount) <= 0.005;
+        alertEl.classList.remove('d-none', 'alert-success', 'alert-warning');
+        alertEl.classList.add(match ? 'alert-success' : 'alert-warning');
+        msgEl.textContent = match
+            ? 'Product total matches the Bill Amount.'
+            : 'Product total (' + total.toFixed(2) + ' ৳) does not match the Bill Amount (' + billAmount.toFixed(2) + ' ৳).';
+    }
+
+    function addProductRow() {
+        if (!productsContainer) return;
+        var tr = document.createElement('tr');
+        tr.className = 'product-item';
+        tr.setAttribute('data-index', productIndex);
+        tr.innerHTML = [
+            '<td class="product-sno"></td>',
+            '<td><input type="text" name="products[' + productIndex + '][product_name]" class="form-control form-control-sm product-name-input" placeholder="e.g. Round Neck T-Shirt" autocomplete="off" list="catalogProducts"></td>',
+            '<td><input type="number" step="0.01" min="0" name="products[' + productIndex + '][rate]" class="form-control form-control-sm product-rate-input" placeholder="0.00"></td>',
+            '<td><input type="number" step="0.01" min="0" name="products[' + productIndex + '][quantity]" class="form-control form-control-sm product-qty-input" placeholder="0"></td>',
+            '<td class="text-end product-price fw-semibold">0.00</td>',
+            '<td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm remove-product-btn"><i class="bi bi-trash"></i></button></td>'
+        ].join('');
+        productsContainer.appendChild(tr);
+        productIndex++;
+        updateProductNumbersAndButtons();
+        updateProductsSummary();
+    }
+
+    if (addProductBtn) {
+        addProductBtn.addEventListener('click', addProductRow);
+    }
+
+    if (productsContainer) {
+        productsContainer.addEventListener('click', function(e) {
+            if (e.target.closest('.remove-product-btn')) {
+                e.target.closest('.product-item').remove();
+                updateProductNumbersAndButtons();
+                updateProductsSummary();
+            }
+        });
+        productsContainer.addEventListener('input', function(e) {
+            var row = e.target.closest('.product-item');
+            if (e.target.classList.contains('product-name-input')) {
+                var cat = lookupCatalogProduct(e.target.value);
+                if (cat) {
+                    var rateInput = row.querySelector('.product-rate-input');
+                    if (rateInput && (rateInput.value === '' || parseFloat(rateInput.value) === 0)) {
+                        rateInput.value = cat.rate || '';
+                    }
+                }
+            }
+            if (e.target.classList.contains('product-rate-input') || e.target.classList.contains('product-qty-input') || e.target.classList.contains('product-name-input')) {
+                updateProductRow(row);
+            }
+        });
+    }
+
+    updateProductNumbersAndButtons();
+    updateProductsSummary();
+})();
+</script>
 @endsection

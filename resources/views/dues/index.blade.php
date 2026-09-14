@@ -214,46 +214,65 @@
                         </select>
                     </div>
                     <div class="card border border-warning mb-3 cheque-fields" style="display:none;">
-                        <div class="card-header bg-warning bg-opacity-10 py-2">
+                        <div class="card-header bg-warning bg-opacity-10 py-2 d-flex justify-content-between align-items-center">
                             <h6 class="mb-0"><i class="bi bi-bank"></i> {{ __('Cheque Payment Details') }}</h6>
+                            <button type="button" class="btn btn-sm btn-warning add-check-btn">
+                                <i class="bi bi-plus"></i> {{ __('Add Another Cheque') }}
+                            </button>
                         </div>
                         <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-6" style="position: relative;">
-                                    <label class="form-label">{{ __('Bank Name') }} <span class="text-danger">*</span></label>
-                                    <div class="input-group">
-                                        <input type="text" name="bank_name" class="form-control bank-search-input" placeholder="{{ __('Search bank name...') }}" autocomplete="off" data-req="1">
-                                        <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#newBankModal">
-                                            <i class="bi bi-plus"></i>
+                            <div class="due-cheque-container">
+                                <div class="card border border-warning mb-3 check-payment-item" data-index="0">
+                                    <div class="card-header bg-warning text-dark py-2 d-flex justify-content-between align-items-center">
+                                        <span class="check-header-title"><i class="bi bi-bank"></i> {{ __('Cheque Payment') }} #1</span>
+                                        <button type="button" class="btn btn-sm btn-danger remove-check-btn" style="display: none;">
+                                            <i class="bi bi-trash"></i> {{ __('Remove') }}
                                         </button>
                                     </div>
-                                    <div class="bank-results list-group position-absolute w-100 shadow search-dropdown" style="z-index: 1050; display: none; max-height: 250px; overflow-y: auto; top: 100%; left: 0; background: #fff;"></div>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">{{ __('Cheque No') }} <span class="text-danger">*</span></label>
-                                    <input type="text" name="check_no" class="form-control" data-req="1">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">{{ __('Cheque Date') }} <span class="text-danger">*</span></label>
-                                    <input type="date" name="check_date" class="form-control" data-req="1">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">{{ __('Cheque Amount') }} <span class="text-danger">*</span></label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">৳</span>
-                                        <input type="number" step="0.01" name="check_amount" class="form-control" data-req="1">
+                                    <div class="card-body">
+                                        <div class="row g-3">
+                                            <div class="col-md-6" style="position: relative;">
+                                                <label class="form-label">{{ __('Bank Name') }} <span class="text-danger">*</span></label>
+                                                <div class="input-group">
+                                                    <input type="text" name="checks[0][bank_name]" class="form-control bank-search-input" placeholder="{{ __('Search bank name...') }}" autocomplete="off" data-req="1">
+                                                    <button type="button" class="btn btn-outline-warning bank-new-btn" data-bs-toggle="modal" data-bs-target="#newBankModal">
+                                                        <i class="bi bi-plus"></i>
+                                                    </button>
+                                                </div>
+                                                <div class="bank-results list-group position-absolute w-100 shadow search-dropdown" style="z-index: 1050; display: none; max-height: 250px; overflow-y: auto; top: 100%; left: 0; background: #fff;"></div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label">{{ __('Cheque No') }} <span class="text-danger">*</span></label>
+                                                <input type="text" name="checks[0][check_no]" class="form-control" data-req="1">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">{{ __('Cheque Date') }} <span class="text-danger">*</span></label>
+                                                <input type="date" name="checks[0][check_date]" class="form-control" data-req="1">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">{{ __('Cheque Amount') }} <span class="text-danger">*</span></label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">৳</span>
+                                                    <input type="number" step="0.01" name="checks[0][check_amount]" class="form-control check-amount-input" data-req="1">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">{{ __('Reminder Date') }}</label>
+                                                <input type="date" name="checks[0][check_reminder_date]" class="form-control">
+                                                <small class="text-muted">{{ __('Date to remind before cheque date') }}</small>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">{{ __('Cheque Photo') }}</label>
+                                                <input type="file" name="checks[0][check_photo]" class="form-control" accept="image/*">
+                                                <small class="text-muted">{{ __('Upload cheque image (max 5MB)') }}</small>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">{{ __('Reminder Date') }}</label>
-                                    <input type="date" name="check_reminder_date" class="form-control">
-                                    <small class="text-muted">{{ __('Date to remind before cheque date') }}</small>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label">{{ __('Cheque Photo') }}</label>
-                                    <input type="file" name="check_photo" class="form-control" accept="image/*">
-                                    <small class="text-muted">{{ __('Upload cheque image (max 5MB)') }}</small>
-                                </div>
+                            </div>
+                            <div class="alert alert-info mb-0">
+                                <strong>{{ __('Total Cheque Amount:') }}</strong> <span class="due-total-check-amount">0.00</span>
+                                <span class="due-check-mismatch text-danger d-block" style="display:none;"></span>
                             </div>
                         </div>
                     </div>
@@ -363,8 +382,117 @@ function setupBankSearch(input) {
     });
 }
 
+function addDueCheckItem(modal) {
+    var container = modal.querySelector('.due-cheque-container');
+    if (!container) return;
+    var index = container.querySelectorAll('.check-payment-item').length;
+    var div = document.createElement('div');
+    div.className = 'card border border-warning mb-3 check-payment-item';
+    div.setAttribute('data-index', index);
+    div.innerHTML = [
+        '<div class="card-header bg-warning text-dark py-2 d-flex justify-content-between align-items-center">',
+        '  <span class="check-header-title"><i class="bi bi-bank"></i> Cheque Payment #' + (index + 1) + '</span>',
+        '  <button type="button" class="btn btn-sm btn-danger remove-check-btn"><i class="bi bi-trash"></i> Remove</button>',
+        '</div>',
+        '<div class="card-body"><div class="row g-3">',
+        '  <div class="col-md-6" style="position: relative;">',
+        '    <label class="form-label">Bank Name <span class="text-danger">*</span></label>',
+        '    <div class="input-group">',
+        '      <input type="text" name="checks[' + index + '][bank_name]" class="form-control bank-search-input" placeholder="Search bank name..." autocomplete="off" data-req="1">',
+        '      <button type="button" class="btn btn-outline-warning bank-new-btn" data-bs-toggle="modal" data-bs-target="#newBankModal"><i class="bi bi-plus"></i></button>',
+        '    </div>',
+        '    <div class="bank-results list-group position-absolute w-100 shadow search-dropdown" style="z-index: 1050; display: none; max-height: 250px; overflow-y: auto; top: 100%; left: 0; background: #fff;"></div>',
+        '  </div>',
+        '  <div class="col-md-6"><label class="form-label">Cheque No <span class="text-danger">*</span></label><input type="text" name="checks[' + index + '][check_no]" class="form-control" data-req="1"></div>',
+        '  <div class="col-md-4"><label class="form-label">Cheque Date <span class="text-danger">*</span></label><input type="date" name="checks[' + index + '][check_date]" class="form-control" data-req="1"></div>',
+        '  <div class="col-md-4"><label class="form-label">Cheque Amount <span class="text-danger">*</span></label><div class="input-group"><span class="input-group-text">৳</span><input type="number" step="0.01" name="checks[' + index + '][check_amount]" class="form-control check-amount-input" data-req="1"></div></div>',
+        '  <div class="col-md-4"><label class="form-label">Reminder Date</label><input type="date" name="checks[' + index + '][check_reminder_date]" class="form-control">',
+        '    <small class="text-muted">Date to remind before cheque date</small></div>',
+        '  <div class="col-md-4"><label class="form-label">Cheque Photo</label><input type="file" name="checks[' + index + '][check_photo]" class="form-control" accept="image/*">',
+        '    <small class="text-muted">Upload cheque image (max 5MB)</small></div>',
+        '</div></div></div>'
+    ].join('');
+    container.appendChild(div);
+    setupBankSearch(div.querySelector('.bank-search-input'));
+    var paymentType = modal.querySelector('[name="payment_type"]');
+    if (paymentType && paymentType.value === 'check') {
+        div.querySelectorAll('[data-req]').forEach(function(f) { f.required = true; });
+    }
+    updateDueCheckButtons(modal);
+    updateDueCheckTotal(modal);
+}
+
+function updateDueCheckButtons(modal) {
+    var items = modal.querySelectorAll('.check-payment-item');
+    items.forEach(function(item, i) {
+        var btn = item.querySelector('.remove-check-btn');
+        if (btn) btn.style.display = items.length > 1 ? 'block' : 'none';
+        var header = item.querySelector('.check-header-title');
+        if (header) header.innerHTML = '<i class="bi bi-bank"></i> Cheque Payment #' + (i + 1);
+    });
+}
+
+function updateDueCheckTotal(modal) {
+    var total = 0;
+    modal.querySelectorAll('.check-amount-input').forEach(function(inp) {
+        total += parseFloat(inp.value) || 0;
+    });
+    var totalEl = modal.querySelector('.due-total-check-amount');
+    if (totalEl) totalEl.textContent = total.toFixed(2);
+    var warnEl = modal.querySelector('.due-check-mismatch');
+    var payInput = modal.querySelector('[name="payment_amount"]');
+    if (warnEl && payInput) {
+        var payVal = parseFloat(payInput.value) || 0;
+        if (total > 0 && Math.abs(total - payVal) > 0.005) {
+            warnEl.style.display = 'block';
+            warnEl.textContent = 'Total cheque amount (৳' + total.toFixed(2) + ') must equal payment amount (৳' + payVal.toFixed(2) + ')';
+        } else {
+            warnEl.style.display = 'none';
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
-    if (document.querySelector('.bank-search-input')) setupBankSearch(document.querySelector('.bank-search-input'));
+    document.querySelectorAll('.bank-search-input').forEach(function(input) {
+        setupBankSearch(input);
+    });
+
+    document.querySelectorAll('.cheque-fields').forEach(function(chequeFields) {
+        var modal = chequeFields.closest('.modal');
+        if (!modal) return;
+        var container = chequeFields.querySelector('.due-cheque-container');
+        if (!container) return;
+        var addBtn = chequeFields.querySelector('.add-check-btn');
+        if (addBtn) addBtn.addEventListener('click', function() {
+            addDueCheckItem(modal);
+        });
+        container.addEventListener('click', function(e) {
+            if (e.target.closest('.remove-check-btn')) {
+                e.target.closest('.check-payment-item').remove();
+                updateDueCheckButtons(modal);
+                updateDueCheckTotal(modal);
+            }
+        });
+        modal.addEventListener('input', function(e) {
+            if (e.target.classList.contains('check-amount-input')) {
+                var paymentType = modal.querySelector('[name="payment_type"]');
+                if (paymentType && paymentType.value === 'check') {
+                    var paymentInput = modal.querySelector('[name="payment_amount"]');
+                    var total = 0;
+                    container.querySelectorAll('.check-amount-input').forEach(function(inp) {
+                        total += parseFloat(inp.value) || 0;
+                    });
+                    if (paymentInput && total > 0) {
+                        var maxVal = parseFloat(paymentInput.max);
+                        paymentInput.value = (!isNaN(maxVal) && total > maxVal) ? maxVal.toFixed(2) : total.toFixed(2);
+                    }
+                }
+                updateDueCheckTotal(modal);
+            }
+        });
+        updateDueCheckButtons(modal);
+        updateDueCheckTotal(modal);
+    });
 
     var bankForm = document.getElementById('newBankForm');
     if (bankForm) {
@@ -381,23 +509,42 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(function(data) {
                 if (data.success) {
                     var bankName = fd.get('name');
-                    document.querySelectorAll('.bank-search-input').forEach(function(inp) {
-                        if (inp.value === '' || inp.dataset.fromModal) {
-                            inp.value = bankName;
-                            inp.dataset.fromModal = 'true';
-                        }
-                    });
+                    var opener = document.querySelector('.bank-opener-active');
+                    var targetInput = null;
+                    if (opener) {
+                        var chequeCard = opener.closest('.check-payment-item');
+                        if (chequeCard) targetInput = chequeCard.querySelector('.bank-search-input');
+                    }
+                    if (targetInput) {
+                        targetInput.value = bankName;
+                    } else {
+                        document.querySelectorAll('.bank-search-input').forEach(function(inp) {
+                            if (inp.value === '' || inp.dataset.fromModal) {
+                                inp.value = bankName;
+                                inp.dataset.fromModal = 'true';
+                            }
+                        });
+                    }
                     var modalEl = document.getElementById('newBankModal');
                     if (modalEl) {
                         var modal = bootstrap.Modal.getInstance(modalEl);
                         if (modal) modal.hide();
                     }
                     bankForm.reset();
+                    document.querySelectorAll('.bank-opener-active').forEach(function(b) { b.classList.remove('bank-opener-active'); });
                 }
             })
             .catch(function(err) { console.error('Error creating bank:', err); });
         });
     }
+
+    document.addEventListener('click', function(e) {
+        var opener = e.target.closest('[data-bs-target="#newBankModal"]');
+        if (opener) {
+            document.querySelectorAll('.bank-opener-active').forEach(function(b) { b.classList.remove('bank-opener-active'); });
+            opener.classList.add('bank-opener-active');
+        }
+    });
 });
 
 function toggleChequeFields(el) {
@@ -407,17 +554,31 @@ function toggleChequeFields(el) {
     if (!chequeFields) return;
     var isCheck = el.value === 'check';
     chequeFields.style.display = isCheck ? '' : 'none';
-    chequeFields.querySelectorAll('input:not([type=file]):not([type=hidden]), select, textarea').forEach(function(f) {
-        if (isCheck) {
-            if (f.hasAttribute('data-req')) f.required = true;
-        } else {
-            f.required = false;
-            f.value = '';
-        }
+    chequeFields.querySelectorAll('input, select, textarea, button').forEach(function(f) {
+        f.disabled = !isCheck;
     });
     if (isCheck) {
-        var fileInput = chequeFields.querySelector('input[type=file]');
-        if (fileInput) fileInput.value = '';
+        chequeFields.querySelectorAll('[data-req]').forEach(function(f) {
+            f.required = true;
+        });
+    } else {
+        var container = chequeFields.querySelector('.due-cheque-container');
+        if (container) {
+            var items = container.querySelectorAll('.check-payment-item');
+            for (var i = items.length - 1; i > 0; i--) items[i].remove();
+            var first = container.querySelector('.check-payment-item');
+            if (first) {
+                first.querySelectorAll('input, select, textarea').forEach(function(f) {
+                    f.value = '';
+                    f.required = false;
+                });
+            }
+            var fieldset = chequeFields.closest('.modal');
+            if (fieldset) {
+                updateDueCheckButtons(fieldset);
+                updateDueCheckTotal(fieldset);
+            }
+        }
     }
 }
 function getDueId(el) {
@@ -452,6 +613,22 @@ function updatePaymentAmount(el, remaining, existingDiscount) {
         el.value = effectiveRemaining;
     }
     if (infoEl) infoEl.textContent = 'Total discount: ৳' + totalDiscount.toFixed(2) + ' | Remaining after: ৳' + effectiveRemaining.toFixed(2);
+    var modal = el.closest('.modal');
+    if (modal && modal.querySelector('[name="payment_type"]')?.value === 'check') {
+        var total = 0;
+        modal.querySelectorAll('.check-amount-input').forEach(function(inp) {
+            total += parseFloat(inp.value) || 0;
+        });
+        var warnEl = modal.querySelector('.due-check-mismatch');
+        if (warnEl && total > 0) {
+            if (Math.abs(total - payVal) > 0.005) {
+                warnEl.style.display = 'block';
+                warnEl.textContent = 'Total cheque amount (৳' + total.toFixed(2) + ') must equal payment amount (৳' + payVal.toFixed(2) + ')';
+            } else {
+                warnEl.style.display = 'none';
+            }
+        }
+    }
 }
 </script>
 @endpush

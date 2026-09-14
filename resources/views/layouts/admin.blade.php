@@ -88,6 +88,11 @@
                                     <i class="bi bi-bank"></i> {{ __('Banks') }}
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a href="{{ route('products.index') }}" class="nav-link text-white py-1 {{ request()->routeIs('products.*') ? 'active bg-primary rounded' : '' }}">
+                                    <i class="bi bi-box-seam"></i> {{ __('Products') }}
+                                </a>
+                            </li>
                             @if(auth()->user()->isAdmin())
                             <li class="nav-item">
                                 <a href="{{ route('users.index') }}" class="nav-link text-white py-1 {{ request()->routeIs('users.*') ? 'active bg-primary rounded' : '' }}">
@@ -241,6 +246,7 @@
                             <ul class="nav flex-column">
                                 <li class="nav-item"><a href="{{ route('customers.index') }}" class="nav-link text-white py-1">{{ __('Customers') }}</a></li>
                                 <li class="nav-item"><a href="{{ route('banks.index') }}" class="nav-link text-white py-1">{{ __('Banks') }}</a></li>
+                                <li class="nav-item"><a href="{{ route('products.index') }}" class="nav-link text-white py-1">{{ __('Products') }}</a></li>
                                 @if(auth()->user()->isAdmin())
                                 <li class="nav-item"><a href="{{ route('users.index') }}" class="nav-link text-white py-1">{{ __('Users') }}</a></li>
                                 @endif
