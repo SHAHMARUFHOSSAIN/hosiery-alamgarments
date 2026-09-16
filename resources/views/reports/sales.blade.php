@@ -118,8 +118,13 @@
                             <span class="badge bg-warning text-dark ms-1" title="{{ __('Edited by') }} {{ $bill->editor?->name ?? __('Unknown') }}">{{ __('Edited') }}</span>
                         @endif
                     </td>
-                    <td>{{ $bill->customer->name ?? 'N/A' }}</td>
-                    <td>{{ $bill->shop_name ?? 'N/A' }}</td>
+                    <td>
+                        {{ $bill->customer->name ?? 'N/A' }}
+                        @if($bill->customer?->mobile)
+                            <div class="small text-muted">{{ $bill->customer->mobile }}</div>
+                        @endif
+                    </td>
+                    <td>{{ $bill->shop_label }}</td>
                     <td>{{ format_number($bill->bill_amount, 2) }}</td>
                     <td>{{ format_number($bill->discount, 2) }}</td>
                     <td class="fw-bold">{{ format_number($bill->bill_amount - $bill->discount, 2) }}</td>

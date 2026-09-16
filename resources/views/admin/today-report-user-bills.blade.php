@@ -166,8 +166,13 @@
                 @endphp
                 <tr>
                     <td class="ps-3"><a href="{{ route('bills.show', $bill) }}" class="fw-semibold text-decoration-none">{{ $bill->bill_no }}</a></td>
-                    <td>{{ $bill->customer?->name ?? 'N/A' }}</td>
-                    <td>{{ $bill->shop_name ?? 'N/A' }}</td>
+                    <td>
+                        {{ $bill->customer?->name ?? 'N/A' }}
+                        @if($bill->customer?->mobile)
+                            <div class="small text-muted">{{ $bill->customer->mobile }}</div>
+                        @endif
+                    </td>
+                    <td>{{ $bill->shop_label }}</td>
                     <td class="text-end">{{ format_currency($bill->bill_amount) }}</td>
                     <td class="text-end text-danger">{{ format_currency($bill->discount) }}</td>
                     <td class="text-end fw-bold text-primary">{{ format_currency($billNet) }}</td>

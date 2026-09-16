@@ -69,6 +69,16 @@ class Bill extends Model
         return $this->hasMany(Due::class);
     }
 
+    public function getShopLabelAttribute(): string
+    {
+        $location = trim((string) ($this->customer?->location ?? ''));
+        if ($location !== '') {
+            return $location;
+        }
+
+        return trim((string) ($this->shop_name ?? '')) !== '' ? $this->shop_name : 'N/A';
+    }
+
     public function isEditable(): bool
     {
         return true;
