@@ -120,6 +120,7 @@ $showLastDateUrl = route('reports.dues', $toggleQuery);
                     <th>{{ __('Bill No') }}</th>
                     <th>{{ __('Customer') }}</th>
                     <th>{{ __('Mobile') }}</th>
+                    <th>{{ __('Location') }}</th>
                     <th>{{ __('Branch') }}</th>
                     <th class="text-end">{{ __('Bill Amount') }}</th>
                     @if($type !== 'cheque')
@@ -142,6 +143,7 @@ $showLastDateUrl = route('reports.dues', $toggleQuery);
                     <td><a href="{{ route('bills.show', $bill) }}">{{ $bill->bill_no }}</a></td>
                     <td>{{ $bill->customer->name ?? 'N/A' }}</td>
                     <td>{{ $bill->customer->mobile ?? 'N/A' }}</td>
+                    <td class="small text-muted">{{ $bill->customer->location ?? 'N/A' }}</td>
                     <td><span class="badge bg-secondary">{{ $bill->user->name ?? 'N/A' }}</span></td>
                     <td class="text-end">{{ format_number($bill->bill_amount, 2) }}</td>
                     @if($type !== 'cheque')
@@ -153,12 +155,12 @@ $showLastDateUrl = route('reports.dues', $toggleQuery);
                     <td class="text-end fw-bold">{{ format_number($billTotal, 2) }}</td>
                 </tr>
                 @empty
-                <tr><td colspan="8" class="text-center py-3">{{ __('No bills found') }}</td></tr>
+                <tr><td colspan="9" class="text-center py-3">{{ __('No bills found') }}</td></tr>
                 @endforelse
             </tbody>
             <tfoot class="table-light fw-bold">
                 <tr>
-                    <td colspan="4">{{ __('Total') }}</td>
+                    <td colspan="5">{{ __('Total') }}</td>
                     <td class="text-end">{{ format_number($totalBills ? $bills->sum(fn($b) => (float) $b->bill_amount) : 0, 2) }}</td>
                     @if($type !== 'cheque')
                     <td class="text-end text-danger">{{ format_number($totalDue, 2) }}</td>

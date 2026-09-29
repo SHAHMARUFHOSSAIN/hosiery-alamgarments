@@ -104,7 +104,7 @@
                             <label for="discount" class="form-label">{{ __('Discount') }}</label>
                             <div class="input-group">
                                 <span class="input-group-text">৳</span>
-                                <input type="number" step="0.01" name="discount" id="discount" class="form-control" value="{{ old('discount', 0) }}">
+                                <input type="number" step="0.01" name="discount" id="discount" class="form-control" value="{{ old('discount') }}">
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -150,7 +150,7 @@
                             <label for="payment_amount" class="form-label">{{ __('Payment Received') }}</label>
                             <div class="input-group">
                                 <span class="input-group-text">৳</span>
-                                <input type="number" step="0.01" name="payment_amount" id="payment_amount" class="form-control" value="{{ old('payment_amount', 0) }}">
+                                <input type="number" step="0.01" name="payment_amount" id="payment_amount" class="form-control" value="{{ old('payment_amount') }}">
                             </div>
                             <small class="text-muted">{{ __('Amount received now (if any)') }}</small>
                         </div>
@@ -409,6 +409,8 @@
 (function() {
     'use strict';
 
+    var isBn = {{ $currentLocale === 'bn' ? 'true' : 'false' }};
+
     var csrfMeta = document.querySelector('meta[name="csrf-token"]');
     var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
     var banksSearchUrl = '{{ route("banks.search") }}';
@@ -629,8 +631,12 @@
         });
     }
 
-    // ---- Due calculation ----
-    var billAmt = document.getElementById('bill_amount');
+        // ---- Due calculation ----
+        function amt(n, d) {
+            var s = Number(n).toFixed(d == null ? 2 : d);
+            return isBn ? window.BnDigits.toBangla(s) : s;
+        }
+        var billAmt = document.getElementById('bill_amount');
     var discAmt = document.getElementById('discount');
     var payAmt = document.getElementById('payment_amount');
     var calcDue = document.getElementById('calculatedDue');
@@ -646,14 +652,14 @@
             paid += parseFloat((document.getElementById('card_amount') || {}).value) || 0;
         } else {
             paid = parseFloat(payAmt ? payAmt.value : 0) || 0;
-            paid += parseFloat((document.getElementById('totalCheckAmount') || {}).textContent) || 0;
+            paid += checkTotalRaw();
         }
         var due = bill - disc - paid;
         if (calcDue) {
-            calcDue.textContent = (due <= 0 ? '0.00' : due.toFixed(2));
+            calcDue.textContent = amt(due <= 0 ? 0 : due, 2);
             calcDue.className = 'fs-5 fw-bold ' + (due <= 0 ? 'text-success' : 'text-danger');
         }
-        if (netPay) netPay.textContent = (bill - disc).toFixed(2);
+        if (netPay) netPay.textContent = amt(bill - disc, 2);
         updateCheckRemainingDue();
     }
 
@@ -781,19 +787,25 @@
             total += parseFloat(inp.value) || 0;
         });
         var el = document.getElementById('totalCheckAmount');
-        if (el) el.textContent = total.toFixed(2);
+        if (el) { el.textContent = amt(total, 2); el.dataset.raw = total.toFixed(2); }
         updateCheckRemainingDue();
         updateDue();
+    }
+
+    function checkTotalRaw() {
+        var el = document.getElementById('totalCheckAmount');
+        if (!el) return 0;
+        return parseFloat(el.dataset.raw || el.textContent) || 0;
     }
 
     function updateCheckRemainingDue() {
         var bill = parseFloat(billAmt ? billAmt.value : 0) || 0;
         var disc = parseFloat(discAmt ? discAmt.value : 0) || 0;
-        var totalCheck = parseFloat((document.getElementById('totalCheckAmount') || {}).textContent) || 0;
+        var totalCheck = checkTotalRaw();
         var other = parseFloat(payAmt ? payAmt.value : 0) || 0;
         var remain = bill - disc - totalCheck - other;
         var el = document.getElementById('checkRemainingDue');
-        if (el) el.textContent = remain.toFixed(2);
+        if (el) el.textContent = amt(remain, 2);
     }
 
     document.addEventListener('input', function(e) {

@@ -22,6 +22,8 @@ class BillsExport implements FromCollection, WithHeadings
                 $bill->id,
                 $bill->bill_no,
                 $bill->customer?->name ?? 'N/A',
+                $bill->customer?->mobile ?? 'N/A',
+                $bill->customer?->location ?? 'N/A',
                 $bill->shop_name ?? 'N/A',
                 $bill->bill_man ?? 'N/A',
                 number_format($bill->bill_amount, 2),
@@ -40,6 +42,6 @@ class BillsExport implements FromCollection, WithHeadings
 
     public function headings(): array
     {
-        return ['ID', 'Bill No', 'Customer', 'Shop', 'Bill Man', 'Amount', 'Discount', 'Net', 'User', 'Payment Type', 'Bank', 'Check No', 'Check Amount', 'Check Date', 'Date'];
+        return ['ID', 'Bill No', 'Customer', 'Mobile', 'Location', 'Shop', 'Bill Man', 'Amount', 'Discount', 'Net', 'User', 'Payment Type', 'Bank', 'Check No', 'Check Amount', 'Check Date', 'Date'];
     }
 }

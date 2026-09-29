@@ -81,7 +81,7 @@ class ImportController extends Controller
 
         $logs = $query->orderBy('import_date', 'desc')
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->paginate(30);
 
         $base = ImportLog::query();
         if (! $user->isAdmin()) {

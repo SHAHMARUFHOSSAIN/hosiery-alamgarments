@@ -21,6 +21,7 @@ class DuesExport implements FromCollection, WithHeadings
                 $due->id,
                 $due->customer?->name ?? 'N/A',
                 $due->customer?->mobile ?? 'N/A',
+                $due->customer?->location ?? 'N/A',
                 $due->bill?->bill_no ?? 'N/A',
                 number_format($due->original_amount, 2),
                 number_format($due->total_paid, 2),
@@ -34,6 +35,6 @@ class DuesExport implements FromCollection, WithHeadings
 
     public function headings(): array
     {
-        return ['ID', 'Customer', 'Mobile', 'Bill No', 'Original', 'Paid', 'Remaining', 'Due Date', 'Status', 'Created By'];
+        return ['ID', 'Customer', 'Mobile', 'Location', 'Bill No', 'Original', 'Paid', 'Remaining', 'Due Date', 'Status', 'Created By'];
     }
 }

@@ -24,7 +24,7 @@ class BankController extends Controller
             $query->where('is_active', $request->status === 'active');
         }
 
-        $banks = $query->orderBy('id', 'desc')->paginate(15);
+        $banks = $query->orderBy('id', 'desc')->paginate(30);
         return view('banks.index', compact('banks'));
     }
 

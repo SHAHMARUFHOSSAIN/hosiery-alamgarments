@@ -74,7 +74,7 @@ class DueController extends Controller
             return $d->remaining_amount > 0 ? $d->remaining_amount : $d->original_amount;
         });
 
-        $dues = $query->paginate(20);
+        $dues = $query->paginate(30);
         $dues->appends($request->only('user_id', 'status', 'search', 'sort', 'direction'));
 
         return view('dues.index', compact('dues', 'totalPendingAmount', 'users'));
@@ -92,7 +92,7 @@ class DueController extends Controller
         
         $allDues = (clone $query)->with('duePayments')->get();
         $totalAmount = $allDues->sum(fn($due) => $due->remaining_amount);
-        $todayDues = $query->orderBy('due_date', 'asc')->paginate(20);
+        $todayDues = $query->orderBy('due_date', 'asc')->paginate(30);
         return view('dues.daily-report', compact('todayDues', 'totalAmount'));
     }
 
@@ -158,7 +158,7 @@ class DueController extends Controller
             $query->orderBy('check_date', 'asc');
         }
         
-        $allChecks = $query->paginate(20);
+        $allChecks = $query->paginate(30);
         $allChecks->appends($request->only('status', 'search', 'bank', 'date_from', 'date_to', 'user_id', 'sort', 'direction'));
 
         $allChecksQuery = Payment::with(['bill.customer', 'bill.user', 'checkEncashments.user'])
@@ -244,7 +244,7 @@ class DueController extends Controller
             $dueCheckQuery->whereHas('due.bill', fn($q) => $q->where('user_id', $request->user_id));
         }
 
-        $dueChecks = $dueCheckQuery->orderBy('check_date', 'asc')->paginate(20, ['*'], 'due_page');
+        $dueChecks = $dueCheckQuery->orderBy('check_date', 'asc')->paginate(30, ['*'], 'due_page');
         $dueChecks->appends($request->only('user_id', 'status', 'search', 'bank', 'date_from', 'date_to'));
 
         $prevDueCheckQuery = PreviousDuePayment::with(['previousDue.customer', 'user'])
@@ -279,7 +279,7 @@ class DueController extends Controller
             $prevDueCheckQuery->whereHas('previousDue', fn($q) => $q->where('created_by', $request->user_id));
         }
 
-        $prevDueChecks = $prevDueCheckQuery->orderBy('check_date', 'asc')->paginate(20, ['*'], 'prev_due_page');
+        $prevDueChecks = $prevDueCheckQuery->orderBy('check_date', 'asc')->paginate(30, ['*'], 'prev_due_page');
         $prevDueChecks->appends($request->only('user_id', 'status', 'search', 'bank', 'date_from', 'date_to'));
 
         return view('dues.checks-report', compact(
@@ -346,7 +346,7 @@ class DueController extends Controller
             $query->orderBy('tt_date', 'asc');
         }
 
-        $ttPayments = $query->paginate(20);
+        $ttPayments = $query->paginate(30);
         $ttPayments->appends($request->only('status', 'search', 'bank', 'date_from', 'date_to', 'user_id', 'sort', 'direction'));
 
         $allTtQuery = Payment::with(['bill.customer', 'bill.user'])
@@ -452,7 +452,7 @@ class DueController extends Controller
             $query->orderBy('created_at', 'desc');
         }
 
-        $cashPayments = $query->paginate(20);
+        $cashPayments = $query->paginate(30);
         $cashPayments->appends($request->only('status', 'search', 'date_from', 'date_to', 'user_id', 'sort', 'direction'));
 
         $allCashQuery = Payment::with(['bill.customer', 'bill.user'])

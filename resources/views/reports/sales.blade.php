@@ -121,7 +121,10 @@
                     <td>
                         {{ $bill->customer->name ?? 'N/A' }}
                         @if($bill->customer?->mobile)
-                            <div class="small text-muted">{{ $bill->customer->mobile }}</div>
+                            <div class="small text-muted"><i class="bi bi-telephone"></i> {{ $bill->customer->mobile }}</div>
+                        @endif
+                        @if($bill->customer?->location)
+                            <div class="small text-muted"><i class="bi bi-geo-alt"></i> {{ $bill->customer->location }}</div>
                         @endif
                     </td>
                     <td>{{ $bill->shop_label }}</td>

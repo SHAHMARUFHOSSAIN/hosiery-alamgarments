@@ -136,11 +136,63 @@
     </div>
 </div>
 
+@if(count($topBillMans) > 0)
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white py-2 py-md-3 px-3 px-md-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h6 class="mb-0 fw-bold fs-6 fs-md-5">{{ __('Top Bill Man') }}</h6>
+                <small class="text-muted">{{ __('Most bills created in this period') }}</small>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>{{ __('Rank') }}</th>
+                                <th>{{ __('Bill Man') }}</th>
+                                <th>{{ __('User') }}</th>
+                                <th class="text-end">{{ __('Bills') }}</th>
+                                <th class="text-end">{{ __('Total Sales') }}</th>
+                                <th class="text-end d-none d-sm-table-cell">{{ __('Discount') }}</th>
+                                <th class="text-end">{{ __('Avg Bill') }}</th>
+                                <th class="d-none d-lg-table-cell" style="width: 180px;">{{ __('Performance') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @php $maxBills = max($topBillMans->pluck('bill_count')->all()); @endphp
+                            @foreach($topBillMans as $index => $man)
+                            <tr>
+                                <td><span class="badge bg-{{ $index === 0 ? 'warning text-dark' : 'secondary' }}">#{{ $index + 1 }}</span></td>
+                                <td class="fw-semibold">{{ $man->bill_man }}</td>
+                                <td><span class="badge bg-secondary">{{ $man->user->name ?? __('Unknown') }}</span></td>
+                                <td class="text-end fw-bold">{{ (int) $man->bill_count }}</td>
+                                <td class="text-end">{{ format_currency($man->total) }}</td>
+                                <td class="text-end text-danger d-none d-sm-table-cell">{{ format_currency($man->discount) }}</td>
+                                <td class="text-end">{{ format_currency($man->bill_count > 0 ? $man->total / $man->bill_count : 0) }}</td>
+                                <td class="d-none d-lg-table-cell">
+                                    @php $share = $maxBills > 0 ? ((int) $man->bill_count / $maxBills) * 100 : 0; @endphp
+                                    <div class="progress" style="height: 8px;">
+                                        <div class="progress-bar bg-success" style="width: {{ $share }}%"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
 <div class="row g-3 mb-4">
     <div class="col-lg-6">
         <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white py-3">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h6 class="mb-0 fw-bold">{{ __('Top Customers') }}</h6>
+                <small class="text-muted">{{ __('Click a row to see customer details') }}</small>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
@@ -148,20 +200,31 @@
                         <tr>
                             <th>#</th>
                             <th>{{ __('Customer') }}</th>
+                            <th class="d-none d-md-table-cell">{{ __('Location') }}</th>
+                            <th class="d-none d-sm-table-cell">{{ __('Mobile') }}</th>
                             <th class="text-end">{{ __('Total') }}</th>
                             <th class="text-end">{{ __('Bills') }}</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($topCustomers as $index => $customer)
-                        <tr>
+                        @php $customerHref = $customer->customer ? route('customers.show', $customer->customer) : null; @endphp
+                        <tr class="top-customer-row {{ $customerHref ? 'table-row-clickable' : '' }}" @if($customerHref) data-href="{{ $customerHref }}" @endif>
                             <td><span class="badge bg-secondary">{{ $index + 1 }}</span></td>
-                            <td>{{ $customer->customer->name ?? __('Unknown') }}</td>
+                            <td>
+                                @if($customerHref)
+                                <a href="{{ $customerHref }}" class="text-decoration-none fw-semibold">{{ $customer->customer->name ?? __('Unknown') }}</a>
+                                @else
+                                {{ __('Unknown') }}
+                                @endif
+                            </td>
+                            <td class="small text-muted d-none d-md-table-cell">{{ $customer->customer->location ?? 'N/A' }}</td>
+                            <td class="small text-muted d-none d-sm-table-cell">{{ $customer->customer->mobile ?? 'N/A' }}</td>
                             <td class="text-end fw-bold">{{ format_currency($customer->total) }}</td>
                             <td class="text-end">{{ $customer->count }}</td>
                         </tr>
                         @empty
-                        <tr><td colspan="4" class="text-center py-3">{{ __('No data') }}</td></tr>
+                        <tr><td colspan="6" class="text-center py-3">{{ __('No data') }}</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -222,8 +285,9 @@
 <div class="row g-3 mb-4">
     <div class="col-12">
         <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white py-2 py-md-3 px-3 px-md-4">
+            <div class="card-header bg-white py-2 py-md-3 px-3 px-md-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h6 class="mb-0 fw-bold fs-6 fs-md-5">{{ __('Team Performance') }}</h6>
+                <small class="text-muted">{{ __('Click a row to see their bills') }}</small>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -243,9 +307,9 @@
                         </thead>
                         <tbody>
                             @foreach($userPerformance as $index => $user)
-                            <tr>
+                            <tr class="table-row-clickable" data-href="{{ route('bills.index', ['user_id' => $user['id']]) }}">
                                 <td><span class="badge bg-{{ $index === 0 ? 'warning text-dark' : 'secondary' }}">#{{ $index + 1 }}</span></td>
-                                <td class="fw-semibold">{{ $user['name'] }}</td>
+                                <td class="fw-semibold"><a href="{{ route('bills.index', ['user_id' => $user['id']]) }}" class="text-decoration-none">{{ $user['name'] }}</a></td>
                                 <td class="text-end fw-bold">{{ format_currency($user['sales']) }}</td>
                                 <td class="text-end">{{ $user['bills'] }}</td>
                                 <td class="text-end text-danger d-none d-sm-table-cell">{{ format_currency($user['discount']) }}</td>
@@ -331,9 +395,20 @@
 @endsection
 
 @section('scripts')
+<style>
+    .table-row-clickable { cursor: pointer; }
+    .table-row-clickable:hover > td { background-color: var(--bs-table-hover-bg); }
+</style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.table-row-clickable[data-href]').forEach(function(row) {
+        row.addEventListener('click', function(e) {
+            if (e.target.closest('a')) return;
+            window.location.href = this.getAttribute('data-href');
+        });
+    });
+
     const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--bs-primary').trim() || '#0d6efd';
     const successColor = getComputedStyle(document.documentElement).getPropertyValue('--bs-success').trim() || '#198754';
     const warningColor = getComputedStyle(document.documentElement).getPropertyValue('--bs-warning').trim() || '#ffc107';

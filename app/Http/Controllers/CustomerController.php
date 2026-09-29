@@ -38,7 +38,7 @@ class CustomerController extends Controller
             });
         }
 
-        $customers = $query->orderBy('id', 'desc')->paginate(15);
+        $customers = $query->orderBy('id', 'desc')->paginate(30);
         $customers->appends($request->only('search', 'user_id', 'location'));
 
         $locations = Customer::distinct()->orderBy('location')->pluck('location')->filter()->values();
@@ -135,7 +135,7 @@ class CustomerController extends Controller
 
         $totalBuy = (clone $billQuery)->sum('bill_amount');
 
-        $bills = $billQuery->latest()->paginate(15);
+        $bills = $billQuery->latest()->paginate(30);
 
         $dueQuery = $customer->dues();
         if ($request->filled('date_from')) {

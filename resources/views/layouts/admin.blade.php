@@ -343,6 +343,53 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+    // Bangla digit support for numeric inputs (type="number" silently drops non-ASCII keystrokes)
+    window.BnDigits = (function () {
+        var map = { '০':'0','১':'1','২':'2','৩':'3','৪':'4','৫':'5','৬':'6','৭':'7','৮':'8','৯':'9' };
+        var re = /[০-৯]/g;
+        return {
+            toLatin: function (s) { return String(s).replace(re, function (c) { return map[c]; }); },
+            toBangla: function (s) { return String(s).replace(/[0-9]/g, function (c) { return '০১২৩৪৫৬৭৮৯'[c]; }); },
+            map: map,
+            re: re
+        };
+    })();
+
+    document.addEventListener('beforeinput', function (e) {
+        var t = e.target;
+        if (!t || t.tagName !== 'INPUT' && t.tagName !== 'TEXTAREA') return;
+        if (!t.dataset) return;
+        if (t.type !== 'number' && t.type !== 'text' && t.type !== 'search' && t.type !== 'tel') return;
+        if (!e.data || !window.BnDigits.re.test(e.data)) return;
+
+        e.preventDefault();
+        var latin = window.BnDigits.toLatin(e.data);
+        var start = t.selectionStart == null ? t.value.length : t.selectionStart;
+        var end = t.selectionEnd == null ? start : t.selectionEnd;
+        var value = t.value.slice(0, start) + latin + t.value.slice(end);
+        t.value = value;
+        var pos = start + latin.length;
+        if (t.setSelectionRange) {
+            try { t.setSelectionRange(pos, pos); } catch (err) { /* number inputs may refuse */ }
+        }
+        t.dispatchEvent(new Event('input', { bubbles: true }));
+    }, true);
+
+    document.addEventListener('paste', function (e) {
+        var t = e.target;
+        if (!t || t.tagName !== 'INPUT' && t.tagName !== 'TEXTAREA') return;
+        var txt = (e.clipboardData || window.clipboardData) && (e.clipboardData || window.clipboardData).getData('text');
+        if (!txt || !window.BnDigits.re.test(txt)) return;
+        e.preventDefault();
+        var latin = window.BnDigits.toLatin(txt);
+        if (document.execCommand) {
+            document.execCommand('insertText', false, latin);
+        } else {
+            t.value = latin;
+        }
+        t.dispatchEvent(new Event('input', { bubbles: true }));
+    }, true);
+
     document.addEventListener('DOMContentLoaded', function () {
         function setupCollapse(id, arrowId, active) {
             var el = document.getElementById(id);

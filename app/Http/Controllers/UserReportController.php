@@ -28,7 +28,7 @@ class UserReportController extends Controller
         $todayQuery = Bill::with(['customer', 'editor'])->where('user_id', Auth::id())
             ->whereDate('report_date', now()->toDateString());
 
-        $bills = $query->orderBy('id', 'desc')->paginate(15);
+        $bills = $query->orderBy('id', 'desc')->paginate(30);
         $totalAmount = $query->sum('bill_amount');
         $totalDiscount = $query->sum('discount');
         
@@ -54,7 +54,7 @@ class UserReportController extends Controller
 
         $dues = $query->orderByRaw("CASE WHEN status = 'pending' THEN 0 ELSE 1 END")
                     ->orderBy('due_date', 'asc')
-                    ->paginate(15);
+                    ->paginate(30);
         $totalPending = $query->clone()->where('status', 'pending')->sum('amount');
         $totalPaid = $query->clone()->where('status', 'paid')->sum('amount');
 

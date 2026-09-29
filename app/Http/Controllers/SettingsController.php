@@ -51,7 +51,7 @@ class SettingsController extends Controller
             $query->where('role', $request->role);
         }
 
-        $users = $query->orderBy('id', 'desc')->paginate(15);
+        $users = $query->orderBy('id', 'desc')->paginate(30);
 
         return view('settings.users', compact('users'));
     }
@@ -140,28 +140,28 @@ class SettingsController extends Controller
         $recentBills = Bill::with(['customer', 'user', 'editor'])
             ->where('created_at', '>=', $startDate)
             ->orderBy('id', 'desc')
-            ->paginate(15);
+            ->paginate(30);
             
         $recentCustomers = Customer::with('creator')
             ->where('created_at', '>=', $startDate)
             ->orderBy('id', 'desc')
-            ->paginate(15);
+            ->paginate(30);
             
         $recentDues = Due::with(['customer', 'bill'])
             ->where('created_at', '>=', $startDate)
             ->orderBy('id', 'desc')
-            ->paginate(15);
+            ->paginate(30);
 
         $recentBanks = \App\Models\Bank::with('creator')
             ->where('created_at', '>=', $startDate)
             ->orderBy('id', 'desc')
-            ->paginate(15);
+            ->paginate(30);
 
         $recentChecks = \App\Models\Payment::with(['bill.customer'])
             ->where('payment_type', 'check')
             ->where('created_at', '>=', $startDate)
             ->orderBy('id', 'desc')
-            ->paginate(15);
+            ->paginate(30);
 
         return view('settings.data-management', compact('recentBills', 'recentCustomers', 'recentDues', 'recentBanks', 'recentChecks', 'days'));
     }

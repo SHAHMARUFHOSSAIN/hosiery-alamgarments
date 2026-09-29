@@ -34,7 +34,7 @@ class PreviousDueController extends Controller
             });
         }
 
-        $previousDues = $query->latest()->paginate(20);
+        $previousDues = $query->latest()->paginate(30);
 
         return view('previous-dues.index', compact('previousDues'));
     }

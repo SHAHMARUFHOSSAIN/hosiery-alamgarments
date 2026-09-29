@@ -179,7 +179,7 @@ class ReportController extends Controller
             $query->orderBy('report_date', 'desc');
         }
 
-        $bills = $query->paginate(20);
+        $bills = $query->paginate(30);
         $totalAmount = Bill::when(Auth::user()->isAdmin(), function ($q) use ($request) {
                 if ($request->filled('user_id')) $q->where('user_id', $request->user_id);
             })
@@ -371,7 +371,7 @@ class ReportController extends Controller
         $totalChequeBills = $rows->sum('cheque_bills');
 
         $page = LengthAwarePaginator::resolveCurrentPage();
-        $perPage = 20;
+        $perPage = 30;
         $rows = new LengthAwarePaginator(
             $rows->forPage($page, $perPage),
             $rows->count(),
@@ -404,7 +404,7 @@ class ReportController extends Controller
             });
         }
 
-        $customers = $query->orderBy('id', 'desc')->paginate(20);
+        $customers = $query->orderBy('id', 'desc')->paginate(30);
         $customers->appends($request->only('search'));
 
         return view('reports.inactive-customers', compact('customers'));
@@ -511,6 +511,18 @@ class ReportController extends Controller
             ->limit(10)
             ->get();
 
+        $topBillMans = (clone $baseBillQuery)
+            ->whereBetween('report_date', [$startDate, $endDate])
+            ->whereNotNull('bill_man')
+            ->whereRaw("TRIM(bill_man) != ''")
+            ->selectRaw('TRIM(bill_man) as bill_man, user_id, COUNT(*) as bill_count, SUM(bill_amount) as total, SUM(discount) as discount')
+            ->groupBy('bill_man', 'user_id')
+            ->orderByDesc('bill_count')
+            ->orderByDesc('total')
+            ->limit(10)
+            ->get()
+            ->load('user:id,name');
+
         $userPerformance = [];
         if (Auth::user()->isAdmin()) {
             $users = User::where('role', 'user')->get();
@@ -523,6 +535,7 @@ class ReportController extends Controller
                     ->whereBetween('report_date', [$startDate, $endDate])
                     ->sum('discount_amt');
                 $userPerformance[] = [
+                    'id' => $user->id,
                     'name' => $user->name,
                     'sales' => $userBills->sum('bill_amount'),
                     'bills' => $userBills->count(),
@@ -582,6 +595,7 @@ class ReportController extends Controller
             'dailyValues',
             'dailyCounts',
             'topCustomers',
+            'topBillMans',
             'userPerformance',
             'dueStats',
             'overdueDues',
@@ -614,7 +628,7 @@ class ReportController extends Controller
         }
 
         $query->orderBy('report_date', 'desc')->orderBy('id', 'desc');
-        $bills = $query->paginate(25);
+        $bills = $query->paginate(30);
 
         // Summary stats for the filtered result
         $summaryQuery = Bill::query()
@@ -738,7 +752,7 @@ class ReportController extends Controller
             $query->latest();
         }
 
-        $previousDues = $query->paginate(20);
+        $previousDues = $query->paginate(30);
         $previousDues->appends($request->only('user_id', 'status', 'date_from', 'date_to', 'search', 'sort', 'direction'));
 
         $users = User::where('role', 'user')->get(['id', 'name']);

@@ -26,6 +26,7 @@ class PreviousDuesExport implements FromCollection, WithHeadings
                 $pd->id,
                 $pd->customer?->name ?? 'N/A',
                 $pd->customer?->mobile ?? 'N/A',
+                $pd->customer?->location ?? 'N/A',
                 number_format($pd->original_amount, 2),
                 number_format($pd->total_paid, 2),
                 number_format($pd->remaining_amount, 2),
@@ -38,6 +39,6 @@ class PreviousDuesExport implements FromCollection, WithHeadings
 
     public function headings(): array
     {
-        return ['ID', 'Customer', 'Mobile', 'Original', 'Paid', 'Remaining', 'Status', 'Created By', 'Date'];
+        return ['ID', 'Customer', 'Mobile', 'Location', 'Original', 'Paid', 'Remaining', 'Status', 'Created By', 'Date'];
     }
 }

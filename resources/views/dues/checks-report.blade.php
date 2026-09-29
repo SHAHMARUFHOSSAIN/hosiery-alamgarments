@@ -108,6 +108,7 @@
                     <th>{{ __('Bill Date') }}</th>
                     <th>{{ __('Customer') }}</th>
                     <th>{{ __('Location') }}</th>
+                    <th>{{ __('Mobile') }}</th>
                     <th>
                         <a href="{{ route('dues.checks-report', ['sort' => 'bank_name', 'direction' => request('sort') == 'bank_name' && request('direction') == 'asc' ? 'desc' : 'asc'] + request()->only('status', 'bank', 'date_from', 'date_to', 'user_id', 'search')) }}" class="text-decoration-none">
                             {{ __('Bank') }} @if(request('sort') == 'bank_name'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif
@@ -146,6 +147,7 @@
                     <td>{{ $check->bill->report_date?->format('M d, Y') ?? 'N/A' }}</td>
                     <td>{{ $check->bill->customer->name ?? 'N/A' }}</td>
                     <td>{{ $check->bill->customer->location ?? 'N/A' }}</td>
+                    <td>{{ $check->bill->customer->mobile ?? 'N/A' }}</td>
                     <td>{{ $check->bank_name ?? 'N/A' }}</td>
                     <td>{{ $check->check_no ?? 'N/A' }}</td>
                     <td>{{ format_number($check->check_amount, 2) }}</td>
@@ -177,6 +179,7 @@
                                     data-bs-toggle="modal" data-bs-target="#encashModal"
                                     data-id="{{ $check->id }}"
                                     data-customer="{{ $check->bill->customer->name ?? 'N/A' }}"
+                                    data-mobile="{{ $check->bill->customer->mobile ?? 'N/A' }}"
                                     data-amount="{{ format_number($check->check_amount, 2) }}"
                                     data-remaining="{{ $remainingCheck }}"
                                     data-discount="{{ $check->total_encashment_discount }}">
@@ -193,7 +196,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="13" class="text-center py-3">{{ __('No cheque payments found') }}</td>
+                    <td colspan="14" class="text-center py-3">{{ __('No cheque payments found') }}</td>
                 </tr>
                 @endforelse
             </tbody>
@@ -217,6 +220,7 @@
                 <tr>
                     <th>{{ __('Customer') }}</th>
                     <th>{{ __('Location') }}</th>
+                    <th>{{ __('Mobile') }}</th>
                     <th>{{ __('Bank') }}</th>
                     <th>{{ __('Cheque No') }}</th>
                     <th>{{ __('Amount') }}</th>
@@ -233,6 +237,7 @@
                 <tr>
                     <td>{{ $dueCheck->due->customer->name ?? 'N/A' }}</td>
                     <td>{{ $dueCheck->due->customer->location ?? 'N/A' }}</td>
+                    <td>{{ $dueCheck->due->customer->mobile ?? 'N/A' }}</td>
                     <td>{{ $dueCheck->bank_name ?? 'N/A' }}</td>
                     <td>{{ $dueCheck->check_no ?? 'N/A' }}</td>
                     <td>{{ format_currency($dueCheck->check_amount ?? $dueCheck->amount) }}</td>
@@ -260,6 +265,7 @@
                                 data-bs-toggle="modal" data-bs-target="#dueEncashModal"
                                 data-id="{{ $dueCheck->id }}"
                                 data-customer="{{ $dueCheck->due->customer->name ?? 'N/A' }}"
+                                data-mobile="{{ $dueCheck->due->customer->mobile ?? 'N/A' }}"
                                 data-amount="{{ format_number($dueCheck->check_amount ?? $dueCheck->amount, 2) }}"
                                 data-remaining="{{ $remainingEncash }}"
                                 data-discount="{{ $dueCheck->discount }}">
@@ -291,6 +297,7 @@
                 <tr>
                     <th>{{ __('Customer') }}</th>
                     <th>{{ __('Location') }}</th>
+                    <th>{{ __('Mobile') }}</th>
                     <th>{{ __('Bank') }}</th>
                     <th>{{ __('Cheque No') }}</th>
                     <th>{{ __('Amount') }}</th>
@@ -307,6 +314,7 @@
                 <tr>
                     <td>{{ $prevDueCheck->previousDue->customer->name ?? 'N/A' }}</td>
                     <td>{{ $prevDueCheck->previousDue->customer->location ?? 'N/A' }}</td>
+                    <td>{{ $prevDueCheck->previousDue->customer->mobile ?? 'N/A' }}</td>
                     <td>{{ $prevDueCheck->bank_name ?? 'N/A' }}</td>
                     <td>{{ $prevDueCheck->check_no ?? 'N/A' }}</td>
                     <td>{{ format_currency($prevDueCheck->check_amount ?? $prevDueCheck->amount) }}</td>
@@ -334,6 +342,7 @@
                                 data-bs-toggle="modal" data-bs-target="#prevDueEncashModal"
                                 data-id="{{ $prevDueCheck->id }}"
                                 data-customer="{{ $prevDueCheck->previousDue->customer->name ?? 'N/A' }}"
+                                data-mobile="{{ $prevDueCheck->previousDue->customer->mobile ?? 'N/A' }}"
                                 data-amount="{{ format_number($prevDueCheck->check_amount ?? $prevDueCheck->amount, 2) }}"
                                 data-remaining="{{ $remainingEncash }}"
                                 data-discount="{{ $prevDueCheck->discount }}">
@@ -368,6 +377,7 @@
                         <div class="col-md-6">
                             <label class="form-label text-muted small">{{ __('Customer') }}</label>
                             <p class="fw-bold mb-0" id="modalCustomer">-</p>
+                            <p class="small text-muted mb-0" id="modalCustomerMobile">-</p>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label text-muted small">{{ __('Original Amount') }}</label>
@@ -449,6 +459,7 @@
                         <div class="col-md-6">
                             <label class="form-label text-muted small">{{ __('Customer') }}</label>
                             <p class="fw-bold mb-0" id="dueEncashCustomer">-</p>
+                            <p class="small text-muted mb-0" id="dueEncashCustomerMobile">-</p>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label text-muted small">{{ __('Original Amount') }}</label>
@@ -522,6 +533,7 @@
                         <div class="col-md-6">
                             <label class="form-label text-muted small">{{ __('Customer') }}</label>
                             <p class="fw-bold mb-0" id="prevDueEncashCustomer">-</p>
+                            <p class="small text-muted mb-0" id="prevDueEncashCustomerMobile">-</p>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label text-muted small">{{ __('Original Amount') }}</label>
@@ -612,6 +624,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var existingDiscount = parseFloat(btn.dataset.discount) || 0;
         document.getElementById('encashForm').action = '{{ route("dues.encash", "_ID_") }}'.replace('_ID_', id);
         document.getElementById('modalCustomer').textContent = customer;
+        document.getElementById('modalCustomerMobile').textContent = btn.dataset.mobile || '-';
         document.getElementById('modalOriginal').textContent = '\u09f3' + amount;
         document.getElementById('modalRemaining').textContent = '\u09f3' + remaining.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
         var existingDiscRow = document.getElementById('existingDiscountRow');
@@ -667,6 +680,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var existingDiscount = parseFloat(btn.dataset.discount) || 0;
         document.getElementById('dueEncashId').value = id;
         document.getElementById('dueEncashCustomer').textContent = customer;
+        document.getElementById('dueEncashCustomerMobile').textContent = btn.dataset.mobile || '-';
         document.getElementById('dueEncashOriginal').textContent = '\u09f3' + amount;
         document.getElementById('dueEncashRemaining').textContent = '\u09f3' + remaining.toFixed(2);
         var discountEl = document.getElementById('dueEncashDiscount');
@@ -714,6 +728,7 @@ document.addEventListener('DOMContentLoaded', function() {
         var existingDiscount = parseFloat(btn.dataset.discount) || 0;
         document.getElementById('prevDueEncashId').value = id;
         document.getElementById('prevDueEncashCustomer').textContent = customer;
+        document.getElementById('prevDueEncashCustomerMobile').textContent = btn.dataset.mobile || '-';
         document.getElementById('prevDueEncashOriginal').textContent = '\u09f3' + amount;
         document.getElementById('prevDueEncashRemaining').textContent = '\u09f3' + remaining.toFixed(2);
         var discountEl = document.getElementById('prevDueEncashDiscount');

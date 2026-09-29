@@ -64,7 +64,7 @@ class CardPaymentController extends Controller
             $query->orderBy('created_at', 'desc');
         }
 
-        $cardPayments = $query->paginate(20);
+        $cardPayments = $query->paginate(30);
         $cardPayments->appends($request->only('user_id', 'search', 'date_from', 'date_to', 'sort', 'direction'));
 
         $totalPendingQuery = Payment::where('payment_type', 'card')->where('status', 'pending');

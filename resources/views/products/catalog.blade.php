@@ -14,6 +14,11 @@
 @endsection
 
 @section('content')
+<datalist id="catalogSizeOptions">
+    @foreach(\App\Models\Product::sizeOptionsFor($products) as $size)
+    <option value="{{ $size }}"></option>
+    @endforeach
+</datalist>
 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
     <div>
         <h2 class="mb-0">{{ __('Product Management') }}</h2>
@@ -34,10 +39,18 @@
 <div class="card border-0 shadow-sm mb-4">
     <div class="card-header bg-white py-3">
         <form method="GET" class="row g-3">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <input type="text" name="search" class="form-control"
-                       placeholder="{{ __('Search product name or unit...') }}"
+                       placeholder="{{ __('Search product, size or unit...') }}"
                        value="{{ request('search') }}">
+            </div>
+            <div class="col-md-2">
+                <select name="category" class="form-select">
+                    <option value="">{{ __('All Categories') }}</option>
+                    @foreach(\App\Models\Product::categories() as $key => $label)
+                    <option value="{{ $key }}" {{ request('category') === $key ? 'selected' : '' }}>{{ __($label) }}</option>
+                    @endforeach
+                </select>
             </div>
             <div class="col-md-2">
                 <select name="status" class="form-select">
@@ -58,6 +71,8 @@
                 <tr>
                     <th>{{ __('ID') }}</th>
                     <th>{{ __('Product Name') }}</th>
+                    <th>{{ __('Category') }}</th>
+                    <th>{{ __('Size') }}</th>
                     <th class="text-end">{{ __('Rate') }}</th>
                     <th>{{ __('Unit') }}</th>
                     <th>{{ __('Status') }}</th>
@@ -71,6 +86,8 @@
                 <tr>
                     <td>{{ $product->id }}</td>
                     <td class="fw-semibold">{{ $product->name }}</td>
+                    <td>{{ __($product->categoryName() ?? '—') }}</td>
+                    <td>{{ $product->size ?? '—' }}</td>
                     <td class="text-end">{{ $product->rate !== null ? format_number($product->rate, 2) : '—' }}</td>
                     <td>{{ $product->unit ?? '—' }}</td>
                     <td>
@@ -98,7 +115,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="8" class="text-center py-3">{{ __('No products found') }}</td></tr>
+                <tr><td colspan="11" class="text-center py-3">{{ __('No products found') }}</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -121,8 +138,22 @@
                 @csrf
                 <div class="modal-body">
                     <div class="mb-3">
+                        <label class="form-label">{{ __('Category') }}</label>
+                        <select name="category" class="form-select">
+                            <option value="">{{ __('-- Select Category --') }}</option>
+                            @foreach(\App\Models\Product::categories() as $key => $label)
+                            <option value="{{ $key }}">{{ __($label) }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">{{ __('Product Name') }} <span class="text-danger">*</span></label>
                         <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ __('Size') }}</label>
+                        <input type="text" name="size" class="form-control" list="catalogSizeOptions"
+                               placeholder="{{ __('e.g. M, L, XL') }}" autocomplete="off">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">{{ __('Rate') }}</label>
@@ -158,8 +189,22 @@
                 @method('PUT')
                 <div class="modal-body">
                     <div class="mb-3">
+                        <label class="form-label">{{ __('Category') }}</label>
+                        <select name="category" class="form-select">
+                            <option value="">{{ __('-- Select Category --') }}</option>
+                            @foreach(\App\Models\Product::categories() as $key => $label)
+                            <option value="{{ $key }}" {{ old('category', $product->category) === $key ? 'selected' : '' }}>{{ __($label) }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label">{{ __('Product Name') }} <span class="text-danger">*</span></label>
                         <input type="text" name="name" class="form-control" value="{{ $product->name }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">{{ __('Size') }}</label>
+                        <input type="text" name="size" class="form-control" list="catalogSizeOptions"
+                               value="{{ $product->size }}" placeholder="{{ __('e.g. M, L, XL') }}" autocomplete="off">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">{{ __('Rate') }}</label>

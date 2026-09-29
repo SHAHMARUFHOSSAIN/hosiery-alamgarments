@@ -87,6 +87,8 @@
                     <th><a href="{{ route('bills.index', ['sort' => 'bill_no', 'direction' => request('sort') == 'bill_no' && request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="text-decoration-none">{{ __('Bill No') }} @if(request('sort') == 'bill_no'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif</a></th>
                     <th>{{ __('Customer') }}</th>
                     <th><a href="{{ route('bills.index', ['sort' => 'shop_name', 'direction' => request('sort') == 'shop_name' && request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="text-decoration-none">{{ __('Shop') }} @if(request('sort') == 'shop_name'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif</a></th>
+                    <th>{{ __('Location') }}</th>
+                    <th>{{ __('Mobile') }}</th>
                     <th><a href="{{ route('bills.index', ['sort' => 'bill_man', 'direction' => request('sort') == 'bill_man' && request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="text-decoration-none">{{ __('Bill Man') }} @if(request('sort') == 'bill_man'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif</a></th>
                     <th>{{ __('Payment') }}</th>
                     <th><a href="{{ route('bills.index', ['sort' => 'bill_amount', 'direction' => request('sort') == 'bill_amount' && request('direction') == 'asc' ? 'desc' : 'asc']) }}" class="text-decoration-none">{{ __('Amount') }} @if(request('sort') == 'bill_amount'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif</a></th>
@@ -122,6 +124,8 @@
                     </td>
                     <td>{{ $bill->customer->name ?? 'N/A' }}</td>
                     <td>{{ $bill->shop_name ?? 'N/A' }}</td>
+                    <td>{{ $bill->customer->location ?? 'N/A' }}</td>
+                    <td>{{ $bill->customer->mobile ?? 'N/A' }}</td>
                     <td>{{ $bill->bill_man ?? 'N/A' }}</td>
                     <td>
                         @if($paymentType === 'check')
@@ -179,7 +183,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="15" class="text-center py-3">{{ __('No bills found') }}</td></tr>
+                <tr><td colspan="17" class="text-center py-3">{{ __('No bills found') }}</td></tr>
                 @endforelse
             </tbody>
         </table>

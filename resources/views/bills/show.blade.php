@@ -76,19 +76,29 @@
                     <small class="text-muted d-block mb-3">{{ __('Add or update the items of this bill. The item total must match the bill amount.') }} <strong>{{ format_currency($bill->bill_amount) }}</strong></small>
                     <datalist id="catalogProducts">
                         @foreach($products as $product)
-                        <option value="{{ $product->name }}" data-rate="{{ $product->rate }}" data-unit="{{ $product->unit }}">{{ $product->unit ? __('Rate') . ': ' . format_number($product->rate, 2) . ' / ' . $product->unit : '' }}</option>
+                        <option value="{{ $product->name }}" data-size="{{ $product->size }}" data-rate="{{ $product->rate }}" data-unit="{{ $product->unit }}">{{ collect([__($product->categoryName() ?? ''), $product->size, $product->unit ? __('Rate') . ': ' . format_number($product->rate, 2) . ' / ' . $product->unit : null])->filter()->implode(' | ') }}</option>
+                        @endforeach
+                    </datalist>
+                    <datalist id="sizeOptions">
+                        @foreach(\App\Models\Product::sizeOptionsFor($products) as $size)
+                        <option value="{{ $size }}"></option>
                         @endforeach
                     </datalist>
                     <div class="table-responsive">
+                        @php
+                            $categoryOptions = \App\Models\Product::categories();
+                        @endphp
                         <table class="table table-bordered align-middle mb-2 product-items-table">
                             <thead class="table-light">
                                 <tr>
-                                    <th style="width: 5%;">#</th>
-                                    <th style="width: 41%;">{{ __('Product Name') }}</th>
-                                    <th style="width: 14%;">{{ __('Rate (৳)') }}</th>
-                                    <th style="width: 14%;">{{ __('Quantity') }}</th>
-                                    <th style="width: 16%;" class="text-end">{{ __('Price (৳)') }}</th>
-                                    <th style="width: 10%;"></th>
+                                    <th style="width: 4%;">#</th>
+                                    <th style="width: 22%;">{{ __('Product Name') }}</th>
+                                    <th style="width: 14%;">{{ __('Category') }}</th>
+                                    <th style="width: 10%;">{{ __('Size') }}</th>
+                                    <th style="width: 12%;">{{ __('Rate (৳)') }}</th>
+                                    <th style="width: 12%;">{{ __('Quantity') }}</th>
+                                    <th style="width: 14%;" class="text-end">{{ __('Price (৳)') }}</th>
+                                    <th style="width: 5%;"></th>
                                 </tr>
                             </thead>
                             <tbody id="productsContainer">
@@ -97,6 +107,15 @@
                                 <tr class="product-item" data-index="{{ $productIndex }}">
                                     <td class="product-sno"></td>
                                     <td><input type="text" name="products[{{ $productIndex }}][product_name]" class="form-control form-control-sm product-name-input" placeholder="{{ __('e.g. Round Neck T-Shirt') }}" value="{{ old('products.' . $productIndex . '.product_name', $bp->product_name) }}" autocomplete="off" list="catalogProducts"></td>
+                                    <td>
+                                        <select name="products[{{ $productIndex }}][category]" class="form-select form-select-sm product-category-input">
+                                            <option value="">{{ __('-- Category --') }}</option>
+                                            @foreach($categoryOptions as $key => $label)
+                                            <option value="{{ $key }}" {{ old('products.' . $productIndex . '.category', $bp->category) === $key ? 'selected' : '' }}>{{ __($label) }}</option>
+                                            @endforeach
+                                        </select>
+                                    </td>
+                                    <td><input type="text" name="products[{{ $productIndex }}][size_name]" class="form-control form-control-sm product-size-input" placeholder="{{ __('e.g. M, L, XL') }}" value="{{ old('products.' . $productIndex . '.size_name', $bp->size_name) }}" autocomplete="off" list="sizeOptions"></td>
                                     <td><input type="number" step="0.01" min="0" name="products[{{ $productIndex }}][rate]" class="form-control form-control-sm product-rate-input" value="{{ old('products.' . $productIndex . '.rate', number_format($bp->rate, 2, '.', '')) }}" placeholder="0.00"></td>
                                     <td><input type="number" step="0.01" min="0" name="products[{{ $productIndex }}][quantity]" class="form-control form-control-sm product-qty-input" value="{{ old('products.' . $productIndex . '.quantity', number_format($bp->quantity, 2, '.', '')) }}" placeholder="0"></td>
                                     <td class="text-end product-price fw-semibold">{{ old('products.' . $productIndex . '.price', number_format($bp->price, 2, '.', '')) }}</td>
@@ -107,6 +126,15 @@
                                 <tr class="product-item" data-index="0">
                                     <td class="product-sno"></td>
                                     <td><input type="text" name="products[0][product_name]" class="form-control form-control-sm product-name-input" placeholder="{{ __('e.g. Round Neck T-Shirt') }}" autocomplete="off" list="catalogProducts"></td>
+                                    <td>
+                                        <select name="products[0][category]" class="form-select form-select-sm product-category-input">
+                                            <option value="">{{ __('-- Category --') }}</option>
+                                            @foreach($categoryOptions as $key => $label)
+                                            <option value="{{ $key }}" {{ old('products.0.category') === $key ? 'selected' : '' }}>{{ __($label) }}</option>
+                                            @endforeach
+                                        </select>
+                                    </td>
+                                    <td><input type="text" name="products[0][size_name]" class="form-control form-control-sm product-size-input" placeholder="{{ __('e.g. M, L, XL') }}" autocomplete="off" list="sizeOptions"></td>
                                     <td><input type="number" step="0.01" min="0" name="products[0][rate]" class="form-control form-control-sm product-rate-input" placeholder="0.00"></td>
                                     <td><input type="number" step="0.01" min="0" name="products[0][quantity]" class="form-control form-control-sm product-qty-input" placeholder="0"></td>
                                     <td class="text-end product-price fw-semibold">0.00</td>
@@ -116,7 +144,7 @@
                             </tbody>
                             <tfoot class="table-light">
                                 <tr class="fw-bold">
-                                    <td colspan="4" class="text-end">{{ __('Total') }}:</td>
+                                    <td colspan="6" class="text-end">{{ __('Total') }}:</td>
                                     <td class="text-end" id="productsTotal">0.00</td>
                                     <td></td>
                                 </tr>
@@ -363,19 +391,41 @@
 
     var billAmount = parseFloat('{{ $bill->bill_amount }}') || 0;
     var catalogProducts = JSON.parse('{!! json_encode($products) !!}'.replace(/&quot;/g, '"'));
+    var categoryOptions = @json(collect(\App\Models\Product::categories())->map(fn ($label) => __($label))->all());
+    var categoryPlaceholder = @json(__('-- Category --'));
     var productIndex = {{ $bill->billProducts->count() > 0 ? $bill->billProducts->count() : 1 }};
     var productsContainer = document.getElementById('productsContainer');
     var addProductBtn = document.getElementById('addProductBtn');
 
-    function lookupCatalogProduct(name) {
+    function lookupCatalogProduct(name, size, category) {
         name = (name || '').trim().toLowerCase();
+        size = (size || '').trim().toLowerCase();
+        category = (category || '').trim().toLowerCase();
         if (!name) return null;
+        var fallback = null;
         for (var i = 0; i < catalogProducts.length; i++) {
-            if ((catalogProducts[i].name || '').trim().toLowerCase() === name) {
-                return catalogProducts[i];
+            var item = catalogProducts[i];
+            if ((item.name || '').trim().toLowerCase() !== name) continue;
+            var itemSize = (item.size || '').trim().toLowerCase();
+            var itemCategory = (item.category || '').trim().toLowerCase();
+            if (category && itemCategory === category) {
+                if (!size || itemSize === size) return item;
+                if (!fallback) fallback = item;
+                continue;
             }
+            if (category) continue;
+            if (size && itemSize === size) return item;
+            if (!fallback) fallback = item;
         }
-        return null;
+        return fallback;
+    }
+
+    function buildOptions(options, selectedValue, placeholder) {
+        var html = '<option value="">' + placeholder + '</option>';
+        Object.keys(options).forEach(function(key) {
+            html += '<option value="' + key + '"' + (key === (selectedValue || '') ? ' selected' : '') + '>' + options[key] + '</option>';
+        });
+        return html;
     }
 
     function updateProductRow(row) {
@@ -431,6 +481,8 @@
         tr.innerHTML = [
             '<td class="product-sno"></td>',
             '<td><input type="text" name="products[' + productIndex + '][product_name]" class="form-control form-control-sm product-name-input" placeholder="e.g. Round Neck T-Shirt" autocomplete="off" list="catalogProducts"></td>',
+            '<td><select name="products[' + productIndex + '][category]" class="form-select form-select-sm product-category-input">' + buildOptions(categoryOptions, '', categoryPlaceholder) + '</select></td>',
+            '<td><input type="text" name="products[' + productIndex + '][size_name]" class="form-control form-control-sm product-size-input" placeholder="e.g. M, L, XL" autocomplete="off" list="sizeOptions"></td>',
             '<td><input type="number" step="0.01" min="0" name="products[' + productIndex + '][rate]" class="form-control form-control-sm product-rate-input" placeholder="0.00"></td>',
             '<td><input type="number" step="0.01" min="0" name="products[' + productIndex + '][quantity]" class="form-control form-control-sm product-qty-input" placeholder="0"></td>',
             '<td class="text-end product-price fw-semibold">0.00</td>',
@@ -456,12 +508,26 @@
         });
         productsContainer.addEventListener('input', function(e) {
             var row = e.target.closest('.product-item');
-            if (e.target.classList.contains('product-name-input')) {
-                var cat = lookupCatalogProduct(e.target.value);
+            if (e.target.classList.contains('product-name-input') || e.target.classList.contains('product-size-input')) {
+                var sizeInput = row.querySelector('.product-size-input');
+                var categorySelect = row.querySelector('.product-category-input');
+                var cat = lookupCatalogProduct(
+                    row.querySelector('.product-name-input').value,
+                    sizeInput ? sizeInput.value : '',
+                    categorySelect ? categorySelect.value : ''
+                );
                 if (cat) {
                     var rateInput = row.querySelector('.product-rate-input');
                     if (rateInput && (rateInput.value === '' || parseFloat(rateInput.value) === 0)) {
                         rateInput.value = cat.rate || '';
+                    }
+                    if (sizeInput && sizeInput.value.trim() === '' && cat.size) {
+                        sizeInput.value = cat.size;
+                    }
+                    if (cat.category) {
+                        if (categorySelect && categorySelect.value === '') {
+                            categorySelect.value = cat.category;
+                        }
                     }
                 }
             }
@@ -469,6 +535,7 @@
                 updateProductRow(row);
             }
         });
+
     }
 
     updateProductNumbersAndButtons();

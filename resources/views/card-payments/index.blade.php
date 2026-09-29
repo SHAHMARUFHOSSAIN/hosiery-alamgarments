@@ -52,8 +52,9 @@
                 <tr>
                     <th>{{ __('Bill No') }}</th>
                     <th>{{ __('Customer') }}</th>
+                    <th>{{ __('Mobile') }}</th>
                     <th>
-                        <a href="{{ route('card-payments.index', ['sort' => 'card_reference', 'direction' => request('sort') == 'card_reference' && request('direction') == 'asc' ? 'desc' : 'asc'] + request()->only('search', 'date_from', 'date_to', 'user_id')) }}" class="text-decoration-none">
+                        <a href="{{ route('card-payments.index', ['sort' => 'card_reference','direction' => request('sort') == 'card_reference' && request('direction') == 'asc' ? 'desc' : 'asc'] + request()->only('search', 'date_from', 'date_to', 'user_id')) }}" class="text-decoration-none">
                             {{ __('Reference Card') }} @if(request('sort') == 'card_reference'){{ request('direction') == 'asc' ? '▲' : '▼' }}@endif
                         </a>
                     </th>
@@ -88,10 +89,8 @@
                     </td>
                     <td>
                         <strong>{{ $payment->bill->customer->name ?? 'Unknown' }}</strong>
-                        @if($payment->bill->customer->mobile)
-                        <br><small>{{ $payment->bill->customer->mobile }}</small>
-                        @endif
                     </td>
+                    <td>{{ $payment->bill->customer->mobile ?? 'N/A' }}</td>
                     <td>{{ $payment->card_reference ?? 'N/A' }}</td>
                     <td>{{ $payment->card_location ?? 'N/A' }}</td>
                     <td class="fw-bold">{{ format_currency($payment->amount) }}</td>
@@ -106,7 +105,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="8" class="text-center py-4"><strong>{{ __('No pending reference card payments found') }}</strong></td></tr>
+                <tr><td colspan="9" class="text-center py-4"><strong>{{ __('No pending reference card payments found') }}</strong></td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -131,6 +130,9 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <strong>{{ __('Customer:') }}</strong> {{ $payment->bill->customer->name ?? 'N/A' }}
+                    </div>
+                    <div class="mb-3">
+                        <strong>{{ __('Mobile:') }}</strong> {{ $payment->bill->customer->mobile ?? __('N/A') }}
                     </div>
                     <div class="mb-3">
                         <strong>{{ __('Bill No:') }}</strong> {{ $payment->bill->bill_no ?? 'N/A' }}

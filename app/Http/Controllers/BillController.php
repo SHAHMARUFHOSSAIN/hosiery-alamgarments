@@ -69,7 +69,7 @@ class BillController extends Controller
             $query->orderBy('id', 'desc');
         }
 
-        $bills = $query->paginate(15);
+        $bills = $query->paginate(30);
         $bills->appends($request->only('search', 'user_id', 'date_from', 'date_to', 'bill_man', 'sort', 'direction'));
 
         $totalBills = Bill::query();
@@ -339,7 +339,7 @@ class BillController extends Controller
 
         $bill->load(['customer', 'user', 'editor', 'billProducts', 'payments.checkEncashments', 'dues.duePayments.user']);
 
-        $products = Product::where('is_active', true)->orderBy('name')->get(['id', 'name', 'rate', 'unit']);
+        $products = Product::where('is_active', true)->orderBy('category')->orderBy('name')->get(['id', 'category', 'name', 'size', 'rate', 'unit']);
 
         return view('bills.show', compact('bill', 'products'));
     }
@@ -359,6 +359,8 @@ class BillController extends Controller
         $request->validate([
             'products' => 'nullable|array',
             'products.*.product_name' => 'required|string|max:255',
+            'products.*.category' => 'nullable|string|max:50',
+            'products.*.size_name' => 'nullable|string|max:100',
             'products.*.rate' => 'required|numeric|min:0',
             'products.*.quantity' => 'required|numeric|min:0',
         ]);
@@ -378,10 +380,36 @@ class BillController extends Controller
         try {
             DB::beginTransaction();
 
+            $catalogItems = $this->catalogItemsFor(array_column($productsInput, 'product_name'));
+
             $bill->billProducts()->delete();
             foreach ($productsInput as $productData) {
+                $name = trim((string) $productData['product_name']);
+                $size = trim((string) ($productData['size_name'] ?? ''));
+                $category = trim((string) ($productData['category'] ?? ''));
+
+                $catalogItem = $category !== ''
+                    ? ($catalogItems[$this->catalogKey($name, $size, $category)]
+                        ?? $catalogItems[$this->catalogKey($name, '', $category)]
+                        ?? null)
+                    : null;
+
+                $catalogItem = $catalogItem
+                    ?? $catalogItems[$this->catalogKey($name, $size)]
+                    ?? $catalogItems[$this->catalogKey($name, '')]
+                    ?? null;
+
+                if ($category === '') {
+                    $category = (string) ($catalogItem['category'] ?? '');
+                }
+                if ($size === '') {
+                    $size = (string) ($catalogItem['size'] ?? '');
+                }
+
                 $bill->billProducts()->create([
-                    'product_name' => $productData['product_name'],
+                    'category' => $category !== '' ? $category : null,
+                    'product_name' => $name,
+                    'size_name' => $size !== '' ? $size : null,
                     'rate' => (float) $productData['rate'],
                     'quantity' => (float) $productData['quantity'],
                     'price' => round(((float) $productData['rate']) * ((float) $productData['quantity']), 2),
@@ -396,6 +424,46 @@ class BillController extends Controller
             DB::rollBack();
             return back()->withInput()->with('error', 'Failed to update products: ' . $e->getMessage());
         }
+    }
+
+    private function catalogKey(string $name, string $size, ?string $category = null): string
+    {
+        $key = mb_strtolower($name) . '||' . mb_strtolower($size);
+
+        return $category === null ? $key : $key . '||' . mb_strtolower($category);
+    }
+
+    private function catalogItemsFor(array $names): array
+    {
+        $names = array_values(array_unique(array_filter(array_map('trim', $names), function ($name) {
+            return $name !== '';
+        })));
+
+        if (empty($names)) {
+            return [];
+        }
+
+        $items = [];
+        foreach (Product::whereIn('name', $names)->orderBy('id')->get(['category', 'name', 'size']) as $product) {
+            $size = (string) $product->size;
+            $item = [
+                'category' => $product->category,
+                'size' => $product->size,
+            ];
+
+            foreach ([$this->catalogKey($product->name, $size), $this->catalogKey($product->name, '')] as $key) {
+                if (!isset($items[$key]) || ($items[$key]['size'] === null && $product->size !== null)) {
+                    $items[$key] = $item;
+                }
+            }
+
+            if (($product->category ?? '') !== '') {
+                $items[$this->catalogKey($product->name, $size, $product->category)] = $item;
+                $items[$this->catalogKey($product->name, '', $product->category)] = $items[$this->catalogKey($product->name, $size, $product->category)];
+            }
+        }
+
+        return $items;
     }
 
     public function edit(Bill $bill): View

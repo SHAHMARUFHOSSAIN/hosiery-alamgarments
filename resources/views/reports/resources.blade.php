@@ -179,6 +179,7 @@
                     <th>{{ __('Bill Date') }}</th>
                     <th>{{ __('Customer') }}</th>
                     <th>{{ __('Location') }}</th>
+                    <th>{{ __('Mobile') }}</th>
                     <th>{{ __('Shop') }}</th>
                     <th>{{ __('Amount') }}</th>
                     <th>{{ __('Discount') }}</th>
@@ -195,6 +196,7 @@
                     <td>{{ $bill->report_date?->format('d/m/Y') ?? 'N/A' }}</td>
                     <td>{{ $bill->customer?->name ?? 'N/A' }}</td>
                     <td>{{ $bill->customer?->location ?? 'N/A' }}</td>
+                    <td>{{ $bill->customer?->mobile ?? 'N/A' }}</td>
                     <td>{{ $bill->shop_name ?? '-' }}</td>
                     <td>{{ format_currency($bill->bill_amount) }}</td>
                     <td>{{ format_currency($bill->discount) }}</td>
@@ -214,7 +216,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="11" class="text-center text-muted py-4">{{ __('No bills found for the selected filters.') }}</td>
+                    <td colspan="12" class="text-center text-muted py-4">{{ __('No bills found for the selected filters.') }}</td>
                 </tr>
                 @endforelse
             </tbody>

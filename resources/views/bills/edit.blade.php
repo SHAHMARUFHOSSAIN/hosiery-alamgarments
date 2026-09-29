@@ -88,7 +88,7 @@
                         <span class="input-group-text">৳</span>
                         <input type="number" step="0.01" name="discount" id="discount" 
                                class="form-control @error('discount') is-invalid @enderror" 
-                               value="{{ old('discount', $bill->discount) }}">
+                               value="{{ old('discount', (float) $bill->discount > 0 ? $bill->discount : null) }}">
                     </div>
                 </div>
 
@@ -116,7 +116,7 @@
                     <div class="input-group">
                         <span class="input-group-text">৳</span>
                         <input type="number" step="0.01" name="payment_amount" id="payment_amount" 
-                               class="form-control" value="{{ old('payment_amount', $cashPayment?->amount ?? 0) }}">
+                               class="form-control" value="{{ old('payment_amount', (float) ($cashPayment?->amount ?? 0) > 0 ? $cashPayment->amount : null) }}">
                     </div>
                     <small class="text-muted">{{ __('Amount received now (if any)') }}</small>
                 </div>
@@ -401,6 +401,8 @@
 (function() {
     'use strict';
 
+    var isBn = {{ $currentLocale === 'bn' ? 'true' : 'false' }};
+
     var csrfMeta = document.querySelector('meta[name="csrf-token"]');
     var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
     var banksSearchUrl = '{{ route("banks.search") }}';
@@ -540,14 +542,25 @@
         });
     }
 
+    function amt(n, d) {
+        var s = Number(n).toFixed(d == null ? 2 : d);
+        return isBn ? window.BnDigits.toBangla(s) : s;
+    }
+
     function updateCheckTotal() {
         var total = 0;
         document.querySelectorAll('.check-amount-input').forEach(function(inp) {
             total += parseFloat(inp.value) || 0;
         });
         var el = document.getElementById('totalCheckAmount');
-        if (el) el.textContent = total.toFixed(2);
+        if (el) { el.textContent = amt(total, 2); el.dataset.raw = total.toFixed(2); }
         updateCheckRemainingDue();
+    }
+
+    function checkTotalRaw() {
+        var el = document.getElementById('totalCheckAmount');
+        if (!el) return 0;
+        return parseFloat(el.dataset.raw || el.textContent) || 0;
     }
 
     function updateCheckRemainingDue() {
@@ -556,11 +569,11 @@
         var payAmt = document.getElementById('payment_amount');
         var bill = parseFloat(billAmt ? billAmt.value : 0) || 0;
         var disc = parseFloat(discAmt ? discAmt.value : 0) || 0;
-        var totalCheck = parseFloat((document.getElementById('totalCheckAmount') || {}).textContent) || 0;
+        var totalCheck = checkTotalRaw();
         var other = parseFloat(payAmt ? payAmt.value : 0) || 0;
         var remain = bill - disc - totalCheck - other;
         var el = document.getElementById('checkRemainingDue');
-        if (el) el.textContent = remain.toFixed(2);
+        if (el) el.textContent = amt(remain, 2);
     }
 
     document.addEventListener('input', function(e) {
